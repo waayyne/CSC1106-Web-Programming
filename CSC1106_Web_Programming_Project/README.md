@@ -66,47 +66,72 @@ src/services/auth_service.rs
 CSC1106_Web_Programming_Project/
 │
 ├── Cargo.toml
-├── Cargo.lock
-├── .env.example
 ├── README.md
 ├── setup_db.bat
-│
 ├── migrations/
 │   └── 001_create_tables.sql
+│
+├── src/
+│   ├── config.rs
+│   ├── db.rs
+│   ├── main.rs
+│   │
+│   ├── middleware/
+│   │   ├── mod.rs
+│   │   └── auth_middleware.rs
+│   │
+│   ├── models/
+│   │   ├── mod.rs
+│   │   ├── account.rs
+│   │   ├── audit_log.rs
+│   │   ├── loan.rs
+│   │   ├── transaction.rs
+│   │   └── user.rs
+│   │
+│   ├── routes/
+│   │   ├── mod.rs
+│   │   ├── account_routes.rs
+│   │   ├── admin_routes.rs
+│   │   ├── auth_routes.rs
+│   │   ├── customer_routes.rs
+│   │   ├── loan_routes.rs
+│   │   ├── staff_routes.rs
+│   │   └── transfer_routes.rs
+│   │
+│   └── services/
+│       ├── mod.rs
+│       ├── account_service.rs
+│       ├── audit_service.rs
+│       ├── auth_service.rs
+│       ├── loan_service.rs
+│       └── transfer_service.rs
 │
 ├── static/
 │   ├── css/
 │   │   └── style.css
-│   ├── js/
-│   │   └── main.js
-│   └── images/
+│   └── js/
+│       └── main.js
 │
 ├── templates/
 │   ├── layout.html
+│   ├── home.html
 │   ├── login.html
 │   ├── register.html
-│   └── customer_dashboard.html
+│   ├── dashboard.html
+│   ├── customer_dashboard.html
+│   ├── staff_dashboard.html
+│   ├── admin_dashboard.html
+│   ├── atm.html
+│   ├── manage_accounts.html
+│   ├── manage_loans.html
+│   ├── manage_users.html
+│   ├── transaction_history.html
+│   ├── transfer_money.html
+│   ├── loan_application.html
+│   ├── audit_logs.html
+│   └── account_details.html
 │
-└── src/
-    ├── main.rs
-    ├── db.rs
-    ├── config.rs
-    │
-    ├── models/
-    │   ├── mod.rs
-    │   └── user.rs
-    │
-    ├── routes/
-    │   ├── mod.rs
-    │   └── auth_routes.rs
-    │
-    ├── services/
-    │   ├── mod.rs
-    │   └── auth_service.rs
-    │
-    └── middleware/
-        ├── mod.rs
-        └── auth_middleware.rs
+└── target/ (build artifacts)
 ```
 
 ---
