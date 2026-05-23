@@ -1,0 +1,43 @@
+create table users (
+    id serial primary key,
+    name varchar(100) not null,
+    email varchar(150) unique not null,
+    password_hash text not null,
+    phone_number varchar(20) unique not null,
+    role varchar(20) not null default 'customer',
+    created_at timestamp default current_timestamp
+);
+
+create table bank_accounts (
+    id serial primary key,
+    user_id int not null references users(id) on delete cascade,
+    account_number varchar(30) unique not null,
+    balance numeric(12, 2) not null default 0.00,
+    created_at timestamp default current_timestamp
+);
+
+create table transactions (
+    id serial primary key,
+    from_account_id int references bank_accounts(id),
+    to_account_id int references bank_accounts(id),
+    transaction_type varchar(30) not null,
+    amount numeric(12, 2) not null,
+    description text,
+    created_at timestamp default current_timestamp
+);
+
+create table loans (
+    id serial primary key,
+    user_id int not null references users(id) on delete cascade,
+    amount numeric(12, 2) not null,
+    status varchar(20) not null default 'pending',
+    reason text,
+    created_at timestamp default current_timestamp
+);
+
+create table audit_logs (
+    id serial primary key,
+    user_id int references users(id),
+    action text not null,
+    created_at timestamp default current_timestamp
+);
