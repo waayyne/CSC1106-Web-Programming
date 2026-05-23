@@ -7,8 +7,31 @@ Banking System
 - Rust
 - Actix Web
 - Tera Templates
-- PostgreSQL
+- PostgreSQL 18
 - HTML/CSS
+
+---
+
+## Database Requirement
+
+This project **must use PostgreSQL 18**.
+
+The database scripts and Rust database connection are written for PostgreSQL.
+
+This project is **not designed for MySQL, MariaDB, SQLite, or MongoDB** unless the database code and SQL syntax are rewritten.
+
+Required database setup:
+
+```text
+Database system: PostgreSQL 18
+Database tool: pgAdmin 4
+Database name: banking_system
+Username: postgres
+Password: 1234
+Port: 5432
+```
+
+---
 
 ## Current Features
 - Homepage
@@ -18,6 +41,8 @@ Banking System
 - User registration
 - Auto bank account creation after registration
 - Login validation using email and password
+
+---
 
 ## Current Note About Passwords
 
@@ -42,7 +67,6 @@ CSC1106_Web_Programming_Project/
 │
 ├── Cargo.toml
 ├── Cargo.lock
-├── .env
 ├── .env.example
 ├── README.md
 ├── setup_db.bat
@@ -110,39 +134,38 @@ pgAdmin 4
 
 ---
 
-## 3. PostgreSQL password
+# Database Setup
 
-For this project, the PostgreSQL password is assumed to be:
+## Option 1: Use setup_db.bat
 
-```text
-1234
-```
+This is the recommended method for Windows.
 
-The default PostgreSQL user is:
-
-```text
-postgres
-```
-
-The database name is:
-
-```text
-banking_system
-```
-
----
-
-# Database Setup Using Batch File
-
-## 1. Create `setup_db.bat`
-
-Create a file in the project root:
+Run:
 
 ```text
 setup_db.bat
 ```
 
-Paste this inside:
+The batch file will:
+
+```text
+1. Drop the old banking_system database if it exists
+2. Create a new banking_system database
+3. Run migrations/001_create_tables.sql
+4. Create all required tables
+```
+
+Important:
+
+```text
+Running setup_db.bat will reset the database and delete existing test data.
+```
+
+---
+
+## setup_db.bat content
+
+The batch file uses PostgreSQL 18:
 
 ```bat
 @echo off
@@ -176,85 +199,31 @@ pause
 
 ---
 
-## 2. Run the batch file
+## Option 2: Manual database setup using pgAdmin 4
 
-Double-click:
+Open pgAdmin 4.
+
+Create the database manually:
+
+```sql
+CREATE DATABASE banking_system;
+```
+
+Then open Query Tool under the `banking_system` database.
+
+Copy and run the SQL from:
 
 ```text
-setup_db.bat
+migrations/001_create_tables.sql
 ```
 
-Or run in terminal:
-
-```bash
-setup_db.bat
-```
-
-This will:
-
-```text
-1. Drop the old banking_system database if it exists
-2. Create a new banking_system database
-3. Run migrations/001_create_tables.sql
-4. Create all required tables
-```
-
-Important:
-
-```text
-Running setup_db.bat will delete existing test users and reset the database.
-```
-
----
-
-# If setup_db.bat does not work
-
-If you see this error:
-
-```text
-psql is not recognized
-```
-
-Check your PostgreSQL folder:
-
-```text
-C:\Program Files\PostgreSQL\
-```
-
-If your version is not `18`, change this line in `setup_db.bat`:
-
-```bat
-set PSQL="C:\Program Files\PostgreSQL\18\bin\psql.exe"
-```
-
-Example for PostgreSQL 17:
-
-```bat
-set PSQL="C:\Program Files\PostgreSQL\17\bin\psql.exe"
-```
+This SQL file is written for **PostgreSQL 18**.
 
 ---
 
 # Environment Setup
 
-## 1. Create `.env.example`
-
-Create this file:
-
-```text
-.env.example
-```
-
-Paste this inside:
-
-```env
-DATABASE_URL=postgres://postgres:1234@localhost:5432/banking_system
-SESSION_KEY=0123456701234567012345670123456701234567012345670123456701234567
-```
-
----
-
-## 2. Create `.env`
+## 1. Create `.env`
 
 Copy `.env.example` and rename the copy to:
 
@@ -262,7 +231,7 @@ Copy `.env.example` and rename the copy to:
 .env
 ```
 
-Your `.env` should contain:
+The `.env` file should contain:
 
 ```env
 DATABASE_URL=postgres://postgres:1234@localhost:5432/banking_system
@@ -371,7 +340,8 @@ If these names are changed, Rust will not receive the form data correctly.
 | `templates/login.html` | Login page UI |
 | `templates/register.html` | Register page UI |
 | `templates/customer_dashboard.html` | Customer dashboard UI |
-| `migrations/001_create_tables.sql` | Creates database tables |
+| `migrations/001_create_tables.sql` | Creates PostgreSQL 18 database tables |
+| `setup_db.bat` | Recreates the PostgreSQL 18 database |
 
 ---
 
@@ -409,69 +379,6 @@ migrations/
 src/
 templates/
 static/
-```
-
----
-
-# Current Team Task Split
-
-## Login/Register teammate
-
-Edit:
-
-```text
-templates/login.html
-templates/register.html
-src/routes/auth_routes.rs
-src/services/auth_service.rs
-```
-
-Main job:
-
-```text
-Improve login/register UI
-Add password hashing back later
-Add validation/error messages
-```
-
----
-
-## Customer banking teammate
-
-Next features:
-
-```text
-Customer dashboard
-Balance display
-Deposit money
-Withdraw money
-```
-
----
-
-## Transfer teammate
-
-Next features:
-
-```text
-Transfer by bank account number
-Transfer by PayNow phone number
-Transaction history
-```
-
----
-
-## Admin/Staff teammate
-
-Next features:
-
-```text
-Admin dashboard
-Staff dashboard
-Manage users
-Manage accounts
-Manage loans
-Audit logs
 ```
 
 ---
