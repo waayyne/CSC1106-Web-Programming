@@ -1,30 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register</title>
+    <meta charset="UTF-8">
+    <title>Register - RustBank</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
-    <h1>Register</h1>
+<body class="auth-body">
 
-    <form method="post" action="/register">
-        <label>Name:</label><br>
-        <input type="text" name="name" required><br><br>
+    <div class="auth-container">
+        <div class="auth-card register-card">
 
-        <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
+            <div class="auth-logo">RB</div>
 
-        <label>Phone Number:</label><br>
-        <input type="text" name="phone_number" required><br><br>
+            <h1>Create Account</h1>
+            <p>Register for a new RustBank banking account.</p>
 
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
+            {% if error %}
+                <div class="error-message">
+                    {{ error }}
+                </div>
+            {% endif %}
 
-        <button type="submit">Register</button>
-    </form>
+            <form method="post" action="/register" class="auth-form">
 
-    <br>
-    <a href="/login">Already have an account? Login</a><br>
-    <a href="/">Back to Home</a>
+                <div class="auth-grid">
+                    <div>
+                        <label for="first_name">First Name</label>
+                        <input
+                            type="text"
+                            id="first_name"
+                            name="first_name"
+                            placeholder="First name"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="last_name">Last Name</label>
+                        <input
+                            type="text"
+                            id="last_name"
+                            name="last_name"
+                            placeholder="Last name"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Choose a username"
+                    required
+                >
+
+                <label for="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Create a password"
+                    required
+                >
+
+                <label for="confirm_password">Confirm Password</label>
+                <input
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    placeholder="Confirm your password"
+                    required
+                >
+
+                <button type="submit" class="auth-btn">
+                    Register
+                </button>
+
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account?</p>
+                <a href="/login">Login here</a>
+            </div>
+
+            <a href="/" class="back-home">← Back to Home</a>
+
+        </div>
+    </div>
+
 </body>
 </html>

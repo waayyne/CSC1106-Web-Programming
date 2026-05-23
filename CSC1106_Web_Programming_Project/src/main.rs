@@ -1,10 +1,13 @@
 use actix_files::Files;
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_web::cookie::Key;
 use actix_web::{web, App, HttpServer};
 use dotenvy::dotenv;
 use std::env;
 use tera::Tera;
 
 mod db;
+mod middleware;
 mod models;
 mod routes;
 mod services;
@@ -22,16 +25,27 @@ async fn main() -> std::io::Result<()> {
 
     println!("Connected to PostgreSQL");
 
-    let tera = Tera::new("templates/**/*").unwrap();
+    let tera = Tera::new("templates/**/*")
+        .expect("Failed to load templates");
+
+    let session_key = env::var("SESSION_KEY")
+        .expect("SESSION_KEY must be set in .env");
+
+    let secret_key = Key::from(session_key.as_bytes());
 
     println!("Server running at http://127.0.0.1:8080");
 
     HttpServer::new(move || {
         App::new()
+            .wrap(SessionMiddleware::new(
+                CookieSessionStore::default(),
+                secret_key.clone(),
+            ))
             .app_data(web::Data::new(tera.clone()))
             .app_data(web::Data::new(db_pool.clone()))
-            .service(Files::new("/static", "static"))
+            .service(Files::new("/static", "./static"))
             .configure(routes::auth_routes::config)
+            .configure(routes::customer_routes::config)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

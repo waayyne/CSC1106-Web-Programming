@@ -1,24 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <title>Login - RustBank</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
-    <h1>Login</h1>
+<body class="auth-body">
 
-    <form method="post" action="/login">
-        <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
+    <div class="auth-container">
+        <div class="auth-card">
 
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
+            <div class="auth-logo">RB</div>
 
-        <button type="submit">Login</button>
-    </form>
+            <h1>Welcome Back</h1>
+            <p>Login to access your RustBank account.</p>
 
-    <br>
-    <a href="/register">Create an account</a><br>
-    <a href="/">Back to Home</a>
+            {% if error_message %}
+                <div class="error-message">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+
+            <form method="post" action="/login" class="auth-form">
+
+                <label for="identifier">Username or Email</label>
+                <input
+                    type="text"
+                    id="identifier"
+                    name="identifier"
+                    placeholder="Enter your username or email"
+                    value="{{ identifier | default(value='') }}"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+                <button type="submit" class="auth-btn">
+                    Login
+                </button>
+
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account?</p>
+                <a href="/register">Create an account</a>
+            </div>
+
+            <a href="/" class="back-home">← Back to Home</a>
+
+        </div>
+    </div>
+
 </body>
 </html>
