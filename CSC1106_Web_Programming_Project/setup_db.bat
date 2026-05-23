@@ -1,0 +1,27 @@
+@echo off
+echo ========================================
+echo Setting up Banking System Database
+echo ========================================
+
+set PSQL="C:\Program Files\PostgreSQL\18\bin\psql.exe"
+set DB_NAME=banking_system
+set DB_USER=postgres
+set PGPASSWORD=1234
+
+echo.
+echo Dropping old database if it exists...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "DROP DATABASE IF EXISTS %DB_NAME%;"
+
+echo.
+echo Creating database...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "CREATE DATABASE %DB_NAME%;"
+
+echo.
+echo Running migration file...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/001_create_tables.sql
+
+echo.
+echo ========================================
+echo Database setup completed.
+echo ========================================
+pause

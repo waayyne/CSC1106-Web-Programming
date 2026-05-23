@@ -1,4 +1,3 @@
-use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
 use sqlx::Row;
 
@@ -6,9 +5,6 @@ use crate::db::DbPool;
 use crate::models::user::RegisterForm;
 
 pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), sqlx::Error> {
-    let password_hash = hash(form.password, DEFAULT_COST)
-        .expect("Failed to hash password");
-
     let user_row = sqlx::query(
         "insert into users (name, email, password_hash, phone_number, role)
          values ($1, $2, $3, $4, 'customer')
@@ -16,7 +12,7 @@ pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), sqlx
     )
     .bind(&form.name)
     .bind(&form.email)
-    .bind(&password_hash)
+    .bind(&form.password)
     .bind(&form.phone_number)
     .fetch_one(pool)
     .await?;
@@ -38,7 +34,6 @@ pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), sqlx
     Ok(())
 }
 
-
 pub async fn login_user(pool: &DbPool, email: String, password: String) -> Result<bool, sqlx::Error> {
     let row = sqlx::query(
         "select password_hash from users where email = $1"
@@ -48,12 +43,9 @@ pub async fn login_user(pool: &DbPool, email: String, password: String) -> Resul
     .await?;
 
     if let Some(user) = row {
-        let password_hash: String = user.get("password_hash");
+        let stored_password: String = user.get("password_hash");
 
-        let is_valid = verify(password, &password_hash)
-            .unwrap_or(false);
-
-        Ok(is_valid)
+        Ok(stored_password == password)
     } else {
         Ok(false)
     }
