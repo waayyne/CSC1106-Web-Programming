@@ -1,0 +1,11 @@
+# Auto-detect text files and perform normalization
+* text=auto
+
+
+# Ensure Rust and TOML files use specific diff/text settings
+*.rs text diff=rust
+*.toml text diff=toml
+
+
+# Treat the lockfile as text if got any mishaps delete this
+Cargo.lock text linguist-generated=true
