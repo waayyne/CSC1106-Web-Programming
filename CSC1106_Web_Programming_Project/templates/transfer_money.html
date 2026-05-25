@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RustBank - Bank Transfer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">RB</div>
+                <div>
+                    <h2>RustBank</h2>
+                    <p>Banking with Trust</p>
+                </div>
+            </div>
+
+            <nav class="side-nav">
+                <a href="/dashboard" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/atm" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    <span>ATM Simulation</span>
+                </a>
+
+                <a href="/transfer" class="nav-item active">
+                    <span class="nav-icon">⇄</span>
+                    <span>Bank Transfer</span>
+                </a>
+
+                <a href="/transactions" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    <span>Transactions</span>
+                </a>
+
+                <a href="/loans" class="nav-item">
+                    <span class="nav-icon">$</span>
+                    <span>Loans</span>
+                </a>
+
+                <a href="/settings" class="nav-item">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="logout-box">
+            <a href="/logout" class="nav-item logout">
+                <span class="nav-icon">↪</span>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="welcome-box">
+                <div class="user-circle">{{ initials }}</div>
+                <div>
+                    <h3>Welcome back, {{ first_name }}!</h3>
+                    <p>Transfer money securely to another RustBank account.</p>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="profile-avatar">{{ initials }}</div>
+
+                <div class="profile-info">
+                    <h4>{{ first_name }} {{ last_name }}</h4>
+                    <p>Account No: {{ account_number }}</p>
+                </div>
+
+                <span class="profile-arrow">⌄</span>
+            </div>
+        </header>
+
+        <section class="page-section">
+            <h1>Bank Transfer</h1>
+            <p class="page-subtitle">
+                Send money using a bank account number or phone number.
+            </p>
+
+            <div class="atm-panel">
+
+                <div class="panel-header">
+                    <div class="panel-icon">⇄</div>
+                    <div>
+                        <h2>Transfer Money</h2>
+                        <p>Enter the recipient details and amount below.</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                {% if message %}
+                    <div class="success-message">
+                        {{ message }}
+                    </div>
+                {% endif %}
+
+                {% if error %}
+                    <div class="error-message">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
+                <form method="post" action="/transfer" class="atm-form">
+
+                    <div class="form-row">
+                        <label for="transfer_by">Transfer By</label>
+                        <select id="transfer_by" name="transfer_by" required>
+                            <option value="account_number">Bank Account Number</option>
+                            <option value="phone_number">Phone Number</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="recipient_identifier">Recipient Account / Phone</label>
+                        <input
+                            type="text"
+                            id="recipient_identifier"
+                            name="recipient_identifier"
+                            placeholder="Enter account number or phone number"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-row">
+                        <label for="amount">Amount</label>
+                        <input
+                            type="number"
+                            id="amount"
+                            name="amount"
+                            placeholder="100.00"
+                            step="0.01"
+                            min="1"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-row">
+                        <label for="description">Description</label>
+                        <input
+                            type="text"
+                            id="description"
+                            name="description"
+                            placeholder="Optional transfer note"
+                        >
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Submit Transfer
+                    </button>
+
+                </form>
+
+                <div class="validation-box">
+                    <div class="info-icon">i</div>
+                    <p>
+                        <strong>Validation:</strong>
+                        recipient must exist, amount must be more than 0,
+                        and transfer amount must not exceed your current balance.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

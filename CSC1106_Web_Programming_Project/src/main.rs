@@ -46,6 +46,7 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/static", "./static"))
             .configure(routes::auth_routes::config)
             .configure(routes::customer_routes::config)
+            .configure(routes::transfer_routes::config)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
