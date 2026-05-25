@@ -67,7 +67,7 @@
                 <div class="user-circle">{{ initials }}</div>
                 <div>
                     <h3>Welcome back, {{ first_name }}!</h3>
-                    <p>Here’s what's happening with your bank today.</p>
+                    <p>Manage your ATM deposits and withdrawals.</p>
                 </div>
             </div>
 
@@ -86,90 +86,159 @@
         <section class="page-section">
             <h1>ATM Simulation</h1>
             <p class="page-subtitle">
-                Deposit or withdraw money using a bank account number.
+                Deposit or withdraw money from your own RustBank account.
             </p>
 
-            <div class="atm-panel">
+            <div class="atm-overview-grid">
 
-                <div class="panel-header">
-                    <div class="panel-icon">▣</div>
-                    <div>
-                        <h2>ATM Transaction</h2>
-                        <p>Enter the details below to simulate an ATM deposit or withdrawal.</p>
-                    </div>
+                <div class="atm-main-balance">
+                    <p>Current Balance</p>
+                    <h2>${{ balance | default(value="0.00") }}</h2>
+                    <span>Available balance for ATM withdrawal</span>
                 </div>
 
-                <hr>
-
-                {% if message %}
-                    <div class="success-message">
-                        {{ message }}
-                    </div>
-                {% endif %}
-
-                {% if error %}
-                    <div class="error-message">
-                        {{ error }}
-                    </div>
-                {% endif %}
-
-                <form method="post" action="/atm" class="atm-form">
-
-                    <div class="form-row">
-                        <label for="find_by">Find Account By</label>
-                        <select id="find_by" name="find_by" required>
-                            <option value="account_number">Bank Account Number</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label for="account_identifier">Account Number</label>
-                        <input
-                            type="text"
-                            id="account_identifier"
-                            name="account_identifier"
-                            placeholder="100000001"
-                            required
-                        >
-                    </div>
-
-                    <div class="form-row">
-                        <label for="transaction_type">Transaction Type</label>
-                        <select id="transaction_type" name="transaction_type" required>
-                            <option value="deposit">Deposit</option>
-                            <option value="withdraw">Withdraw</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label for="amount">Amount</label>
-                        <input
-                            type="number"
-                            id="amount"
-                            name="amount"
-                            placeholder="100.00"
-                            step="0.01"
-                            min="1"
-                            required
-                        >
-                    </div>
-
-                    <button type="submit" class="submit-btn">
-                        Submit ATM Transaction
-                    </button>
-
-                </form>
-
-                <div class="validation-box">
-                    <div class="info-icon">i</div>
-                    <p>
-                        <strong>Validation:</strong>
-                        account must exist, amount must be more than 0,
-                        and withdrawal must not exceed the current balance.
-                    </p>
+                <div class="atm-mini-card">
+                    <p>Linked Account</p>
+                    <h3>{{ account_number }}</h3>
+                    <span>RustBank Savings Account</span>
                 </div>
 
             </div>
+
+            <div class="atm-main-grid">
+
+                <div class="atm-form-section">
+                    <div class="panel-header">
+                        <div class="panel-icon">▣</div>
+                        <div>
+                            <h2>ATM Transaction</h2>
+                            <p>Choose deposit or withdrawal and enter the amount.</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    {% if message %}
+                        <div class="success-message">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+
+                    {% if error %}
+                        <div class="error-message">
+                            {{ error }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="/atm" class="atm-form">
+
+                        <input type="hidden" name="find_by" value="account_number">
+
+                        <div class="form-row">
+                            <label for="account_identifier">Account Number</label>
+                            <input
+                                type="text"
+                                id="account_identifier"
+                                name="account_identifier"
+                                value="{{ account_number }}"
+                                readonly
+                            >
+                        </div>
+
+                        <div class="form-row">
+                            <label for="transaction_type">Transaction Type</label>
+                            <select id="transaction_type" name="transaction_type" required>
+                                <option value="deposit">Deposit</option>
+                                <option value="withdraw">Withdraw</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="amount">Amount</label>
+                            <input
+                                type="number"
+                                id="amount"
+                                name="amount"
+                                placeholder="100.00"
+                                step="0.01"
+                                min="1"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            Confirm ATM Transaction
+                        </button>
+
+                    </form>
+                </div>
+
+                <div class="atm-rules-section">
+                    <h2>ATM Rules</h2>
+
+                    <div class="atm-rule">
+                        <span>1</span>
+                        <p>ATM transactions only apply to your own logged-in account.</p>
+                    </div>
+
+                    <div class="atm-rule">
+                        <span>2</span>
+                        <p>Amount must be more than $0.</p>
+                    </div>
+
+                    <div class="atm-rule">
+                        <span>3</span>
+                        <p>Withdrawal cannot exceed your current balance.</p>
+                    </div>
+
+                    <div class="atm-rule">
+                        <span>4</span>
+                        <p>Deposits and withdrawals are saved in transaction history.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="atm-activity-section">
+                <h2>Recent ATM Activity</h2>
+
+                {% if atm_history and atm_history | length > 0 %}
+                    {% for item in atm_history %}
+                        <div class="activity-item">
+                            <div>
+                                <h4>
+                                    {% if item.transaction_type == "deposit" %}
+                                        Deposit
+                                    {% else %}
+                                        Withdrawal
+                                    {% endif %}
+                                </h4>
+
+                                <p>
+                                    ${{ item.amount }} • {{ item.created_at }}
+                                </p>
+                            </div>
+
+                            <span>
+                                {% if item.transaction_type == "deposit" %}
+                                    In
+                                {% else %}
+                                    Out
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="activity-item">
+                        <div>
+                            <h4>No ATM Transactions Yet</h4>
+                            <p>Your deposit and withdrawal history will appear here.</p>
+                        </div>
+                        <span>Empty</span>
+                    </div>
+                {% endif %}
+            </div>
+
         </section>
 
     </main>

@@ -15,12 +15,6 @@
             <h1>Create Account</h1>
             <p>Register for a new RustBank banking account.</p>
 
-            {% if error %}
-                <div class="error-message">
-                    {{ error }}
-                </div>
-            {% endif %}
-
             {% if error_message %}
                 <div class="error-message">
                     {{ error_message }}
@@ -37,6 +31,7 @@
                             id="first_name"
                             name="first_name"
                             placeholder="First name"
+                            value="{{ first_name | default(value='') }}"
                             required
                         >
                     </div>
@@ -48,6 +43,7 @@
                             id="last_name"
                             name="last_name"
                             placeholder="Last name"
+                            value="{{ last_name | default(value='') }}"
                             required
                         >
                     </div>
@@ -59,6 +55,7 @@
                     id="username"
                     name="username"
                     placeholder="Choose a username"
+                    value="{{ username | default(value='') }}"
                     required
                 >
 
@@ -68,6 +65,7 @@
                     id="email"
                     name="email"
                     placeholder="Enter your email"
+                    value="{{ email | default(value='') }}"
                     required
                 >
 
@@ -77,6 +75,7 @@
                     id="phone_number"
                     name="phone_number"
                     placeholder="Enter your phone number"
+                    value="{{ phone_number | default(value='') }}"
                     required
                 >
 

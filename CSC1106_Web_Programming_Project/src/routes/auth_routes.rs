@@ -6,11 +6,25 @@ use crate::services::auth_service;
 use crate::models::user::{RegisterForm, LoginForm};
 use sqlx::Row;
 
-fn render_login_page(tmpl: &Tera, error_message: Option<&str>, identifier: Option<&str>) -> HttpResponse {
+#[derive(serde::Deserialize)]
+pub struct LoginQuery {
+    pub registered: Option<String>,
+}
+
+fn render_login_page(
+    tmpl: &Tera,
+    error_message: Option<&str>,
+    success_message: Option<&str>,
+    identifier: Option<&str>,
+) -> HttpResponse {
     let mut context = Context::new();
 
     if let Some(message) = error_message {
         context.insert("error_message", message);
+    }
+
+    if let Some(message) = success_message {
+        context.insert("success_message", message);
     }
 
     if let Some(identifier_value) = identifier {
@@ -75,8 +89,20 @@ pub async fn homepage(tmpl: web::Data<Tera>) -> impl Responder {
         .body(rendered)
 }
 
-pub async fn login_page(tmpl: web::Data<Tera>) -> impl Responder {
-    render_login_page(&tmpl, None, None)
+pub async fn login_page(
+    tmpl: web::Data<Tera>,
+    query: web::Query<LoginQuery>,
+) -> impl Responder {
+    if query.registered.as_deref() == Some("1") {
+        return render_login_page(
+            &tmpl,
+            None,
+            Some("Registration successful. Please log in."),
+            None,
+        );
+    }
+
+    render_login_page(&tmpl, None, None, None)
 }
 
 pub async fn register_page(tmpl: web::Data<Tera>) -> impl Responder {
@@ -132,6 +158,7 @@ pub async fn dashboard_page(
     let username: String = user_row.get("username");
     let account_number: String = account_row.get("account_number");
     let balance: rust_decimal::Decimal = account_row.get("balance");
+
     let initials = format!(
         "{}{}",
         first_name.chars().next().unwrap_or('U'),
@@ -139,6 +166,7 @@ pub async fn dashboard_page(
     );
 
     let mut context = Context::new();
+
     context.insert("first_name", &first_name);
     context.insert("last_name", &last_name);
     context.insert("username", &username);
@@ -153,22 +181,13 @@ pub async fn dashboard_page(
         .body(rendered)
 }
 
-pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.route("/", web::get().to(homepage))
-        .route("/login", web::get().to(login_page))
-        .route("/login", web::post().to(login_user))
-        .route("/logout", web::get().to(logout))
-        .route("/register", web::get().to(register_page))
-        .route("/register", web::post().to(register_user))
-        .route("/dashboard", web::get().to(dashboard_page));
-}
-
 pub async fn register_user(
     tmpl: web::Data<Tera>,
     pool: web::Data<DbPool>,
     form: web::Form<RegisterForm>,
 ) -> impl Responder {
     let form_data = form.into_inner();
+
     let first_name = form_data.first_name.clone();
     let last_name = form_data.last_name.clone();
     let username = form_data.username.clone();
@@ -179,7 +198,7 @@ pub async fn register_user(
 
     match result {
         Ok(_) => HttpResponse::Found()
-            .append_header(("Location", "/login"))
+            .append_header(("Location", "/login?registered=1"))
             .finish(),
         Err(_) => render_register_page(
             &tmpl,
@@ -221,11 +240,13 @@ pub async fn login_user(
         Ok(None) => render_login_page(
             &tmpl,
             Some("Invalid username/email or password."),
+            None,
             Some(&identifier),
         ),
         Err(_) => render_login_page(
             &tmpl,
             Some("Login failed. Please try again."),
+            None,
             Some(&identifier),
         ),
     }
@@ -237,4 +258,14 @@ pub async fn logout(session: Session) -> impl Responder {
     HttpResponse::Found()
         .append_header(("Location", "/login"))
         .finish()
+}
+
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.route("/", web::get().to(homepage))
+        .route("/login", web::get().to(login_page))
+        .route("/login", web::post().to(login_user))
+        .route("/logout", web::get().to(logout))
+        .route("/register", web::get().to(register_page))
+        .route("/register", web::post().to(register_user))
+        .route("/dashboard", web::get().to(dashboard_page));
 }
