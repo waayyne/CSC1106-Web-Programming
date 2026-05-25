@@ -4,8 +4,6 @@
 # Debugging information (Windows binary symbols)
 *.pdb
 
-# Local environment variables containing private keys/passwords
-.env
 
 # Block development configuration directories
 .rs.bk
