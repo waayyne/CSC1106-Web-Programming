@@ -220,7 +220,7 @@ pub async fn login_user(
         }
         Ok(None) => render_login_page(
             &tmpl,
-            Some("Invalid email or password."),
+            Some("Invalid username/email or password."),
             Some(&identifier),
         ),
         Err(_) => render_login_page(
