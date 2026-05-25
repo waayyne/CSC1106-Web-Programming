@@ -4,6 +4,8 @@ use sqlx::Row;
 use tera::{Context, Tera};
 
 use crate::db::DbPool;
+use crate::models::transaction::TransferForm;
+use crate::services::transfer_service;
 
 async fn load_user_context(
     pool: &DbPool,
@@ -73,6 +75,54 @@ pub async fn transfer_page(
         .body(rendered)
 }
 
+pub async fn process_transfer(
+    pool: web::Data<DbPool>,
+    tmpl: web::Data<Tera>,
+    session: Session,
+    form: web::Form<TransferForm>,
+) -> impl Responder {
+    let user_id = session.get::<i32>("user_id").unwrap_or(None);
+
+    let user_id = match user_id {
+        Some(id) => id,
+        None => {
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish();
+        }
+    };
+
+    let result = transfer_service::process_transfer(
+        &pool,
+        user_id,
+        form.into_inner(),
+    )
+    .await;
+
+    let mut context = match load_user_context(&pool, user_id).await {
+        Ok(context) => context,
+        Err(error) => {
+            return HttpResponse::InternalServerError().body(error);
+        }
+    };
+
+    match result {
+        Ok(_) => {
+            context.insert("message", "Transfer completed successfully.");
+        }
+        Err(error) => {
+            context.insert("error", &error);
+        }
+    }
+
+    let rendered = tmpl.render("transfer_money.html", &context).unwrap();
+
+    HttpResponse::Ok()
+        .content_type("text/html")
+        .body(rendered)
+}
+
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.route("/transfer", web::get().to(transfer_page));
+    cfg.route("/transfer", web::get().to(transfer_page))
+        .route("/transfer", web::post().to(process_transfer));
 }
