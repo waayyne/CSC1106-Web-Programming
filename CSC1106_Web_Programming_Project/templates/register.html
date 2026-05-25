@@ -21,6 +21,12 @@
                 </div>
             {% endif %}
 
+            {% if error_message %}
+                <div class="error-message">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+
             <form method="post" action="/register" class="auth-form">
 
                 <div class="auth-grid">
@@ -62,6 +68,15 @@
                     id="email"
                     name="email"
                     placeholder="Enter your email"
+                    required
+                >
+
+                <label for="phone_number">Phone Number</label>
+                <input
+                    type="text"
+                    id="phone_number"
+                    name="phone_number"
+                    placeholder="Enter your phone number"
                     required
                 >
 
