@@ -187,6 +187,17 @@ pub async fn register_user(
     form: web::Form<RegisterForm>,
 ) -> impl Responder {
     let form_data = form.into_inner();
+    if form_data.password != form_data.confirm_password {
+        return render_register_page(
+            &tmpl,
+            Some("Passwords do not match."),
+            Some(&form_data.first_name),
+            Some(&form_data.last_name),
+            Some(&form_data.username),
+            Some(&form_data.email),
+            Some(&form_data.phone_number),
+        );
+    }
 
     let first_name = form_data.first_name.clone();
     let last_name = form_data.last_name.clone();

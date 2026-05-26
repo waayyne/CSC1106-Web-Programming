@@ -8,6 +8,7 @@ pub struct RegisterForm {
     pub email: String,
     pub phone_number: String,
     pub password: String,
+    pub confirm_password: String,
 }
 
 #[derive(Deserialize)]
