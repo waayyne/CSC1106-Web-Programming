@@ -54,7 +54,7 @@ async fn load_user_context(
             )
             OR
             (
-                transaction_type = 'withdraw'
+                transaction_type = 'withdrawal'
                 AND from_account_id = $1
             )
         ORDER BY created_at DESC
