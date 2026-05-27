@@ -10,15 +10,19 @@ set PGPASSWORD=1234
 
 echo.
 echo Dropping old database if it exists...
-%PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "DROP DATABASE IF EXISTS %DB_NAME%;"
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "DROP DATABASE IF EXISTS %DB_NAME% WITH (FORCE);"
 
 echo.
 echo Creating database...
 %PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "CREATE DATABASE %DB_NAME%;"
 
 echo.
-echo Running migration file...
+echo Running main migration file...
 %PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/001_create_tables.sql
+
+echo.
+echo Running profile settings migration file...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/002_add_profile_updated_at.sql
 
 echo.
 echo ========================================

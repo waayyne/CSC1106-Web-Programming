@@ -1,7 +1,7 @@
 use chrono::Utc;
 use sqlx::Row;
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
-use password_hash::{PasswordHash, PasswordHasher as _, PasswordVerifier as _, SaltString};
+use password_hash::{PasswordHash, SaltString};
 use rand_core::OsRng;
 
 use crate::db::DbPool;

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RustBank - Profile Settings</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">RB</div>
+                <div>
+                    <h2>RustBank</h2>
+                    <p>Banking with Trust</p>
+                </div>
+            </div>
+
+            <nav class="side-nav">
+                <a href="/dashboard" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/atm" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    <span>ATM Simulation</span>
+                </a>
+
+                <a href="/transfer" class="nav-item">
+                    <span class="nav-icon">⇄</span>
+                    <span>Bank Transfer</span>
+                </a>
+
+                <a href="/transactions" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    <span>Transactions</span>
+                </a>
+
+                <a href="/loans" class="nav-item">
+                    <span class="nav-icon">$</span>
+                    <span>Loans</span>
+                </a>
+
+                <a href="/profile" class="nav-item active">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="logout-box">
+            <a href="/logout" class="nav-item logout">
+                <span class="nav-icon">↪</span>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="welcome-box">
+                <div class="user-circle">{{ initials }}</div>
+                <div>
+                    <h3>Profile Settings</h3>
+                    <p>Review and update your personal details.</p>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="profile-avatar">{{ initials }}</div>
+                <div class="profile-info">
+                    <h4>{{ profile.first_name }} {{ profile.last_name }}</h4>
+                    <p>{{ profile.email }}</p>
+                </div>
+                <span class="profile-arrow">⌄</span>
+            </div>
+        </header>
+
+        <section class="page-section">
+            <h1>Profile Settings</h1>
+            <p class="page-subtitle">Update your contact details or change your password.</p>
+
+            {% if success_message %}
+                <div class="success-message">{{ success_message }}</div>
+            {% endif %}
+
+            {% if error_message %}
+                <div class="error-message">{{ error_message }}</div>
+            {% endif %}
+
+            <div class="content-grid">
+                <div class="panel-card">
+                    <h2>Account Information</h2>
+
+                    <div class="profile-detail-grid">
+                        <div class="detail-item">
+                            <span>ID</span>
+                            <strong>{{ profile.id }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Username</span>
+                            <strong>{{ profile.username }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>First Name</span>
+                            <strong>{{ profile.first_name }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Last Name</span>
+                            <strong>{{ profile.last_name }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Name</span>
+                            <strong>{{ profile.name }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Email</span>
+                            <strong>{{ profile.email }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Phone Number</span>
+                            <strong>{{ profile.phone_number }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Role</span>
+                            <strong>{{ profile.role }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Created At</span>
+                            <strong>{{ profile.created_at }}</strong>
+                        </div>
+                        <div class="detail-item">
+                            <span>Updated At</span>
+                            <strong>{{ profile.updated_at }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <h2>Edit Profile</h2>
+
+                    <form method="post" action="/profile/update" class="auth-form profile-form">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" value="{{ profile.first_name }}" required>
+
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" value="{{ profile.last_name }}" required>
+
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" value="{{ profile.email }}" required>
+
+                        <label for="phone_number">Phone Number</label>
+                        <input type="text" id="phone_number" name="phone_number" value="{{ profile.phone_number }}" required>
+
+                        <button type="submit" class="auth-btn">Save Profile</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel-card profile-password-card">
+                <h2>Change Password</h2>
+
+                <form method="post" action="/profile/password" class="auth-form profile-form">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" required>
+
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" minlength="6" required>
+
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" minlength="6" required>
+
+                    <button type="submit" class="auth-btn">Change Password</button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

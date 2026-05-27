@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>RustBank</title>
+	<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-layout">
+	<aside class="sidebar">
+		<div>
+			<div class="brand">
+				<div class="brand-icon">RB</div>
+				<div>
+					<h2>RustBank</h2>
+					<p>Banking with Trust</p>
+				</div>
+			</div>
+
+			<nav class="side-nav">
+				<a href="/dashboard" class="nav-item">
+					<span class="nav-icon">⌂</span>
+					<span>Dashboard</span>
+				</a>
+
+				<a href="/profile" class="nav-item">
+					<span class="nav-icon">P</span>
+					<span>Profile Settings</span>
+				</a>
+
+				<a href="/atm" class="nav-item">
+					<span class="nav-icon">▣</span>
+					<span>ATM Simulation</span>
+				</a>
+
+				<a href="/transfer" class="nav-item">
+					<span class="nav-icon">⇄</span>
+					<span>Bank Transfer</span>
+				</a>
+
+				<a href="/transactions" class="nav-item">
+					<span class="nav-icon">▤</span>
+					<span>Transactions</span>
+				</a>
+
+				<a href="/loans" class="nav-item">
+					<span class="nav-icon">$</span>
+					<span>Loans</span>
+				</a>
+			</nav>
+		</div>
+
+		<div class="logout-box">
+			<a href="/logout" class="nav-item logout">
+				<span class="nav-icon">↪</span>
+				<span>Log Out</span>
+			</a>
+		</div>
+	</aside>
+
+	<main class="main-content">
+		{% block content %}{% endblock content %}
+	</main>
+</div>
+
+</body>
+</html>
+

@@ -50,7 +50,7 @@ Password hashing is currently removed because another teammate will be handling 
 
 For now, the password is stored inside the `password_hash` column as plain text.
 
-Before final submission, password hashing should be added back using bcrypt.
+Before final submission, password hashing should be added back using Argon2.
 
 The file to update later is:
 
