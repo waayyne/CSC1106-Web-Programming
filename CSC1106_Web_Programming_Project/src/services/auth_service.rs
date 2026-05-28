@@ -7,12 +7,7 @@ use sqlx::Row;
 use crate::db::DbPool;
 use crate::models::user::RegisterForm;
 
-<<<<<<< Updated upstream
-
-pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), sqlx::Error> {
-=======
 pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), String> {
->>>>>>> Stashed changes
     let full_name = format!("{} {}", form.first_name.trim(), form.last_name.trim());
 
     let hashed_password = match hash_password(&form.password) {
@@ -58,53 +53,37 @@ pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), Stri
     }
 }
 
-
 pub async fn login_user(
     pool: &DbPool,
     identifier: String,
     password: String,
-<<<<<<< Updated upstream
-) -> Result<Option<(i32, String)>, sqlx::Error> {
+) -> Result<Option<(i32, String)>, String> {
     let identifier = identifier.trim().to_string();
 
-    let row = sqlx::query(
-        "select id, password_hash, role from users where email = $1 or username = $1"
+    let user_result = sqlx::query(
+        "select id, password_hash, role from users where email = $1 or username = $1",
     )
     .bind(identifier)
     .fetch_optional(pool)
-    .await?;
-=======
-) -> Result<Option<i32>, String> {
-    let identifier = identifier.trim().to_string();
-
-    let user_result = sqlx::query("select id, password_hash from users where email = $1 or username = $1")
-        .bind(identifier)
-        .fetch_optional(pool)
-        .await;
+    .await;
 
     let row = match user_result {
         Ok(row) => row,
         Err(_) => return Err("Failed to check login.".to_string()),
     };
->>>>>>> Stashed changes
 
     if let Some(user) = row {
         let user_id: i32 = user.get("id");
         let stored_password: String = user.get("password_hash");
+        let role: String = user.get("role");
 
-<<<<<<< Updated upstream
-        if verify_password(&stored_password, &password).unwrap_or(false) {
-            let role: String = user.get("role");
-            Ok(Some((user_id, role)))
-=======
         let password_correct = match verify_password(&stored_password, &password) {
             Ok(result) => result,
             Err(_) => false,
         };
 
         if password_correct {
-            Ok(Some(user_id))
->>>>>>> Stashed changes
+            Ok(Some((user_id, role)))
         } else {
             Ok(None)
         }
@@ -125,11 +104,6 @@ pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Er
 pub fn verify_password(hash: &str, password: &str) -> Result<bool, argon2::password_hash::Error> {
     let parsed_hash = PasswordHash::new(hash)?;
     let argon2 = Argon2::default();
-<<<<<<< Updated upstream
-    Ok(argon2.verify_password(password.as_bytes(), &parsed_hash).is_ok())
-}
-
-=======
 
     let result = argon2.verify_password(password.as_bytes(), &parsed_hash);
 
@@ -138,4 +112,3 @@ pub fn verify_password(hash: &str, password: &str) -> Result<bool, argon2::passw
         Err(_) => Ok(false),
     }
 }
->>>>>>> Stashed changes

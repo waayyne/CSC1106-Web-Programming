@@ -1,13 +1,7 @@
 use actix_files::Files;
-<<<<<<< Updated upstream
 use actix_session::{ storage::CookieSessionStore, SessionMiddleware };
 use actix_web::cookie::Key;
 use actix_web::{ web, App, HttpServer };
-=======
-use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-use actix_web::cookie::Key;
-use actix_web::{App, HttpServer, web};
->>>>>>> Stashed changes
 use dotenvy::dotenv;
 use std::env;
 use tera::Tera;

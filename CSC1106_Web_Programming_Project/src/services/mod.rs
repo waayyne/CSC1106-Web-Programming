@@ -4,7 +4,4 @@ pub mod auth_service;
 pub mod loan_service;
 pub mod profile_service;
 pub mod transfer_service;
-<<<<<<< Updated upstream
 pub mod admin_service;
-=======
->>>>>>> Stashed changes
