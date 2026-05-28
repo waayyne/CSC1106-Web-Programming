@@ -25,6 +25,10 @@ echo Running profile settings migration file...
 %PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/002_add_profile_updated_at.sql
 
 echo.
+echo Seeding admin user...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/003_perma_admin.sql
+
+echo.
 echo ========================================
 echo Database setup completed.
 echo ========================================

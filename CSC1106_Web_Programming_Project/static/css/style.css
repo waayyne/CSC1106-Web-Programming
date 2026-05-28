@@ -731,7 +731,7 @@ body {
     color: #0f172a;
 }
 
-.auth-card > p {
+.auth-card>p {
     text-align: center;
     color: #64748b;
     margin-bottom: 30px;
@@ -949,6 +949,7 @@ body {
 }
 
 @media (max-width: 1000px) {
+
     .atm-overview-grid,
     .atm-main-grid {
         grid-template-columns: 1fr;
@@ -1033,4 +1034,69 @@ body {
     .transfer-page-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Table Styles */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 14px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+/* Role Badge styling */
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.role-staff {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.role-customer {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+/* Button alignment */
+.btn-primary {
+    background: #2563eb;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-danger {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
 }

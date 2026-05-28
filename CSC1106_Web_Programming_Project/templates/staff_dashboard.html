@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RustBank - Staff Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <div class="brand-icon">RB</div>
+                    <div>
+                        <h2>RustBank</h2>
+                        <p>Banking with Trust</p>
+                    </div>
+                </div>
+
+                <nav class="side-nav">
+                    <a href="/staff/dashboard" class="nav-item active">
+                        <span class="nav-icon">⌂</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/staff/users" class="nav-item">
+                        <span class="nav-icon">☰</span>
+                        <span>View Users</span>
+                    </a>
+                    <a href="/staff/loans" class="nav-item">
+                        <span class="nav-icon">$</span>
+                        <span>Loan Approvals</span>
+                    </a>
+                    <a href="/staff/transactions" class="nav-item">
+                        <span class="nav-icon">▤</span>
+                        <span>Transactions</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon">↪</span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Welcome, {{ first_name }}!</h3>
+                        <p>You are logged in as Staff.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>Staff Member</p>
+                    </div>
+                    <span class="profile-arrow">⌄</span>
+                </div>
+            </header>
+
+            <section class="page-section">
+                <h1>Staff Dashboard</h1>
+                <p class="page-subtitle">Manage users, review loan applications, and monitor transactions.</p>
+
+                <div class="dashboard-cards">
+                    <div class="balance-card">
+                        <div>
+                            <p>Total Users</p>
+                            <h2>{{ total_users }}</h2>
+                            <span>Registered customers</span>
+                        </div>
+                        <div class="card-icon">☰</div>
+                    </div>
+                    <div class="small-card">
+                        <p>Pending Loans</p>
+                        <h3>{{ pending_loans }}</h3>
+                        <span>Awaiting review</span>
+                    </div>
+                    <div class="small-card">
+                        <p>Staff Status</p>
+                        <h3>Active</h3>
+                        <span>You are currently on duty</span>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="panel-card">
+                        <h2>Quick Actions</h2>
+                        <div class="quick-actions">
+                            <a href="/staff/users" class="quick-action-link">
+                                <span>☰</span> View Users
+                            </a>
+                            <a href="/staff/loans" class="quick-action-link">
+                                <span>$</span> Loan Approvals
+                            </a>
+                            <a href="/staff/transactions" class="quick-action-link">
+                                <span>▤</span> View Transactions
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <h2>Recent Activity</h2>
+                        <div class="activity-item">
+                            <div>
+                                <h4>Logged In</h4>
+                                <p>You have successfully logged in as staff.</p>
+                            </div>
+                            <span>Now</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

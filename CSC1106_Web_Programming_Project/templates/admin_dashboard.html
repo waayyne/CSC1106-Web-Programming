@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RustBank - Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <div class="brand-icon">RB</div>
+                    <div>
+                        <h2>RustBank</h2>
+                        <p>Banking with Trust</p>
+                    </div>
+                </div>
+
+                <nav class="side-nav">
+                    <a href="/admin/dashboard" class="nav-item active">
+                        <span class="nav-icon">⌂</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/admin/logs" class="nav-item">
+                        <span class="nav-icon">▤</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon">↪</span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Welcome, {{ first_name }}!</h3>
+                        <p>You are logged in as Administrator.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>Administrator</p>
+                    </div>
+                    <span class="profile-arrow">⌄</span>
+                </div>
+            </header>
+
+            <section class="page-section">
+                <h1>Admin Dashboard</h1>
+                <p class="page-subtitle">Manage all users, assign roles, and oversee the system.</p>
+
+                <!-- Stats row including register button as a card -->
+                <div class="dashboard-cards">
+                    <div class="balance-card">
+                        <div>
+                            <p>Total Users</p>
+                            <h2>{{ total_users }}</h2>
+                            <span>All registered accounts</span>
+                        </div>
+                        <div class="card-icon">☰</div>
+                    </div>
+
+                    <div class="small-card">
+                        <p>Staff Members</p>
+                        <h3>{{ total_staff }}</h3>
+                        <span>Active staff accounts</span>
+                    </div>
+
+                    <div class="small-card">
+                        <p>Customers</p>
+                        <h3>{{ total_customers }}</h3>
+                        <span>Active customer accounts</span>
+                    </div>
+                </div>
+
+                {% if error %}<p class="error-message">{{ error }}</p>{% endif %}
+                {% if message %}<p class="success-message">{{ message }}</p>{% endif %}
+
+                <!-- User table -->
+                <div class="panel-card">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                        <h2 style="margin:0;">All Users</h2>
+                        <button onclick="openModal()" style="
+                            padding:0.5rem 1.1rem;
+                            border:none;
+                            border-radius:8px;
+                            background:#4f6ef7;
+                            color:white;
+                            font-size:0.875rem;
+                            font-weight:500;
+                            cursor:pointer;
+                        ">+ Register User</button>
+                    </div>
+
+                    {% if error %}<p class="error-message">{{ error }}</p>{% endif %}
+                    {% if message %}<p class="success-message">{{ message }}</p>{% endif %}
+
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #e5e7eb;">
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Username</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        First Name</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Last Name</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Email</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Phone</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Role</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr style="border-bottom:1px solid #f3f4f6; transition: background 0.15s;"
+                                    onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+
+                                    <td style="padding:0.85rem 1rem; font-weight:500;">{{ user.username }}</td>
+                                    <td style="padding:0.85rem 1rem;">{{ user.first_name }}</td>
+                                    <td style="padding:0.85rem 1rem;">{{ user.last_name }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.email }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.phone_number }}</td>
+
+                                    <td style="padding:0.85rem 1rem;">
+                                        {% if user.role == "staff" %}
+                                        <span
+                                            style="padding:0.25rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:600; background:#dbeafe; color:#1d4ed8;">staff</span>
+                                        {% elif user.role == "customer" %}
+                                        <span
+                                            style="padding:0.25rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:600; background:#dcfce7; color:#15803d;">customer</span>
+                                        {% else %}
+                                        <span
+                                            style="padding:0.25rem 0.75rem; border-radius:999px; font-size:0.78rem; font-weight:600; background:#fef9c3; color:#854d0e;">{{
+                                            user.role }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td style="padding:0.85rem 1rem;">
+                                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+
+                                            <form method="post" action="/admin/users/update-role">
+                                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                {% if user.role == "staff" %}
+                                                <input type="hidden" name="new_role" value="customer">
+                                                <button type="submit"
+                                                    style="padding:0.3rem 0.8rem; border-radius:6px; border:none; font-size:0.8rem; font-weight:500; cursor:pointer; background:#fee2e2; color:#dc2626;">
+                                                    Remove Staff
+                                                </button>
+                                                {% else %}
+                                                <input type="hidden" name="new_role" value="staff">
+                                                <button type="submit"
+                                                    style="padding:0.3rem 0.8rem; border-radius:6px; border:none; font-size:0.8rem; font-weight:500; cursor:pointer; background:#dbeafe; color:#1d4ed8;">
+                                                    Make Staff
+                                                </button>
+                                                {% endif %}
+                                            </form>
+
+                                            <form method="post" action="/admin/users/delete/{{ user.id }}"
+                                                onsubmit="return confirm('Are you sure you want to delete {{ user.username }}?');">
+                                                <button type="submit"
+                                                    style="padding:0.3rem 0.8rem; border-radius:6px; border:none; font-size:0.8rem; font-weight:500; cursor:pointer; background:#f3f4f6; color:#374151;">
+                                                    Delete
+                                                </button>
+                                            </form>
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+                                {% endfor %}
+
+                                {% if users | length == 0 %}
+                                <tr>
+                                    <td colspan="7" style="padding:2rem; text-align:center; color:#9ca3af;">
+                                        No users found.
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+    </div>
+
+    </section>
+
+    </main>
+
+    <!-- Register User Modal -->
+    <div id="register-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; border-radius:12px; padding:2rem; width:100%; max-width:480px; position:relative; max-height:90vh; overflow-y:auto;">
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;">Register New User</h2>
+                <button onclick="closeModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280;">✕</button>
+            </div>
+
+            <form method="post" action="/admin/register">
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.875rem; font-weight:500; color:#374151;">Username</label>
+                    <input type="text" name="username" required
+                        style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem;">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                    <div>
+                        <label style="font-size:0.875rem; font-weight:500; color:#374151;">First Name</label>
+                        <input type="text" name="first_name" required
+                            style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.875rem; font-weight:500; color:#374151;">Last Name</label>
+                        <input type="text" name="last_name" required
+                            style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem;">
+                    </div>
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.875rem; font-weight:500; color:#374151;">Email</label>
+                    <input type="email" name="email" required
+                        style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.875rem; font-weight:500; color:#374151;">Phone Number</label>
+                    <input type="text" name="phone_number" required
+                        style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.875rem; font-weight:500; color:#374151;">Password</label>
+                    <input type="password" name="password" required
+                        style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem;">
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <label style="font-size:0.875rem; font-weight:500; color:#374151;">Role</label>
+                    <select name="role"
+                        style="width:100%; padding:0.6rem 0.75rem; margin-top:0.35rem; border:1px solid #d1d5db; border-radius:8px; box-sizing:border-box; font-size:0.9rem; background:white;">
+                        <option value="customer">Customer</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+                    <button type="button" onclick="closeModal()"
+                        style="padding:0.6rem 1.25rem; border:1px solid #d1d5db; border-radius:8px; background:white; cursor:pointer; font-size:0.9rem; color:#374151;">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        style="padding:0.6rem 1.25rem; border:none; border-radius:8px; background:#4f6ef7; color:white; cursor:pointer; font-size:0.9rem; font-weight:500;">
+                        Register
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('register-modal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('register-modal').style.display = 'none';
+        }
+        document.getElementById('register-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+
+</body>
+
+</html>

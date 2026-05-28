@@ -7,6 +7,7 @@ use rand_core::OsRng;
 use crate::db::DbPool;
 use crate::models::user::RegisterForm;
 
+
 pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), sqlx::Error> {
     let full_name = format!("{} {}", form.first_name.trim(), form.last_name.trim());
 
@@ -42,15 +43,16 @@ pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<(), sqlx
     Ok(())
 }
 
+
 pub async fn login_user(
     pool: &DbPool,
     identifier: String,
     password: String,
-) -> Result<Option<i32>, sqlx::Error> {
+) -> Result<Option<(i32, String)>, sqlx::Error> {
     let identifier = identifier.trim().to_string();
 
     let row = sqlx::query(
-        "select id, password_hash from users where email = $1 or username = $1"
+        "select id, password_hash, role from users where email = $1 or username = $1"
     )
     .bind(identifier)
     .fetch_optional(pool)
@@ -61,7 +63,8 @@ pub async fn login_user(
         let stored_password: String = user.get("password_hash");
 
         if verify_password(&stored_password, &password).unwrap_or(false) {
-            Ok(Some(user_id))
+            let role: String = user.get("role");
+            Ok(Some((user_id, role)))
         } else {
             Ok(None)
         }
@@ -82,3 +85,4 @@ pub fn verify_password(hash: &str, password: &str) -> Result<bool, argon2::passw
     let argon2 = Argon2::default();
     Ok(argon2.verify_password(password.as_bytes(), &parsed_hash).is_ok())
 }
+

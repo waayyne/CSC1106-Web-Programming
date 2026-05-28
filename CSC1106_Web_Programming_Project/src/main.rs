@@ -1,17 +1,19 @@
 use actix_files::Files;
-use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_session::{ storage::CookieSessionStore, SessionMiddleware };
 use actix_web::cookie::Key;
-use actix_web::{web, App, HttpServer};
+use actix_web::{ web, App, HttpServer };
 use dotenvy::dotenv;
 use std::env;
 use tera::Tera;
 
+// Importing modules for database connection, routes, and services using mod declarations
 mod db;
 mod middleware;
 mod models;
 mod routes;
 mod services;
 
+#[rustfmt::skip]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -48,6 +50,8 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::customer_routes::config)
             .configure(routes::profile_routes::config)
             .configure(routes::transfer_routes::config)
+            .configure(routes::admin_routes::config)
+            .configure(routes::staff_routes::config)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
