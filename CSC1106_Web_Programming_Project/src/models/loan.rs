@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
-use serde::{Serialize, Deserialize};
-use sqlx::FromRow;
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Loan {

@@ -1,8 +1,8 @@
-use serde::Deserialize;
 use chrono::NaiveDateTime;
-use serde::{Serialize};
-use sqlx::FromRow;
 use rust_decimal::Decimal;
+use serde::Deserialize;
+use serde::Serialize;
+use sqlx::FromRow;
 
 #[derive(Deserialize)]
 pub struct TransferForm {

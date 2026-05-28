@@ -1,7 +1,13 @@
 use actix_files::Files;
+<<<<<<< Updated upstream
 use actix_session::{ storage::CookieSessionStore, SessionMiddleware };
 use actix_web::cookie::Key;
 use actix_web::{ web, App, HttpServer };
+=======
+use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+use actix_web::cookie::Key;
+use actix_web::{App, HttpServer, web};
+>>>>>>> Stashed changes
 use dotenvy::dotenv;
 use std::env;
 use tera::Tera;
@@ -18,8 +24,7 @@ mod services;
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set in .env");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
 
     let db_pool = db::create_pool(&database_url)
         .await
@@ -27,11 +32,9 @@ async fn main() -> std::io::Result<()> {
 
     println!("Connected to PostgreSQL");
 
-    let tera = Tera::new("templates/**/*")
-        .expect("Failed to load templates");
+    let tera = Tera::new("templates/**/*").expect("Failed to load templates");
 
-    let session_key = env::var("SESSION_KEY")
-        .expect("SESSION_KEY must be set in .env");
+    let session_key = env::var("SESSION_KEY").expect("SESSION_KEY must be set in .env");
 
     let secret_key = Key::from(session_key.as_bytes());
 

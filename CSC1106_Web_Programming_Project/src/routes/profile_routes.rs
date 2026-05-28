@@ -3,20 +3,14 @@ use actix_web::{web, HttpResponse, Responder};
 use tera::{Context, Tera};
 
 use crate::db::DbPool;
-use crate::middleware::auth_middleware::RequireAuth;
+use crate::middleware::auth_middleware;
 use crate::models::profile::{ChangePasswordForm, UpdateProfileForm};
-use crate::services::profile_service::{self, ProfileError};
+use crate::services::profile_service;
 
 #[derive(serde::Deserialize)]
 pub struct ProfileQuery {
     pub success: Option<String>,
     pub error: Option<String>,
-}
-
-fn login_redirect() -> HttpResponse {
-    HttpResponse::Found()
-        .append_header(("Location", "/login"))
-        .finish()
 }
 
 fn profile_redirect(query: &str) -> HttpResponse {
@@ -40,16 +34,9 @@ fn message_for_error(code: &str) -> &'static str {
         "password_mismatch" => "New password and confirm password do not match.",
         "current_password_invalid" => "Current password is incorrect.",
         "validation_error" => "All profile fields are required.",
+        "database_error" => "Something went wrong. Please try again.",
         _ => "Something went wrong. Please try again.",
     }
-}
-
-fn profile_error_code(error: &ProfileError) -> &'static str {
-    error.code()
-}
-
-fn extract_user_id(session: &Session) -> Option<i32> {
-    session.get::<i32>("user_id").unwrap_or(None)
 }
 
 pub async fn profile_page(
@@ -58,31 +45,30 @@ pub async fn profile_page(
     session: Session,
     query: web::Query<ProfileQuery>,
 ) -> impl Responder {
-    let user_id = match extract_user_id(&session) {
+    let user_id = match auth_middleware::get_user_id(&session) {
         Some(user_id) => user_id,
-        None => return login_redirect(),
+        None => return auth_middleware::redirect_to_login(),
     };
 
     let profile = match profile_service::get_profile(&pool, user_id).await {
         Ok(profile) => profile,
-        Err(_) => return login_redirect(),
+        Err(_) => return auth_middleware::redirect_to_login(),
     };
 
-    let initials = format!(
-        "{}{}",
-        profile.first_name.chars().next().unwrap_or('U'),
-        profile.last_name.chars().next().unwrap_or('S')
-    );
+    let first_initial = profile.first_name.chars().next().unwrap_or('U');
+    let last_initial = profile.last_name.chars().next().unwrap_or('S');
+    let initials = format!("{}{}", first_initial, last_initial);
 
     let mut context = Context::new();
+
     context.insert("profile", &profile);
     context.insert("initials", &initials);
 
-    if let Some(code) = query.success.as_deref() {
+    if let Some(code) = &query.success {
         context.insert("success_message", message_for_success(code));
     }
 
-    if let Some(code) = query.error.as_deref() {
+    if let Some(code) = &query.error {
         context.insert("error_message", message_for_error(code));
     }
 
@@ -98,14 +84,16 @@ pub async fn update_profile(
     session: Session,
     form: web::Form<UpdateProfileForm>,
 ) -> impl Responder {
-    let user_id = match extract_user_id(&session) {
+    let user_id = match auth_middleware::get_user_id(&session) {
         Some(user_id) => user_id,
-        None => return login_redirect(),
+        None => return auth_middleware::redirect_to_login(),
     };
 
-    match profile_service::update_profile(&pool, user_id, form.into_inner()).await {
+    let result = profile_service::update_profile(&pool, user_id, form.into_inner()).await;
+
+    match result {
         Ok(_) => profile_redirect("success=profile_updated"),
-        Err(error) => profile_redirect(&format!("error={}", profile_error_code(&error))),
+        Err(error) => profile_redirect(&format!("error={}", error)),
     }
 }
 
@@ -114,21 +102,22 @@ pub async fn change_password(
     session: Session,
     form: web::Form<ChangePasswordForm>,
 ) -> impl Responder {
-    let user_id = match extract_user_id(&session) {
+    let user_id = match auth_middleware::get_user_id(&session) {
         Some(user_id) => user_id,
-        None => return login_redirect(),
+        None => return auth_middleware::redirect_to_login(),
     };
 
-    match profile_service::change_password(&pool, user_id, form.into_inner()).await {
+    let result = profile_service::change_password(&pool, user_id, form.into_inner()).await;
+
+    match result {
         Ok(_) => profile_redirect("success=password_changed"),
-        Err(error) => profile_redirect(&format!("error={}", profile_error_code(&error))),
+        Err(error) => profile_redirect(&format!("error={}", error)),
     }
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/profile")
-            .wrap(RequireAuth::new())
             .route("", web::get().to(profile_page))
             .route("/update", web::post().to(update_profile))
             .route("/password", web::post().to(change_password)),

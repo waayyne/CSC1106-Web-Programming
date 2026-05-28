@@ -1,5 +1,5 @@
 use actix_session::Session;
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use serde::Serialize;
 use sqlx::Row;
 use tera::{Context, Tera};
@@ -15,10 +15,7 @@ struct AtmHistoryItem {
     created_at: String,
 }
 
-async fn load_user_context(
-    pool: &DbPool,
-    user_id: i32,
-) -> Result<Context, String> {
+async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, String> {
     let user = sqlx::query(
         "SELECT 
             u.first_name,
@@ -28,7 +25,7 @@ async fn load_user_context(
             ba.balance::TEXT AS balance
          FROM users u
          JOIN bank_accounts ba ON u.id = ba.user_id
-         WHERE u.id = $1"
+         WHERE u.id = $1",
     )
     .bind(user_id)
     .fetch_one(pool)
@@ -58,7 +55,7 @@ async fn load_user_context(
                 AND from_account_id = $1
             )
         ORDER BY created_at DESC
-        LIMIT 5"
+        LIMIT 5",
     )
     .bind(account_id)
     .fetch_all(pool)
@@ -95,14 +92,11 @@ async fn load_user_context(
     Ok(context)
 }
 
-async fn get_logged_in_account_number(
-    pool: &DbPool,
-    user_id: i32,
-) -> Result<String, String> {
+async fn get_logged_in_account_number(pool: &DbPool, user_id: i32) -> Result<String, String> {
     let account = sqlx::query(
         "SELECT account_number
          FROM bank_accounts
-         WHERE user_id = $1"
+         WHERE user_id = $1",
     )
     .bind(user_id)
     .fetch_one(pool)
@@ -137,9 +131,7 @@ pub async fn atm_page(
 
     let rendered = tmpl.render("atm.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub async fn process_atm(
@@ -171,11 +163,7 @@ pub async fn process_atm(
     atm_form.find_by = "account_number".to_string();
     atm_form.account_identifier = account_number;
 
-    let result = account_service::process_atm_transaction(
-        &pool,
-        atm_form,
-    )
-    .await;
+    let result = account_service::process_atm_transaction(&pool, atm_form).await;
 
     let mut context = match load_user_context(&pool, user_id).await {
         Ok(context) => context,
@@ -195,9 +183,7 @@ pub async fn process_atm(
 
     let rendered = tmpl.render("atm.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {

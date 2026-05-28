@@ -1,10 +1,12 @@
-use actix_web::{web, HttpResponse, Responder};
-use tera::{Context, Tera};
 use crate::db::DbPool;
-use actix_session::Session;
+use crate::middleware::auth_middleware;
+use crate::models::user::{LoginForm, RegisterForm};
 use crate::services::auth_service;
-use crate::models::user::{RegisterForm, LoginForm};
+
+use actix_session::Session;
+use actix_web::{HttpResponse, Responder, web};
 use sqlx::Row;
+use tera::{Context, Tera};
 
 #[derive(serde::Deserialize)]
 pub struct LoginQuery {
@@ -27,15 +29,13 @@ fn render_login_page(
         context.insert("success_message", message);
     }
 
-    if let Some(identifier_value) = identifier {
-        context.insert("identifier", identifier_value);
+    if let Some(value) = identifier {
+        context.insert("identifier", value);
     }
 
     let rendered = tmpl.render("login.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 fn render_register_page(
@@ -75,25 +75,18 @@ fn render_register_page(
 
     let rendered = tmpl.render("register.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub async fn homepage(tmpl: web::Data<Tera>) -> impl Responder {
     let context = Context::new();
     let rendered = tmpl.render("home.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
-pub async fn login_page(
-    tmpl: web::Data<Tera>,
-    query: web::Query<LoginQuery>,
-) -> impl Responder {
-    if query.registered.as_deref() == Some("1") {
+pub async fn login_page(tmpl: web::Data<Tera>, query: web::Query<LoginQuery>) -> impl Responder {
+    if query.registered == Some("1".to_string()) {
         return render_login_page(
             &tmpl,
             None,
@@ -114,43 +107,34 @@ pub async fn dashboard_page(
     pool: web::Data<DbPool>,
     session: Session,
 ) -> impl Responder {
-    let user_id = match session.get::<i32>("user_id").unwrap_or(None) {
+    if !auth_middleware::is_logged_in(&session) {
+        return auth_middleware::redirect_to_login();
+    }
+
+    let user_id = match auth_middleware::get_user_id(&session) {
         Some(user_id) => user_id,
-        None => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
+        None => return auth_middleware::redirect_to_login(),
     };
 
-    let user_row = match sqlx::query(
-        "select first_name, last_name, username from users where id = $1"
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
+    let user_row = sqlx::query("select first_name, last_name, username from users where id = $1")
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await;
+
+    let user_row = match user_row {
         Ok(row) => row,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
+        Err(_) => return auth_middleware::redirect_to_login(),
     };
 
-    let account_row = match sqlx::query(
-        "select account_number, balance from bank_accounts where user_id = $1"
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
+    let account_row =
+        sqlx::query("select account_number, balance from bank_accounts where user_id = $1")
+            .bind(user_id)
+            .fetch_one(pool.get_ref())
+            .await;
+
+    let account_row = match account_row {
         Ok(row) => row,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
+        Err(_) => return auth_middleware::redirect_to_login(),
     };
 
     let first_name: String = user_row.get("first_name");
@@ -159,11 +143,9 @@ pub async fn dashboard_page(
     let account_number: String = account_row.get("account_number");
     let balance: rust_decimal::Decimal = account_row.get("balance");
 
-    let initials = format!(
-        "{}{}",
-        first_name.chars().next().unwrap_or('U'),
-        last_name.chars().next().unwrap_or('S')
-    );
+    let first_initial = first_name.chars().next().unwrap_or('U');
+    let last_initial = last_name.chars().next().unwrap_or('S');
+    let initials = format!("{}{}", first_initial, last_initial);
 
     let mut context = Context::new();
 
@@ -176,9 +158,7 @@ pub async fn dashboard_page(
 
     let rendered = tmpl.render("dashboard.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub async fn register_user(
@@ -187,6 +167,7 @@ pub async fn register_user(
     form: web::Form<RegisterForm>,
 ) -> impl Responder {
     let form_data = form.into_inner();
+
     if form_data.password != form_data.confirm_password {
         return render_register_page(
             &tmpl,
@@ -211,6 +192,7 @@ pub async fn register_user(
         Ok(_) => HttpResponse::Found()
             .append_header(("Location", "/login?registered=1"))
             .finish(),
+
         Err(_) => render_register_page(
             &tmpl,
             Some("Registration failed. Username, email, or phone number may already exist."),
@@ -230,15 +212,11 @@ pub async fn login_user(
     form: web::Form<LoginForm>,
 ) -> impl Responder {
     let login_form = form.into_inner();
+
     let identifier = login_form.identifier;
     let password = login_form.password;
 
-    let result = auth_service::login_user(
-        &pool,
-        identifier.clone(),
-        password,
-    )
-    .await;
+    let result = auth_service::login_user(&pool, identifier.clone(), password).await;
 
     match result {
         Ok(Some((user_id, role))) => {
@@ -256,12 +234,14 @@ pub async fn login_user(
                 .append_header(("Location", redirecrt_url))
                 .finish()
         }
+
         Ok(None) => render_login_page(
             &tmpl,
             Some("Invalid username/email or password."),
             None,
             Some(&identifier),
         ),
+
         Err(_) => render_login_page(
             &tmpl,
             Some("Login failed. Please try again."),
@@ -273,7 +253,6 @@ pub async fn login_user(
 
 pub async fn logout(session: Session) -> impl Responder {
     session.purge();
-
     HttpResponse::Found()
         .append_header(("Location", "/login"))
         .finish()

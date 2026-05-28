@@ -5,6 +5,7 @@ use sqlx::Row;
 use tera::{Context, Tera};
 
 use crate::db::DbPool;
+use crate::middleware::auth_middleware;
 use crate::models::transaction::TransferForm;
 use crate::services::transfer_service;
 
@@ -15,28 +16,19 @@ struct TransferHistoryItem {
     created_at: String,
 }
 
-async fn load_user_context(
-    pool: &DbPool,
-    user_id: i32,
-) -> Result<Context, String> {
-let user = sqlx::query(
-    "SELECT 
-        u.first_name,
-        u.last_name,
-        ba.id AS account_id,
-        ba.account_number,
-        ba.balance::TEXT AS balance
-     FROM users u
-     JOIN bank_accounts ba ON u.id = ba.user_id
-     WHERE u.id = $1"
-)
-.bind(user_id)
-.fetch_one(pool)
-.await
-.map_err(|e| {
-    println!("LOAD USER CONTEXT ERROR: {:?}", e);
-    "Failed to load user details.".to_string()
-})?;
+async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, String> {
+    let user_result = sqlx::query(
+        "SELECT u.first_name, u.last_name, ba.id AS account_id, ba.account_number, ba.balance::TEXT AS balance
+         FROM users u JOIN bank_accounts ba ON u.id = ba.user_id WHERE u.id = $1",
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await;
+
+    let user = match user_result {
+        Ok(row) => row,
+        Err(_) => return Err("Failed to load user details.".to_string()),
+    };
 
     let first_name: String = user.get("first_name");
     let last_name: String = user.get("last_name");
@@ -44,45 +36,35 @@ let user = sqlx::query(
     let account_number: String = user.get("account_number");
     let balance: String = user.get("balance");
 
-    let history_rows = sqlx::query(
-        "SELECT 
-            CASE
-                WHEN from_account_id = $1 THEN 'Transferred'
-                WHEN to_account_id = $1 THEN 'Received'
-                ELSE 'Transfer'
-            END AS transaction_type,
-            amount::TEXT AS amount,
-            created_at::TEXT AS created_at
-        FROM transactions
-        WHERE transaction_type = 'transfer'
-        AND (
-            from_account_id = $1
-            OR to_account_id = $1
-        )
-        ORDER BY created_at DESC
-        LIMIT 5"
+    let history_result = sqlx::query(
+        "SELECT CASE WHEN from_account_id = $1 THEN 'Transferred' WHEN to_account_id = $1 THEN 'Received' ELSE 'Transfer' END AS transaction_type, amount::TEXT AS amount, created_at::TEXT AS created_at
+         FROM transactions WHERE transaction_type = 'transfer' AND (from_account_id = $1 OR to_account_id = $1) ORDER BY created_at DESC LIMIT 5",
     )
     .bind(account_id)
     .fetch_all(pool)
-    .await
-    .unwrap_or_else(|e| {
-        println!("TRANSFER HISTORY ERROR: {:?}", e);
-        Vec::new()
-    });
+    .await;
 
-    let transfer_history: Vec<TransferHistoryItem> = history_rows
-        .into_iter()
-        .map(|row| TransferHistoryItem {
+    let history_rows = match history_result {
+        Ok(rows) => rows,
+        Err(_) => Vec::new(),
+    };
+
+    let mut transfer_history: Vec<TransferHistoryItem> = Vec::new();
+
+    for row in history_rows {
+        let item = TransferHistoryItem {
             transaction_type: row.get("transaction_type"),
             amount: row.get("amount"),
             created_at: row.get("created_at"),
-        })
-        .collect();
+        };
+
+        transfer_history.push(item);
+    }
 
     let initials = format!(
         "{}{}",
-        first_name.chars().next().unwrap_or(' '),
-        last_name.chars().next().unwrap_or(' ')
+        first_name.chars().next().unwrap_or('U'),
+        last_name.chars().next().unwrap_or('S')
     );
 
     let mut context = Context::new();
@@ -102,22 +84,14 @@ pub async fn transfer_page(
     tmpl: web::Data<Tera>,
     session: Session,
 ) -> impl Responder {
-    let user_id = session.get::<i32>("user_id").unwrap_or(None);
-
-    let user_id = match user_id {
+    let user_id = match auth_middleware::get_user_id(&session) {
         Some(id) => id,
-        None => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
+        None => return auth_middleware::redirect_to_login(),
     };
 
     let context = match load_user_context(&pool, user_id).await {
         Ok(context) => context,
-        Err(error) => {
-            return HttpResponse::InternalServerError().body(error);
-        }
+        Err(error) => return HttpResponse::InternalServerError().body(error),
     };
 
     let rendered = tmpl.render("transfer_money.html", &context).unwrap();
@@ -133,29 +107,16 @@ pub async fn process_transfer(
     session: Session,
     form: web::Form<TransferForm>,
 ) -> impl Responder {
-    let user_id = session.get::<i32>("user_id").unwrap_or(None);
-
-    let user_id = match user_id {
+    let user_id = match auth_middleware::get_user_id(&session) {
         Some(id) => id,
-        None => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
+        None => return auth_middleware::redirect_to_login(),
     };
 
-    let result = transfer_service::process_transfer(
-        &pool,
-        user_id,
-        form.into_inner(),
-    )
-    .await;
+    let result = transfer_service::process_transfer(&pool, user_id, form.into_inner()).await;
 
     let mut context = match load_user_context(&pool, user_id).await {
         Ok(context) => context,
-        Err(error) => {
-            return HttpResponse::InternalServerError().body(error);
-        }
+        Err(error) => return HttpResponse::InternalServerError().body(error),
     };
 
     match result {
