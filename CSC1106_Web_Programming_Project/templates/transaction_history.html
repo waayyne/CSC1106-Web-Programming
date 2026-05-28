@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RustBank - Transactions</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <div>
+      <div class="brand">
+        <div class="brand-icon">RB</div>
+        <div>
+          <h2>RustBank</h2>
+          <p>Banking with Trust</p>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <a href="/dashboard" class="nav-item">
+          <span class="nav-icon">⌂</span>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="/atm" class="nav-item">
+          <span class="nav-icon">▣</span>
+          <span>ATM Simulation</span>
+        </a>
+
+        <a href="/transfer" class="nav-item">
+          <span class="nav-icon">⇄</span>
+          <span>Bank Transfer</span>
+        </a>
+
+        <a href="/transactions" class="nav-item active">
+          <span class="nav-icon">▤</span>
+          <span>Transactions</span>
+        </a>
+
+        <a href="/loans" class="nav-item">
+          <span class="nav-icon">$</span>
+          <span>Loans</span>
+        </a>
+
+        <a href="/profile" class="nav-item">
+          <span class="nav-icon">⚙</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="logout-box">
+      <a href="/logout" class="nav-item logout">
+        <span class="nav-icon">↪</span>
+        <span>Log Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <header class="topbar">
+      <div class="welcome-box">
+        <div class="user-circle">{{ initials }}</div>
+        <div>
+          <h3>Welcome back, {{ first_name }}!</h3>
+          <p>View your recent deposits, withdrawals and transfers.</p>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-avatar">{{ initials }}</div>
+
+        <div class="profile-info">
+          <h4>{{ first_name }} {{ last_name }}</h4>
+          <p>Account No: {{ account_number }}</p>
+        </div>
+
+        <span class="profile-arrow">⌄</span>
+      </div>
+    </header>
+
+    <section class="page-section">
+      <h1>Transaction History</h1>
+      <p class="page-subtitle">Filter and browse your recent transactions.</p>
+
+      <div class="atm-main-grid">
+
+        <div class="atm-form-section">
+          <div class="panel-header">
+            <div class="panel-icon">▤</div>
+            <div>
+              <h2>Filters</h2>
+              <p>Use the controls below to filter the transaction list.</p>
+            </div>
+          </div>
+
+          <hr>
+
+          <form method="get" action="/transactions" class="atm-form">
+            <div class="form-row">
+              <label for="start_date">Start date</label>
+              <input type="date" id="start_date" name="start_date" value="{{ query.start_date | default(value='') }}">
+            </div>
+
+            <div class="form-row">
+              <label for="end_date">End date</label>
+              <input type="date" id="end_date" name="end_date" value="{{ query.end_date | default(value='') }}">
+            </div>
+
+            <div class="form-row">
+              <label for="tx_type">Type</label>
+              <select id="tx_type" name="tx_type">
+                <option value="" {% if query.tx_type is defined and query.tx_type == "" %}selected{% endif %}>All</option>
+                <option value="deposit" {% if query.tx_type is defined and query.tx_type == "deposit" %}selected{% endif %}>Deposit</option>
+                <option value="withdraw" {% if query.tx_type is defined and query.tx_type == "withdraw" %}selected{% endif %}>Withdraw</option>
+                <option value="transfer" {% if query.tx_type is defined and query.tx_type == "transfer" %}selected{% endif %}>Transfer</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="q">Search</label>
+              <input type="text" id="q" name="q" placeholder="Account number or description" value="{{ query.q | default(value='') }}">
+            </div>
+
+            <button type="submit" class="submit-btn">Filter</button>
+          </form>
+        </div>
+
+        <div class="atm-rules-section">
+          <h2>Notes</h2>
+          <div class="atm-rule">
+            <span>1</span>
+            <p>Transactions are shown newest first.</p>
+          </div>
+          <div class="atm-rule">
+            <span>2</span>
+            <p>Search checks account numbers and description text.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="panel-card" style="margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+          <h2 style="margin:0;">Transactions</h2>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e5e7eb;">
+                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Date</th>
+                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Type</th>
+                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Direction</th>
+                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Amount</th>
+                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Counterparty</th>
+                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in transactions %}
+              <tr style="border-bottom:1px solid #f3f4f6; transition: background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                <td style="padding:0.85rem 1rem; font-weight:500;">{{ tx.created_at }}</td>
+                <td style="padding:0.85rem 1rem;">{{ tx.transaction_type }}</td>
+                <td style="padding:0.85rem 1rem;">{{ tx.direction }}</td>
+                <td style="padding:0.85rem 1rem;">${{ tx.amount }}</td>
+                <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.counterparty | default(value='-') }}</td>
+                <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.description | default(value='-') }}</td>
+              </tr>
+              {% endfor %}
+
+              {% if transactions | length == 0 %}
+              <tr>
+                <td colspan="6" style="padding:2rem; text-align:center; color:#9ca3af;">No transactions found.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {% set total_pages = ((total_count + per_page - 1) / per_page) %}
+      <div style="margin-top:16px;">
+        {% if page > 1 %}
+          <a href="?page={{ page - 1 }}{% if query.per_page %}&per_page={{ query.per_page }}{% endif %}{% if query.start_date %}&start_date={{ query.start_date }}{% endif %}{% if query.end_date %}&end_date={{ query.end_date }}{% endif %}{% if query.tx_type %}&tx_type={{ query.tx_type }}{% endif %}{% if query.q %}&q={{ query.q }}{% endif %}">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a href="?page={{ page + 1 }}{% if query.per_page %}&per_page={{ query.per_page }}{% endif %}{% if query.start_date %}&start_date={{ query.start_date }}{% endif %}{% if query.end_date %}&end_date={{ query.end_date }}{% endif %}{% if query.tx_type %}&tx_type={{ query.tx_type }}{% endif %}{% if query.q %}&q={{ query.q }}{% endif %}">Next</a>
+        {% endif %}
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+</body>
+</html>

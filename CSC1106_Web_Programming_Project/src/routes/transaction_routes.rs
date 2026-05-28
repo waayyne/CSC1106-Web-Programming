@@ -1,0 +1,113 @@
+use actix_session::Session;
+use actix_web::{web, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
+use tera::Tera;
+
+use crate::db::DbPool;
+use crate::services::transaction_service;
+use sqlx::Row;
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct TxQuery {
+    pub page: Option<u32>,
+    pub per_page: Option<u32>,
+    pub start_date: Option<String>,
+    pub end_date: Option<String>,
+    pub tx_type: Option<String>,
+    pub q: Option<String>,
+}
+
+pub async fn transactions_page(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<DbPool>,
+    session: Session,
+    query: web::Query<TxQuery>,
+) -> impl Responder {
+    let user_id = match session.get::<i32>("user_id").unwrap_or(None) {
+        Some(id) => id,
+        None => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+    };
+
+    let page = query.page.unwrap_or(1).max(1) as i64;
+    let per_page = query.per_page.unwrap_or(10).max(1) as i64;
+
+    let (transactions, total_count) = match transaction_service::fetch_transactions(
+        &pool,
+        user_id,
+        page,
+        per_page,
+        query.start_date.clone(),
+        query.end_date.clone(),
+        query.tx_type.clone(),
+        query.q.clone(),
+    )
+    .await
+    {
+        Ok(res) => res,
+        Err(err) => {
+            println!("TRANSACTION LOAD ERROR: {:?}", err);
+            return HttpResponse::InternalServerError().body("Failed to load transactions");
+        }
+    };
+
+    let mut context = tera::Context::new();
+    // Load user and account details for the topbar/sidebar context
+    let user_row = match sqlx::query(
+        "SELECT first_name, last_name, username FROM users WHERE id = $1"
+    )
+    .bind(user_id)
+    .fetch_one(pool.get_ref())
+    .await
+    {
+        Ok(r) => r,
+        Err(_) => {
+            return HttpResponse::Found().append_header(("Location", "/login")).finish();
+        }
+    };
+
+    let account_row = match sqlx::query(
+        "SELECT account_number, balance FROM bank_accounts WHERE user_id = $1"
+    )
+    .bind(user_id)
+    .fetch_one(pool.get_ref())
+    .await
+    {
+        Ok(r) => r,
+        Err(_) => {
+            return HttpResponse::Found().append_header(("Location", "/login")).finish();
+        }
+    };
+
+    let first_name: String = user_row.get("first_name");
+    let last_name: String = user_row.get("last_name");
+    let account_number: String = account_row.get("account_number");
+    let initials = format!(
+        "{}{}",
+        first_name.chars().next().unwrap_or('U'),
+        last_name.chars().next().unwrap_or('S')
+    );
+
+    context.insert("first_name", &first_name);
+    context.insert("last_name", &last_name);
+    context.insert("initials", &initials);
+    context.insert("account_number", &account_number);
+    context.insert("transactions", &transactions);
+    context.insert("page", &page);
+    context.insert("per_page", &per_page);
+    context.insert("total_count", &total_count);
+    context.insert("query", &query.into_inner());
+
+    let rendered = match tmpl.render("transaction_history.html", &context) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("TEMPLATE RENDER ERROR: {:?}", e);
+            return HttpResponse::InternalServerError().body("Template render error");
+        }
+    };
+
+    HttpResponse::Ok().content_type("text/html").body(rendered)
+}
+
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.route("/transactions", web::get().to(transactions_page));
+}
