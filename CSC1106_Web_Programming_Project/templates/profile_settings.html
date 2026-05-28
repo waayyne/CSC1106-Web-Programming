@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>RustBank - Profile Settings</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
 
@@ -75,9 +76,14 @@
                 <div class="profile-avatar">{{ initials }}</div>
                 <div class="profile-info">
                     <h4>{{ profile.first_name }} {{ profile.last_name }}</h4>
-                    <p>{{ profile.email }}</p>
+                    <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email }}{% elif role %}{{ role }}{% endif %}</p>
                 </div>
-                <span class="profile-arrow">⌄</span>
+                <div class="dropdown">
+                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                        <div class="dropdown-content">
+                            <a href="/logout">Log out</a>
+                        </div>
+                </div>
             </div>
         </header>
 
@@ -99,44 +105,32 @@
 
                     <div class="profile-detail-grid">
                         <div class="detail-item">
-                            <span>ID</span>
+                            <span>ID: </span>
                             <strong>{{ profile.id }}</strong>
                         </div>
                         <div class="detail-item">
-                            <span>Username</span>
+                            <span>Username: </span>
                             <strong>{{ profile.username }}</strong>
                         </div>
                         <div class="detail-item">
-                            <span>First Name</span>
+                            <span>First Name: </span>
                             <strong>{{ profile.first_name }}</strong>
                         </div>
                         <div class="detail-item">
-                            <span>Last Name</span>
+                            <span>Last Name: </span>
                             <strong>{{ profile.last_name }}</strong>
                         </div>
                         <div class="detail-item">
-                            <span>Name</span>
+                            <span>Name: </span>
                             <strong>{{ profile.name }}</strong>
                         </div>
                         <div class="detail-item">
-                            <span>Email</span>
+                            <span>Email: </span>
                             <strong>{{ profile.email }}</strong>
                         </div>
                         <div class="detail-item">
-                            <span>Phone Number</span>
-                            <strong>{{ profile.phone_number }}</strong>
-                        </div>
-                        <div class="detail-item">
-                            <span>Role</span>
-                            <strong>{{ profile.role }}</strong>
-                        </div>
-                        <div class="detail-item">
-                            <span>Created At</span>
-                            <strong>{{ profile.created_at }}</strong>
-                        </div>
-                        <div class="detail-item">
-                            <span>Updated At</span>
-                            <strong>{{ profile.updated_at }}</strong>
+                            <span>Phone Number: </span>
+                            <strong>+65 {{ profile.phone_number }}</strong>
                         </div>
                     </div>
                 </div>
@@ -161,7 +155,6 @@
                     </form>
                 </div>
             </div>
-
             <div class="panel-card profile-password-card">
                 <h2>Change Password</h2>
 

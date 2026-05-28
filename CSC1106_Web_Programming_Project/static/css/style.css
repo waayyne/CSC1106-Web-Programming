@@ -302,6 +302,50 @@ body {
     margin-bottom: 22px;
 }
 
+.profile-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+.detail-item {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.detail-item span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.01em;
+}
+
+.detail-item strong {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+@media (max-width: 600px) {
+    .detail-item {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+
+.profile-password-card {
+    margin-top: 24px;
+}
+
 .quick-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1076,7 +1120,6 @@ body {
     color: #059669;
 }
 
-/* Button alignment */
 .btn-primary {
     background: #2563eb;
     color: white;
@@ -1099,4 +1142,55 @@ body {
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
+}
+
+.dropbtn {
+    height: 67px;
+    color: black;
+    background: white;
+    border: none;
+    outline: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0; 
+  background-color: #ffffff; 
+  min-width: 335px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1; 
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #f1f1f1;
 }

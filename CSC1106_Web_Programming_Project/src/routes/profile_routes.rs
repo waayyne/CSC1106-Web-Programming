@@ -1,6 +1,7 @@
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Responder};
 use tera::{Context, Tera};
+use sqlx::Row;
 
 use crate::db::DbPool;
 use crate::middleware::auth_middleware;
@@ -63,6 +64,17 @@ pub async fn profile_page(
 
     context.insert("profile", &profile);
     context.insert("initials", &initials);
+
+    // Try to load the user's account number for header display
+    let account_row = sqlx::query("select account_number from bank_accounts where user_id = $1")
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await;
+
+    if let Ok(row) = account_row {
+        let account_number: String = row.get("account_number");
+        context.insert("account_number", &account_number);
+    }
 
     if let Some(code) = &query.success {
         context.insert("success_message", message_for_success(code));

@@ -55,7 +55,7 @@
                     <div class="profile-avatar">{{ initials }}</div>
                     <div class="profile-info">
                         <h4>{{ first_name }} {{ last_name }}</h4>
-                        <p>Administrator</p>
+                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email }}{% elif role %}{{ role }}{% else %}Administrator{% endif %}</p>
                     </div>
                     <span class="profile-arrow">⌄</span>
                 </div>
