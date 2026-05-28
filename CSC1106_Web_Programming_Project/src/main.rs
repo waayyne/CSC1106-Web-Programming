@@ -50,6 +50,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::customer_routes::config)
             .configure(routes::profile_routes::config)
             .configure(routes::transfer_routes::config)
+            .configure(routes::transaction_routes::config)
             .configure(routes::admin_routes::config)
             .configure(routes::staff_routes::config)
     })
