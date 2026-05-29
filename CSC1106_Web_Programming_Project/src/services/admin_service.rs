@@ -2,6 +2,7 @@ use sqlx::{Row};
 use crate::db::DbPool;
 use crate::models::admin::{AdminUserRegisterForm, AdminUserUpdateForm};
 
+
 /// Struct to represent user information for service-level operations
 pub struct UserInfo {
     pub id: i32,
@@ -13,7 +14,7 @@ pub struct UserInfo {
     pub role: String,
 }
 
-// Fetch all users from the database for display
+// Fetch all users from the database for display as well as displays them
 pub async fn get_all_users(pool: &DbPool) -> Result<Vec<UserInfo>, String> {
     let rows = sqlx::query(
         "SELECT id, username, first_name, last_name, email, phone_number, role 

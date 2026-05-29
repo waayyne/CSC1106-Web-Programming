@@ -77,7 +77,7 @@ CSC1106_Web_Programming_Project/
 │   │   ├── mod.rs
 │   │   └── auth_middleware.rs
 │   │
-│   ├── models/
+│   ├── models/     #handles all the Data Transferable Objects (DTO) for shapping of HTML elements
 │   │   ├── mod.rs
 │   │   ├── account.rs
 │   │   ├── audit_log.rs
@@ -85,7 +85,7 @@ CSC1106_Web_Programming_Project/
 │   │   ├── transaction.rs
 │   │   └── user.rs
 │   │
-│   ├── routes/
+│   ├── routes/     #handles linking url patterns to different functions
 │   │   ├── mod.rs
 │   │   ├── account_routes.rs
 │   │   ├── admin_routes.rs
@@ -95,7 +95,7 @@ CSC1106_Web_Programming_Project/
 │   │   ├── staff_routes.rs
 │   │   └── transfer_routes.rs
 │   │
-│   └── services/
+│   └── services/       #If you wanna change a column name it is here as well as insert, update and read data
 │       ├── mod.rs
 │       ├── account_service.rs
 │       ├── audit_service.rs

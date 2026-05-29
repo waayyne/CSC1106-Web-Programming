@@ -27,7 +27,7 @@
                         <span class="nav-icon">⌂</span>
                         <span>Dashboard</span>
                     </a>
-                    <a href="/staff/users" class="nav-item">
+                    <a href="/staff/table_view" class="nav-item">
                         <span class="nav-icon">☰</span>
                         <span>View Users</span>
                     </a>
@@ -64,15 +64,16 @@
                     <div class="profile-avatar">{{ initials }}</div>
                     <div class="profile-info">
                         <h4>{{ first_name }} {{ last_name }}</h4>
-                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email }}{% elif role %}{{ role }}{% else %}Staff Member{% endif %}</p>
+                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email
+                            }}{% elif role %}{{ role }}{% else %}Staff Member{% endif %}</p>
                     </div>
                     <div class="dropdown">
-                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                        <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
                         <div class="dropdown-content">
                             <a href="/profile">Settings</a>
                             <a href="/logout">Log out</a>
                         </div>
-                </div>
+                    </div>
                 </div>
             </header>
 
@@ -105,7 +106,7 @@
                     <div class="panel-card">
                         <h2>Quick Actions</h2>
                         <div class="quick-actions">
-                            <a href="/staff/users" class="quick-action-link">
+                            <a href="/staff/table_view" class="quick-action-link">
                                 <span>☰</span> View Users
                             </a>
                             <a href="/staff/loans" class="quick-action-link">

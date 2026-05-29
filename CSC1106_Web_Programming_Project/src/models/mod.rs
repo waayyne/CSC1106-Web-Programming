@@ -5,3 +5,4 @@ pub mod profile;
 pub mod transaction;
 pub mod user;
 pub mod admin;
+pub mod staff;

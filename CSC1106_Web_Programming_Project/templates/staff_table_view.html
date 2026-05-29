@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RustBank - View Users</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div>
+                <div class="brand">
+                    <div class="brand-icon">RB</div>
+                    <div>
+                        <h2>RustBank</h2>
+                        <p>Banking with Trust</p>
+                    </div>
+                </div>
+
+                <nav class="side-nav">
+                    <a href="/staff/dashboard" class="nav-item">
+                        <span class="nav-icon">⌂</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/staff/table_view" class="nav-item active">
+                        <span class="nav-icon">☰</span>
+                        <span>View Users</span>
+                    </a>
+                    <a href="/staff/loans" class="nav-item">
+                        <span class="nav-icon">$</span>
+                        <span>Loan Approvals</span>
+                    </a>
+                    <a href="/staff/transactions" class="nav-item">
+                        <span class="nav-icon">▤</span>
+                        <span>Transactions</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon">↪</span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Customer List</h3>
+                        <p>Viewing all registered customers.</p>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>Staff Member</p>
+                    </div>
+                    <span class="profile-arrow">⌄</span>
+                </div>
+            </header>
+            <section class="page-section">
+                <h1>Customers</h1>
+                <p class="page-subtitle">All registered customer accounts.</p>
+
+                <div class="panel-card">
+                    <div style="overflow-x:auto;">
+                        <form action="/staff/table_view" method="get" style="margin-bottom: 20px;">
+                            <input type="text" name="query" placeholder="Search..."
+                                value="{{ query | default(value='') }}">
+                            <button type="submit">Search</button>
+                            <a href="/staff/table_view">Clear</a>
+                        </form>
+                        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #e5e7eb;">
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Username</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        First Name</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Last Name</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Email</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Phone No.</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Balance</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in table_view %}
+                                <tr style="border-bottom:1px solid #f3f4f6; transition: background 0.15s;"
+                                    onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                                    <td style="padding:0.85rem 1rem; font-weight:500;">{{ user.username }}</td>
+                                    <td style="padding:0.85rem 1rem;">{{ user.first_name }}</td>
+                                    <td style="padding:0.85rem 1rem;">{{ user.last_name }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.email }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.phone }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">${{ user.balance }}</td>
+
+                                </tr>
+                                {% endfor %}
+
+                                {% if table_view | length == 0 %}
+                                <tr>
+                                    <td colspan="6" style="padding:2rem; text-align:center; color:#9ca3af;">
+                                        No customers found.
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

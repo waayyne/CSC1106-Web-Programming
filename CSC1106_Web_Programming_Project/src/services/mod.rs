@@ -6,3 +6,4 @@ pub mod profile_service;
 pub mod transfer_service;
 pub mod transaction_service;
 pub mod admin_service;
+pub mod staff_service;
