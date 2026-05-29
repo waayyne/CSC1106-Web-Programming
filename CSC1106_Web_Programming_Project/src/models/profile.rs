@@ -49,8 +49,8 @@ impl From<ProfileRecord> for ProfileView {
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateProfileForm {
-    pub first_name: String,
-    pub last_name: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
     pub email: String,
     pub phone_number: String,
 }

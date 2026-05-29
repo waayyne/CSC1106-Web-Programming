@@ -26,38 +26,79 @@ pub async fn update_profile(
     user_id: i32,
     form: UpdateProfileForm,
 ) -> Result<(), String> {
-    let first_name = form.first_name.trim();
-    let last_name = form.last_name.trim();
     let email = form.email.trim();
     let phone_number = form.phone_number.trim();
-
-    if first_name.is_empty() || last_name.is_empty() || email.is_empty() || phone_number.is_empty()
-    {
-        return Err("validation_error".to_string());
-    }
-
-    let full_name = format!("{} {}", first_name, last_name);
-
-    let update_result = sqlx::query(
-        "update users set first_name = $1, last_name = $2, name = $3, email = $4, phone_number = $5, updated_at = current_timestamp
-         where id = $6",
-    )
-    .bind(first_name)
-    .bind(last_name)
-    .bind(&full_name)
-    .bind(email)
-    .bind(phone_number)
-    .bind(user_id)
-    .execute(pool)
-    .await;
-
-    let result = match update_result {
-        Ok(result) => result,
-        Err(_) => return Err("database_error".to_string()),
+    // Load current profile to inspect role and existing names
+    let current = match get_profile(pool, user_id).await {
+        Ok(p) => p,
+        Err(_) => return Err("profile_not_found".to_string()),
     };
 
-    if result.rows_affected() == 0 {
-        return Err("profile_not_found".to_string());
+    // Resolve name fields: use provided values or keep existing
+    let first_name = match form.first_name {
+        Some(s) => s.trim().to_string(),
+        None => current.first_name.clone(),
+    };
+
+    let last_name = match form.last_name {
+        Some(s) => s.trim().to_string(),
+        None => current.last_name.clone(),
+    };
+
+    // If the user is a customer, only allow updating email and phone number.
+    if current.role == "customer" {
+        if email.is_empty() || phone_number.is_empty() {
+            return Err("validation_error".to_string());
+        }
+
+        let update_result = sqlx::query(
+            "update users set email = $1, phone_number = $2, updated_at = current_timestamp
+             where id = $3",
+        )
+        .bind(email)
+        .bind(phone_number)
+        .bind(user_id)
+        .execute(pool)
+        .await;
+
+        let result = match update_result {
+            Ok(result) => result,
+            Err(_) => return Err("database_error".to_string()),
+        };
+
+        if result.rows_affected() == 0 {
+            return Err("profile_not_found".to_string());
+        }
+    } else {
+        // Non-customer (staff/admin): allow updating first/last/name/email/phone
+        if first_name.is_empty() || last_name.is_empty() || email.is_empty() || phone_number.is_empty()
+        {
+            return Err("validation_error".to_string());
+        }
+
+        let full_name = format!("{} {}", first_name, last_name);
+
+        let update_result = sqlx::query(
+            "update users set first_name = $1, last_name = $2, name = $3, email = $4, phone_number = $5, updated_at = current_timestamp
+             where id = $6",
+        )
+        .bind(first_name)
+        .bind(last_name)
+        .bind(&full_name)
+        .bind(email)
+        .bind(phone_number)
+        .bind(user_id)
+        .execute(pool)
+        .await;
+
+        let result = match update_result {
+            Ok(result) => result,
+            Err(_) => return Err("database_error".to_string()),
+        };
+
+        if result.rows_affected() == 0 {
+            return Err("profile_not_found".to_string());
+        }
     }
 
     let audit_result = sqlx::query("insert into audit_logs (user_id, action) values ($1, $2)")
