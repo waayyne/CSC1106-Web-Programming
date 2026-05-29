@@ -8,7 +8,7 @@ create table users (
     password_hash text not null,
     phone_number varchar(20) unique not null,
     role varchar(20) not null default 'customer',
-    created_at timestamp default current_timestamp
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
 
 create table bank_accounts (
@@ -16,7 +16,7 @@ create table bank_accounts (
     user_id int not null references users(id) on delete cascade,
     account_number varchar(30) unique not null,
     balance numeric(12, 2) not null default 0.00,
-    created_at timestamp default current_timestamp
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
 
 create table transactions (
@@ -26,7 +26,7 @@ create table transactions (
     transaction_type varchar(30) not null,
     amount numeric(12, 2) not null,
     description text,
-    created_at timestamp default current_timestamp
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
 
 create table loans (
@@ -35,12 +35,12 @@ create table loans (
     amount numeric(12, 2) not null,
     status varchar(20) not null default 'pending',
     reason text,
-    created_at timestamp default current_timestamp
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
 
 create table audit_logs (
     id serial primary key,
     user_id int references users(id),
     action text not null,
-    created_at timestamp default current_timestamp
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
