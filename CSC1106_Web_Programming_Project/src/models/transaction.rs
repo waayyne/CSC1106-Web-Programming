@@ -20,5 +20,7 @@ pub struct TransactionRecord {
     pub transaction_type: String,
     pub amount: Decimal,
     pub description: Option<String>,
+    pub from_account_number: Option<String>,
+    pub to_account_number: Option<String>,
     pub created_at: NaiveDateTime,
 }

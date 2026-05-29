@@ -1,7 +1,8 @@
 use crate::db::DbPool;
+use crate::models::transaction::TransactionRecord;
 use serde::Serialize;
-use sqlx::Row;
 use chrono::NaiveDateTime;
+use sqlx::Row;
 
 #[derive(Serialize)]
 pub struct TransactionView {
@@ -71,7 +72,7 @@ pub async fn fetch_transactions(
     let total_count: i64 = total_row.get::<i64, _>(0);
 
     let data_sql = r#"
-        SELECT t.id, t.from_account_id, t.to_account_id, t.transaction_type, t.amount::TEXT AS amount,
+        SELECT t.id, t.from_account_id, t.to_account_id, t.transaction_type, t.amount,
                t.description, t.created_at,
                bf.account_number AS from_account_number,
                bt.account_number AS to_account_number
@@ -87,7 +88,7 @@ pub async fn fetch_transactions(
         LIMIT $6 OFFSET $7
     "#;
 
-    let rows = sqlx::query(&data_sql)
+    let records: Vec<TransactionRecord> = sqlx::query_as(&data_sql)
         .bind(account_id)
         .bind(tx_type_filter)
         .bind(q)
@@ -99,15 +100,10 @@ pub async fn fetch_transactions(
         .await?;
 
     let mut items = Vec::new();
-    for row in rows {
-        let from_id: Option<i32> = row.get("from_account_id");
-        let _to_id: Option<i32> = row.get("to_account_id");
-        let amount: String = row.get("amount");
-        let tx_type: String = row.get("transaction_type");
-        let desc: Option<String> = row.get("description");
-        let created_at: NaiveDateTime = row.get("created_at");
-        let from_acc: Option<String> = row.get("from_account_number");
-        let to_acc: Option<String> = row.get("to_account_number");
+    for r in records {
+        let from_id = r.from_account_id;
+        let from_acc = r.from_account_number;
+        let to_acc = r.to_account_number;
 
         let (direction, counterparty) = if from_id == Some(account_id) {
             ("Out".to_string(), to_acc)
@@ -116,13 +112,13 @@ pub async fn fetch_transactions(
         };
 
         items.push(TransactionView {
-            id: row.get("id"),
+            id: r.id,
             direction,
-            transaction_type: tx_type,
-            amount,
-            description: desc,
+            transaction_type: r.transaction_type,
+            amount: r.amount.to_string(),
+            description: r.description,
             counterparty,
-            created_at: created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+            created_at: r.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
         });
     }
 
