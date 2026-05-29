@@ -1,3 +1,5 @@
+//The system starts a database transaction, locks the sender account row using FOR UPDATE, checks the balance while locked, deducts the sender balance, credits the recipient balance,
+// records the transaction, and commits. If any step fails, rollback is performed.
 use rust_decimal::Decimal;
 use sqlx::Row;
 
@@ -23,8 +25,9 @@ pub async fn process_transfer(
     }
 
     let sender_result = sqlx::query(
-        "SELECT id, account_number, balance
-         FROM bank_accounts WHERE user_id = $1",
+        "SELECT id, account_number
+         FROM bank_accounts
+         WHERE user_id = $1",
     )
     .bind(sender_user_id)
     .fetch_one(pool)
@@ -37,20 +40,22 @@ pub async fn process_transfer(
 
     let sender_account_id: i32 = sender_account.get("id");
     let sender_account_number: String = sender_account.get("account_number");
-    let sender_balance: Decimal = sender_account.get("balance");
 
     let recipient_result = if form.transfer_by == "account_number" {
         sqlx::query(
-            "SELECT id, account_number, balance
-             FROM bank_accounts WHERE account_number = $1",
+            "SELECT id, account_number
+             FROM bank_accounts
+             WHERE account_number = $1",
         )
         .bind(&form.recipient_identifier)
         .fetch_optional(pool)
         .await
     } else {
         sqlx::query(
-            "SELECT ba.id, ba.account_number, ba.balance
-             FROM bank_accounts ba JOIN users u ON ba.user_id = u.id WHERE u.phone_number = $1",
+            "SELECT ba.id, ba.account_number
+             FROM bank_accounts ba
+             JOIN users u ON ba.user_id = u.id
+             WHERE u.phone_number = $1",
         )
         .bind(&form.recipient_identifier)
         .fetch_optional(pool)
@@ -74,13 +79,9 @@ pub async fn process_transfer(
         return Err("You cannot transfer money to your own account.".to_string());
     }
 
-    if sender_balance < amount {
-        return Err("Insufficient balance.".to_string());
-    }
-
     let description = match form.description {
-        Some(text) => text,
-        None => "Bank transfer".to_string(),
+        Some(text) if !text.trim().is_empty() => text,
+        _ => "Bank transfer".to_string(),
     };
 
     let transaction_result = pool.begin().await;
@@ -90,8 +91,34 @@ pub async fn process_transfer(
         Err(_) => return Err("Failed to start transfer.".to_string()),
     };
 
+    let locked_sender_result = sqlx::query(
+        "SELECT id, balance
+         FROM bank_accounts
+         WHERE id = $1
+         FOR UPDATE",
+    )
+    .bind(sender_account_id)
+    .fetch_one(&mut *tx)
+    .await;
+
+    let locked_sender = match locked_sender_result {
+        Ok(account) => account,
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to lock sender account.".to_string());
+        }
+    };
+
+    let sender_balance: Decimal = locked_sender.get("balance");
+
+    if sender_balance < amount {
+        let _ = tx.rollback().await;
+        return Err("Insufficient balance.".to_string());
+    }
+
     let deduct_result = sqlx::query(
-        "UPDATE bank_accounts SET balance = balance - $1
+        "UPDATE bank_accounts
+         SET balance = balance - $1
          WHERE id = $2",
     )
     .bind(amount)
@@ -101,11 +128,15 @@ pub async fn process_transfer(
 
     match deduct_result {
         Ok(_) => {}
-        Err(_) => return Err("Failed to deduct sender balance.".to_string()),
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to deduct sender balance.".to_string());
+        }
     }
 
     let add_result = sqlx::query(
-        "UPDATE bank_accounts SET balance = balance + $1
+        "UPDATE bank_accounts
+         SET balance = balance + $1
          WHERE id = $2",
     )
     .bind(amount)
@@ -115,7 +146,10 @@ pub async fn process_transfer(
 
     match add_result {
         Ok(_) => {}
-        Err(_) => return Err("Failed to update recipient balance.".to_string()),
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to update recipient balance.".to_string());
+        }
     }
 
     let save_result = sqlx::query(
@@ -131,7 +165,10 @@ pub async fn process_transfer(
 
     match save_result {
         Ok(_) => {}
-        Err(_) => return Err("Failed to save transfer transaction.".to_string()),
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to save transfer transaction.".to_string());
+        }
     }
 
     let commit_result = tx.commit().await;
