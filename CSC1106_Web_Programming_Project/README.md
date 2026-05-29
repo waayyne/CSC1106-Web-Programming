@@ -41,18 +41,15 @@ Port: 5432
 - User registration
 - Auto bank account creation after registration
 - Login validation using email and password
+- Password hashing with Argon2
+- Forgot password email reset flow using SMTP
 
 ---
 
-## Current Note About Passwords
+## Password Security
 
-Password hashing is currently removed because another teammate will be handling it.
-
-For now, the password is stored inside the `password_hash` column as plain text.
-
-Before final submission, password hashing should be added back using Argon2.
-
-The file to update later is:
+Passwords are hashed with Argon2 before being stored in the `password_hash` column.
+Login and password reset both use the same hashing and verification helpers in:
 
 ```text
 src/services/auth_service.rs
@@ -261,9 +258,18 @@ The `.env` file should contain:
 ```env
 DATABASE_URL=postgres://postgres:1234@localhost:5432/banking_system
 SESSION_KEY=0123456701234567012345670123456701234567012345670123456701234567
+APP_BASE_URL=http://127.0.0.1:8080
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-gmail-app-password
+SMTP_FROM=your-email@gmail.com
 ```
 
 Do not commit `.env` to GitHub.
+
+For Gmail, `SMTP_PASSWORD` must be an app password, not your normal Gmail password.
+You can also use Brevo, Mailtrap, or another SMTP provider by changing the SMTP values.
 
 ---
 

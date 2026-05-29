@@ -1,6 +1,8 @@
 use crate::db::DbPool;
 use crate::middleware::auth_middleware;
-use crate::models::user::{LoginForm, RegisterForm};
+use crate::models::user::{
+    ForgotPasswordForm, LoginForm, RegisterForm, ResetPasswordForm, ResetPasswordQuery,
+};
 use crate::services::auth_service;
 
 use actix_session::Session;
@@ -78,6 +80,56 @@ fn render_register_page(
     HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
+fn render_forgot_password_page(
+    tmpl: &Tera,
+    error_message: Option<&str>,
+    success_message: Option<&str>,
+    email: Option<&str>,
+) -> HttpResponse {
+    let mut context = Context::new();
+
+    if let Some(message) = error_message {
+        context.insert("error_message", message);
+    }
+
+    if let Some(message) = success_message {
+        context.insert("success_message", message);
+    }
+
+    if let Some(value) = email {
+        context.insert("email", value);
+    }
+
+    let rendered = tmpl.render("forgot_password.html", &context).unwrap();
+
+    HttpResponse::Ok().content_type("text/html").body(rendered)
+}
+
+fn render_reset_password_page(
+    tmpl: &Tera,
+    token: Option<&str>,
+    error_message: Option<&str>,
+    success_message: Option<&str>,
+) -> HttpResponse {
+    let mut context = Context::new();
+
+    if let Some(value) = token {
+        context.insert("token", value);
+    }
+
+    if let Some(message) = error_message {
+        context.insert("error_message", message);
+    }
+
+    if let Some(message) = success_message {
+        context.insert("success_message", message);
+    }
+
+    let rendered = tmpl.render("reset_password.html", &context).unwrap();
+
+    HttpResponse::Ok().content_type("text/html").body(rendered)
+}
+
 pub async fn homepage(tmpl: web::Data<Tera>) -> impl Responder {
     let context = Context::new();
     let rendered = tmpl.render("home.html", &context).unwrap();
@@ -100,6 +152,43 @@ pub async fn login_page(tmpl: web::Data<Tera>, query: web::Query<LoginQuery>) ->
 
 pub async fn register_page(tmpl: web::Data<Tera>) -> impl Responder {
     render_register_page(&tmpl, None, None, None, None, None, None)
+}
+
+pub async fn forgot_password_page(tmpl: web::Data<Tera>) -> impl Responder {
+    render_forgot_password_page(&tmpl, None, None, None)
+}
+
+pub async fn reset_password_page(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<DbPool>,
+    query: web::Query<ResetPasswordQuery>,
+) -> impl Responder {
+    let token = query.token.trim().to_string();
+
+    if token.is_empty() {
+        return render_reset_password_page(
+            &tmpl,
+            None,
+            Some("This reset link is missing a token."),
+            None,
+        );
+    }
+
+    match auth_service::is_reset_token_valid(&pool, &token).await {
+        Ok(true) => render_reset_password_page(&tmpl, Some(&token), None, None),
+        Ok(false) => render_reset_password_page(
+            &tmpl,
+            None,
+            Some("This reset link is invalid or has expired."),
+            None,
+        ),
+        Err(_) => render_reset_password_page(
+            &tmpl,
+            None,
+            Some("Unable to check this reset link. Please try again."),
+            None,
+        ),
+    }
 }
 
 pub async fn dashboard_page(
@@ -223,7 +312,8 @@ pub async fn login_user(
             session.insert("user_id", user_id).unwrap();
             session.insert("role", role.clone()).unwrap(); // clone as session.insert requires ownership of the value
 
-            let redirecrt_url = match role.as_str() { // gets the role as a string slice for matching
+            let redirecrt_url = match role.as_str() {
+                // gets the role as a string slice for matching
                 "admin" => "/admin/dashboard",
                 "staff" => "/staff/dashboard",
                 "customer" => "/dashboard",
@@ -251,6 +341,86 @@ pub async fn login_user(
     }
 }
 
+pub async fn forgot_password(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<DbPool>,
+    form: web::Form<ForgotPasswordForm>,
+) -> impl Responder {
+    let email = form.into_inner().email;
+
+    if email.trim().is_empty() {
+        return render_forgot_password_page(
+            &tmpl,
+            Some("Please enter your account email address."),
+            None,
+            Some(&email),
+        );
+    }
+
+    let result = auth_service::request_password_reset(&pool, email.clone()).await;
+
+    match result {
+        Ok(true) => render_forgot_password_page(
+            &tmpl,
+            None,
+            Some("A password reset email has been sent. Please check your inbox."),
+            None,
+        ),
+        Ok(false) => render_forgot_password_page(
+            &tmpl,
+            None,
+            Some("If that email exists, a reset link will be sent to it."),
+            None,
+        ),
+        Err(error) => {
+            eprintln!("Password reset email error: {error}");
+            render_forgot_password_page(
+                &tmpl,
+                Some("Unable to send the reset email. Please check the mail settings and try again."),
+                None,
+                Some(&email),
+            )
+        }
+    }
+}
+
+pub async fn reset_password(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<DbPool>,
+    form: web::Form<ResetPasswordForm>,
+) -> impl Responder {
+    let form_data = form.into_inner();
+    let token = form_data.token.trim().to_string();
+
+    if form_data.password != form_data.confirm_password {
+        return render_reset_password_page(
+            &tmpl,
+            Some(&token),
+            Some("Passwords do not match."),
+            None,
+        );
+    }
+
+    if form_data.password.trim().len() < 8 {
+        return render_reset_password_page(
+            &tmpl,
+            Some(&token),
+            Some("Password must be at least 8 characters long."),
+            None,
+        );
+    }
+
+    match auth_service::reset_password(&pool, token.clone(), form_data.password).await {
+        Ok(_) => render_login_page(
+            &tmpl,
+            None,
+            Some("Password reset successful. Please log in with your new password."),
+            None,
+        ),
+        Err(message) => render_reset_password_page(&tmpl, Some(&token), Some(&message), None),
+    }
+}
+
 pub async fn logout(session: Session) -> impl Responder {
     session.purge();
     HttpResponse::Found()
@@ -262,6 +432,10 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("/", web::get().to(homepage))
         .route("/login", web::get().to(login_page))
         .route("/login", web::post().to(login_user))
+        .route("/forgot-password", web::get().to(forgot_password_page))
+        .route("/forgot-password", web::post().to(forgot_password))
+        .route("/reset-password", web::get().to(reset_password_page))
+        .route("/reset-password", web::post().to(reset_password))
         .route("/logout", web::get().to(logout))
         .route("/register", web::get().to(register_page))
         .route("/register", web::post().to(register_user))

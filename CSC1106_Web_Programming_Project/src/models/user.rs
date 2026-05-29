@@ -16,3 +16,20 @@ pub struct LoginForm {
     pub identifier: String,
     pub password: String,
 }
+
+#[derive(Deserialize)]
+pub struct ForgotPasswordForm {
+    pub email: String,
+}
+
+#[derive(Deserialize)]
+pub struct ResetPasswordQuery {
+    pub token: String,
+}
+
+#[derive(Deserialize)]
+pub struct ResetPasswordForm {
+    pub token: String,
+    pub password: String,
+    pub confirm_password: String,
+}

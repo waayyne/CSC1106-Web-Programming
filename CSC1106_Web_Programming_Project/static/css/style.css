@@ -837,6 +837,22 @@ body {
     text-align: center;
 }
 
+.auth-link-row {
+    margin-top: 16px;
+    text-align: right;
+}
+
+.auth-link-row a {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.auth-link-row a:hover {
+    text-decoration: underline;
+}
+
 .auth-footer p {
     color: #64748b;
     margin-bottom: 6px;

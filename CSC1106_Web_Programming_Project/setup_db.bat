@@ -29,6 +29,10 @@ echo Seeding admin user...
 %PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/003_perma_admin.sql
 
 echo.
+echo Running password reset migration file...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/004_password_reset_tokens.sql
+
+echo.
 echo ========================================
 echo Database setup completed.
 echo ========================================
