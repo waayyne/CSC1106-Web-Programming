@@ -1,259 +1,160 @@
-# CSC1106 Web Programming Project
+# 🏦 Banking System
 
-## Project Name
-Banking System
+> CSC1106 Web Programming Project
+
+A banking web application built with Rust, Actix Web, Tera Templates, and PostgreSQL 18.
+
+---
 
 ## Tech Stack
-- Rust
-- Actix Web
-- Tera Templates
-- PostgreSQL 18
-- HTML/CSS
+
+| Layer | Technology |
+|---|---|
+| Language | Rust |
+| Web Framework | Actix Web |
+| Templating | Tera Templates |
+| Database | PostgreSQL 18 |
+| Frontend | HTML / CSS |
 
 ---
 
-## Database Requirement
+## Project Structure
 
-This project **must use PostgreSQL 18**.
-
-The database scripts and Rust database connection are written for PostgreSQL.
-
-This project is **not designed for MySQL, MariaDB, SQLite, or MongoDB** unless the database code and SQL syntax are rewritten.
-
-Required database setup:
-
-```text
-Database system: PostgreSQL 18
-Database tool: pgAdmin 4
-Database name: banking_system
-Username: postgres
-Password: 1234
-Port: 5432
 ```
-
----
-
-## Current Features
-- Homepage
-- Register page
-- Login page
-- PostgreSQL database connection
-- User registration
-- Auto bank account creation after registration
-- Login validation using email and password
-- Password hashing with Argon2
-- Forgot password email reset flow using SMTP
-
----
-
-## Password Security
-
-Passwords are hashed with Argon2 before being stored in the `password_hash` column.
-Login and password reset both use the same hashing and verification helpers in:
-
-```text
-src/services/auth_service.rs
-```
-
----
-
-# Project Structure
-
-```text
-CSC1106_Web_Programming_Project/
-│
+├── .env
+├── .env.example
 ├── Cargo.toml
-├── README.md
+├── Cargo.lock
 ├── setup_db.bat
 ├── migrations/
-│   └── 001_create_tables.sql
-│
+│   ├── 001_create_tables.sql
+│   ├── 002_add_profile_updated_at.sql
+│   ├── 003_perma_admin.sql
+│   └── 004_password_reset_tokens.sql
 ├── src/
+│   ├── main.rs
 │   ├── config.rs
 │   ├── db.rs
-│   ├── main.rs
-│   │
 │   ├── middleware/
-│   │   ├── mod.rs
-│   │   └── auth_middleware.rs
-│   │
-│   ├── models/     #handles all the Data Transferable Objects (DTO) for shapping of HTML elements
-│   │   ├── mod.rs
+│   │   ├── auth_middleware.rs
+│   │   └── mod.rs
+│   ├── models/
 │   │   ├── account.rs
+│   │   ├── admin.rs
 │   │   ├── audit_log.rs
 │   │   ├── loan.rs
+│   │   ├── mod.rs
+│   │   ├── profile.rs
+│   │   ├── staff.rs
 │   │   ├── transaction.rs
 │   │   └── user.rs
-│   │
-│   ├── routes/     #handles linking url patterns to different functions
-│   │   ├── mod.rs
+│   ├── routes/
 │   │   ├── account_routes.rs
 │   │   ├── admin_routes.rs
 │   │   ├── auth_routes.rs
 │   │   ├── customer_routes.rs
 │   │   ├── loan_routes.rs
+│   │   ├── mod.rs
+│   │   ├── profile_routes.rs
 │   │   ├── staff_routes.rs
+│   │   ├── transaction_routes.rs
 │   │   └── transfer_routes.rs
-│   │
-│   └── services/       #If you wanna change a column name it is here as well as insert, update and read data
-│       ├── mod.rs
+│   └── services/
 │       ├── account_service.rs
+│       ├── admin_service.rs
 │       ├── audit_service.rs
 │       ├── auth_service.rs
 │       ├── loan_service.rs
+│       ├── mod.rs
+│       ├── profile_service.rs
+│       ├── staff_service.rs
+│       ├── transaction_service.rs
 │       └── transfer_service.rs
-│
 ├── static/
 │   ├── css/
-│   │   └── style.css
+│   │   ├── auth.css
+│   │   ├── dashboard.css
+│   │   ├── forms.css
+│   │   ├── sidebar.css
+│   │   ├── statement.css
+│   │   ├── style.css
+│   │   └── transactions.css
 │   └── js/
 │       └── main.js
-│
-├── templates/
-│   ├── layout.html
-│   ├── home.html
-│   ├── login.html
-│   ├── register.html
-│   ├── dashboard.html
-│   ├── customer_dashboard.html
-│   ├── staff_dashboard.html
-│   ├── admin_dashboard.html
-│   ├── atm.html
-│   ├── manage_accounts.html
-│   ├── manage_loans.html
-│   ├── manage_users.html
-│   ├── transaction_history.html
-│   ├── transfer_money.html
-│   ├── loan_application.html
-│   ├── audit_logs.html
-│   └── account_details.html
-│
-└── target/ (build artifacts)
+└── templates/
+    ├── layout.html
+    ├── home.html
+    ├── login.html
+    ├── register.html
+    ├── dashboard.html
+    ├── admin_dashboard.html
+    ├── staff_dashboard.html
+    ├── account_details.html
+    ├── manage_accounts.html
+    ├── manage_loans.html
+    ├── transfer_money.html
+    ├── transaction_history.html
+    ├── transaction_statement.html
+    ├── loan_application.html
+    ├── profile_settings.html
+    ├── audit_logs.html
+    ├── atm.html
+    ├── staff_table_view.html
+    ├── forgot_password.html
+    └── reset_password.html
 ```
 
 ---
 
-# Setup Instructions
+## Prerequisites
 
-## 1. Clone the project
+Make sure these are installed before proceeding:
+
+- [Rust](https://www.rust-lang.org/tools/install)
+- [PostgreSQL 18](https://www.postgresql.org/download/)
+- pgAdmin 4 (optional, for GUI access)
+
+---
+
+## Setup
+
+### 1. Clone the repo
 
 ```bash
 git clone <repo-link>
 cd CSC1106_Web_Programming_Project
 ```
 
----
+### 2. Set up the database
 
-## 2. Install requirements
+**Option A — Automated (Windows, recommended)**
 
-Make sure these are installed:
-
-```text
-Rust
-PostgreSQL 18
-pgAdmin 4
-```
-
----
-
-# Database Setup
-
-## Option 1: Use setup_db.bat
-
-This is the recommended method for Windows.
-
-Run:
-
-```text
+```bash
 setup_db.bat
 ```
 
-The batch file will:
+This will drop and recreate the `banking_system` database, then run `migrations/001_create_tables.sql`.
 
-```text
-1. Drop the old banking_system database if it exists
-2. Create a new banking_system database
-3. Run migrations/001_create_tables.sql
-4. Create all required tables
-```
+> ⚠️ Running this resets the database and deletes all existing data.
 
-Important:
+**Option B — Manual via pgAdmin 4**
 
-```text
-Running setup_db.bat will reset the database and delete existing test data.
-```
-
----
-
-## setup_db.bat content
-
-The batch file uses PostgreSQL 18:
-
-```bat
-@echo off
-echo ========================================
-echo Setting up Banking System Database
-echo ========================================
-
-set PSQL="C:\Program Files\PostgreSQL\18\bin\psql.exe"
-set DB_NAME=banking_system
-set DB_USER=postgres
-set PGPASSWORD=1234
-
-echo.
-echo Dropping old database if it exists...
-%PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "DROP DATABASE IF EXISTS %DB_NAME%;"
-
-echo.
-echo Creating database...
-%PSQL% -U %DB_USER% -h localhost -p 5432 -d postgres -c "CREATE DATABASE %DB_NAME%;"
-
-echo.
-echo Running migration file...
-%PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/001_create_tables.sql
-
-echo.
-echo ========================================
-echo Database setup completed.
-echo ========================================
-pause
-```
-
----
-
-## Option 2: Manual database setup using pgAdmin 4
-
-Open pgAdmin 4.
-
-Create the database manually:
-
+1. Open pgAdmin 4
+2. Create the database:
 ```sql
 CREATE DATABASE banking_system;
 ```
+3. Open the Query Tool under `banking_system` and paste + run the contents of `migrations/001_create_tables.sql`
 
-Then open Query Tool under the `banking_system` database.
+### 3. Configure environment variables
 
-Copy and run the SQL from:
+Copy `.env.example` and rename it to `.env`:
 
-```text
-migrations/001_create_tables.sql
+```bash
+cp .env.example .env
 ```
 
-This SQL file is written for **PostgreSQL 18**.
-
----
-
-# Environment Setup
-
-## 1. Create `.env`
-
-Copy `.env.example` and rename the copy to:
-
-```text
-.env
-```
-
-The `.env` file should contain:
+Fill in your values:
 
 ```env
 DATABASE_URL=postgres://postgres:1234@localhost:5432/banking_system
@@ -266,37 +167,29 @@ SMTP_PASSWORD=your-gmail-app-password
 SMTP_FROM=your-email@gmail.com
 ```
 
-Do not commit `.env` to GitHub.
+> For Gmail, `SMTP_PASSWORD` must be a **[Gmail App Password](https://myaccount.google.com/apppasswords)**, not your regular password.
+> You can also use Brevo, Mailtrap, or any other SMTP provider.
 
-For Gmail, `SMTP_PASSWORD` must be an app password, not your normal Gmail password.
-You can also use Brevo, Mailtrap, or another SMTP provider by changing the SMTP values.
+> ❌ Never commit `.env` to GitHub.
 
----
-
-# Run the Project
-
-Run:
+### 4. Run the server
 
 ```bash
 cargo run
 ```
 
-If successful, you should see:
+If everything is set up correctly, you should see:
 
-```text
+```
 Connected to PostgreSQL
 Server running at http://127.0.0.1:8080
 ```
 
-Open in browser:
-
-```text
-http://127.0.0.1:8080/
-```
+Open your browser at [http://127.0.0.1:8080](http://127.0.0.1:8080)
 
 ---
 
-# Current Pages
+## Pages
 
 | Page | URL |
 |---|---|
@@ -307,85 +200,49 @@ http://127.0.0.1:8080/
 
 ---
 
-# Login/Register Notes
-
-## Login UI
-
-Edit this file:
-
-```text
-templates/login.html
-```
-
-The login form must keep:
-
-```html
-<form method="post" action="/login">
-```
-
-The input names must stay as:
-
-```html
-<input type="email" name="email">
-<input type="password" name="password">
-```
-
----
-
-## Register UI
-
-Edit this file:
-
-```text
-templates/register.html
-```
-
-The register form must keep:
-
-```html
-<form method="post" action="/register">
-```
-
-The input names must stay as:
-
-```html
-<input type="text" name="name">
-<input type="email" name="email">
-<input type="text" name="phone_number">
-<input type="password" name="password">
-```
-
-If these names are changed, Rust will not receive the form data correctly.
-
----
-
-# Main Files and Purpose
+## Key Files
 
 | File | Purpose |
 |---|---|
 | `src/main.rs` | Starts the Actix Web server |
-| `src/db.rs` | Connects Rust to PostgreSQL |
-| `src/routes/auth_routes.rs` | Handles homepage, login, register, dashboard routes |
-| `src/services/auth_service.rs` | Handles register/login database logic |
-| `src/models/user.rs` | Stores register/login form structs |
+| `src/db.rs` | PostgreSQL connection setup |
+| `src/routes/auth_routes.rs` | Login, register, dashboard routes |
+| `src/services/auth_service.rs` | Register/login business logic |
+| `src/models/user.rs` | User form structs |
 | `templates/login.html` | Login page UI |
 | `templates/register.html` | Register page UI |
-| `templates/customer_dashboard.html` | Customer dashboard UI |
-| `migrations/001_create_tables.sql` | Creates PostgreSQL 18 database tables |
-| `setup_db.bat` | Recreates the PostgreSQL 18 database |
+| `migrations/001_create_tables.sql` | Database schema |
+| `setup_db.bat` | Database reset script (Windows) |
 
 ---
 
-# GitHub Rules
+## Form Field Reference
 
-Do not commit:
+### Login — `templates/login.html`
 
-```text
-.env
-target/
+```html
+<form method="post" action="/login">
+  <input type="email" name="email">
+  <input type="password" name="password">
+</form>
 ```
 
-Make sure `.gitignore` contains:
+### Register — `templates/register.html`
+
+```html
+<form method="post" action="/register">
+  <input type="text" name="name">
+  <input type="email" name="email">
+  <input type="text" name="phone_number">
+  <input type="password" name="password">
+</form>
+```
+
+> ⚠️ Do not rename these input fields — Rust reads them by name.
+
+---
+
+## .gitignore
 
 ```gitignore
 /target/
@@ -398,9 +255,9 @@ Thumbs.db
 *.log
 ```
 
-Commit these files:
+**Commit these:**
 
-```text
+```
 Cargo.toml
 Cargo.lock
 README.md
@@ -414,17 +271,15 @@ static/
 
 ---
 
-# Next Features To Build
+## Roadmap
 
-```text
-1. Customer dashboard with real account balance
-2. Deposit money
-3. Withdraw money
-4. Transfer money by account number
-5. Transfer money by PayNow phone number
-6. Transaction history
-7. Loan application
-8. Admin dashboard
-9. Staff dashboard
-10. Audit logs
-```
+- [ ] Customer dashboard with real account balance
+- [ ] Deposit money
+- [ ] Withdraw money
+- [ ] Transfer money by account number
+- [ ] Transfer money by PayNow phone number
+- [ ] Transaction history
+- [ ] Loan application
+- [ ] Admin dashboard
+- [ ] Staff dashboard
+- [ ] Audit logs
