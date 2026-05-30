@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RustBank - Bank Statement</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="statement-body">
+
+  <div class="statement-actions no-print">
+    <a href="/transactions" class="statement-back-btn">Back to Transactions</a>
+    <button onclick="window.print()" class="statement-print-btn">Print / Save as PDF</button>
+  </div>
+
+  <div class="statement-page">
+
+    <div class="statement-header">
+      <div>
+        <h1>RustBank</h1>
+        <p>Banking with Trust</p>
+      </div>
+
+      <div class="statement-title-box">
+        <h2>Bank Statement</h2>
+        <p>Generated on {{ generated_at }}</p>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="statement-info-grid">
+      <div class="statement-info-card">
+        <p>Customer Name</p>
+        <h3>{{ first_name }} {{ last_name }}</h3>
+      </div>
+
+      <div class="statement-info-card">
+        <p>Account Number</p>
+        <h3>{{ account_number }}</h3>
+      </div>
+
+      <div class="statement-info-card">
+        <p>Current Balance</p>
+        <h3>${{ current_balance }}</h3>
+      </div>
+    </div>
+
+    <div class="statement-section-title">
+      <h2>Transaction Details</h2>
+      <p>This statement shows all transactions for this account.</p>
+    </div>
+
+    <table class="statement-table">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Type</th>
+          <th>Direction</th>
+          <th>Amount</th>
+          <th>Counterparty</th>
+          <th>Description</th>
+          <th>Balance After</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for tx in statement_transactions %}
+        <tr>
+          <td>{{ tx.created_at }}</td>
+          <td>{{ tx.transaction_type }}</td>
+          <td>{{ tx.direction }}</td>
+          <td>${{ tx.amount }}</td>
+          <td>{{ tx.counterparty | default(value='-') }}</td>
+          <td>{{ tx.description | default(value='-') }}</td>
+          <td>${{ tx.balance_after }}</td>
+        </tr>
+        {% endfor %}
+
+        {% if statement_transactions | length == 0 %}
+        <tr>
+          <td colspan="7" class="statement-empty">
+            No transactions found.
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <div class="statement-footer">
+      <p>This is a system-generated bank statement from RustBank.</p>
+    </div>
+
+  </div>
+
+</body>
+</html>
