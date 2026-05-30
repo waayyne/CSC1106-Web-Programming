@@ -25,7 +25,11 @@ pub async fn transactions_page(
 ) -> impl Responder {
     let user_id = match session.get::<i32>("user_id").unwrap_or(None) {
         Some(id) => id,
-        None => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+        None => {
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish();
+        }
     };
 
     let page = query.page.unwrap_or(1).max(1) as i64;
@@ -50,8 +54,12 @@ pub async fn transactions_page(
         }
     };
 
-    let mut context = tera::Context::new();
-    // Load user and account details for the topbar/sidebar context
+    let total_pages = if total_count == 0 {
+        1
+    } else {
+        (total_count + per_page - 1) / per_page
+    };
+
     let user_row = match sqlx::query(
         "SELECT first_name, last_name, username FROM users WHERE id = $1"
     )
@@ -61,7 +69,9 @@ pub async fn transactions_page(
     {
         Ok(r) => r,
         Err(_) => {
-            return HttpResponse::Found().append_header(("Location", "/login")).finish();
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish();
         }
     };
 
@@ -74,27 +84,34 @@ pub async fn transactions_page(
     {
         Ok(r) => r,
         Err(_) => {
-            return HttpResponse::Found().append_header(("Location", "/login")).finish();
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish();
         }
     };
 
     let first_name: String = user_row.get("first_name");
     let last_name: String = user_row.get("last_name");
     let account_number: String = account_row.get("account_number");
+
     let initials = format!(
         "{}{}",
         first_name.chars().next().unwrap_or('U'),
         last_name.chars().next().unwrap_or('S')
     );
 
+    let mut context = tera::Context::new();
+
     context.insert("first_name", &first_name);
     context.insert("last_name", &last_name);
     context.insert("initials", &initials);
     context.insert("account_number", &account_number);
+
     context.insert("transactions", &transactions);
     context.insert("page", &page);
     context.insert("per_page", &per_page);
     context.insert("total_count", &total_count);
+    context.insert("total_pages", &total_pages);
     context.insert("query", &query.into_inner());
 
     let rendered = match tmpl.render("transaction_history.html", &context) {

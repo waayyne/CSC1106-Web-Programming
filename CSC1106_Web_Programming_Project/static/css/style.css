@@ -1210,3 +1210,40 @@ body {
 .dropdown:hover .dropbtn {
     background-color: #f1f1f1;
 }
+
+/* Transaction History Pagination */
+
+.pagination-box {
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+}
+
+.pagination-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.pagination-btn:hover {
+    background: #1d4ed8;
+}
+
+.pagination-btn.disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 15px;
+    font-weight: bold;
+    color: #334155;
+}
