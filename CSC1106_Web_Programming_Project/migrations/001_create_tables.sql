@@ -44,3 +44,31 @@ create table audit_logs (
     action text not null,
     created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
+
+create table fixed_deposits (
+    id serial primary key,
+    user_id int not null references users(id) on delete cascade,
+    account_id int not null references bank_accounts(id) on delete cascade,
+    principal_amount numeric(12, 2) not null,
+    interest_rate numeric(5, 2) not null,
+    interest_amount numeric(12, 2) not null,
+    total_return numeric(12, 2) not null,
+    duration_days int not null,
+    maturity_seconds int not null,
+    status varchar(20) not null default 'active',
+    created_at timestamp default (now() at time zone 'Asia/Singapore'),
+    maturity_at timestamp not null,
+    claimed_at timestamp
+);
+
+create table risk_investments (
+    id serial primary key,
+    user_id int not null references users(id) on delete cascade,
+    account_id int not null references bank_accounts(id) on delete cascade,
+    amount numeric(12, 2) not null,
+    risk_level varchar(20) not null,
+    result varchar(20) not null,
+    return_amount numeric(12, 2) not null,
+    profit_loss numeric(12, 2) not null,
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
+);

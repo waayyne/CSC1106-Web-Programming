@@ -50,6 +50,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::transaction_routes::config)
             .configure(routes::admin_routes::config)
             .configure(routes::staff_routes::config)
+            .configure(routes::fixed_deposit_routes::config)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

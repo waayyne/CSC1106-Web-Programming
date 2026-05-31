@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RustBank - Fixed Deposit</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/sidebar.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/forms.css">
+    <link rel="stylesheet" href="/static/css/transactions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">RB</div>
+                <div>
+                    <h2>RustBank</h2>
+                    <p>Banking with Trust</p>
+                </div>
+            </div>
+
+            <nav class="side-nav">
+                <a href="/dashboard" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/atm" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    <span>ATM Simulation</span>
+                </a>
+
+                <a href="/transfer" class="nav-item">
+                    <span class="nav-icon">⇄</span>
+                    <span>Bank Transfer</span>
+                </a>
+
+                <a href="/transactions" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    <span>Transactions</span>
+                </a>
+
+                <details class="nav-dropdown" open>
+                    <summary class="nav-item nav-dropdown-title active">
+                        <span class="nav-icon">◈</span>
+                        <span>Investments</span>
+                        <span class="nav-arrow">⌄</span>
+                    </summary>
+
+                    <div class="nav-dropdown-menu">
+                        <a href="/fixed-deposit" class="nav-sub-item active">Fixed Deposit</a>
+                        <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+                    </div>
+                </details>
+
+                <a href="/loans" class="nav-item">
+                    <span class="nav-icon">$</span>
+                    <span>Loans</span>
+                </a>
+
+                <a href="/profile" class="nav-item">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="logout-box">
+            <a href="/logout" class="nav-item logout">
+                <span class="nav-icon">↪</span>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="welcome-box">
+                <div class="user-circle">{{ initials }}</div>
+                <div>
+                    <h3>Fixed Deposit</h3>
+                    <p>Create and claim your fixed deposits.</p>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="profile-avatar">{{ initials }}</div>
+
+                <div class="profile-info">
+                    <h4>{{ first_name }} {{ last_name }}</h4>
+                    <p>Account No: {{ account_number }}</p>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="/profile">Settings</a>
+                        <a href="/logout">Log out</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-section">
+            <h1>Fixed Deposit</h1>
+            <p class="page-subtitle">
+                Lock money into a fixed deposit and earn interest after it matures.
+            </p>
+
+            {% if success %}
+                <div class="success-message">{{ success }}</div>
+            {% endif %}
+
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+
+            <div class="atm-overview-grid">
+                <div class="atm-main-balance">
+                    <p>Available Balance</p>
+                    <h2>${{ balance }}</h2>
+                    <span>Money used for fixed deposit will be deducted immediately.</span>
+                </div>
+
+                <div class="atm-mini-card">
+                    <p>Demo Duration</p>
+                    <h3>90 / 180 / 360 days</h3>
+                    <span>Simulated as 9 / 18 / 36 seconds</span>
+                </div>
+            </div>
+
+            <div class="atm-main-grid">
+
+                <div class="atm-form-section">
+                    <div class="panel-header">
+                        <div class="panel-icon">◈</div>
+                        <div>
+                            <h2>Create Fixed Deposit</h2>
+                            <p>Select an amount and duration for the deposit.</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <form method="post" action="/fixed-deposit/create" class="atm-form">
+                        <div class="form-row">
+                            <label for="amount">Amount</label>
+                            <input
+                                type="number"
+                                id="amount"
+                                name="amount"
+                                step="0.01"
+                                min="1"
+                                placeholder="Enter amount"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-row">
+                            <label for="duration_days">Duration</label>
+                            <select id="duration_days" name="duration_days" required>
+                                <option value="90">90 days - 1.50% interest</option>
+                                <option value="180">180 days - 2.50% interest</option>
+                                <option value="360">360 days - 3.50% interest</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Create Fixed Deposit</button>
+                    </form>
+                </div>
+
+                <div class="atm-rules-section">
+                    <h2>How It Works</h2>
+
+                    <div class="atm-rule">
+                        <span>1</span>
+                        <p>The amount is deducted from your account balance.</p>
+                    </div>
+
+                    <div class="atm-rule">
+                        <span>2</span>
+                        <p>The deposit becomes claimable after the simulated maturity time.</p>
+                    </div>
+
+                    <div class="atm-rule">
+                        <span>3</span>
+                        <p>For demo, 90 days = 9 seconds, 180 days = 18 seconds, 360 days = 36 seconds.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="panel-card" style="margin-top:20px;">
+                <h2>Your Fixed Deposits</h2>
+
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e5e7eb;">
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Amount</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Rate</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Interest</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Return</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Duration</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Maturity Time</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Status</th>
+                                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280;">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for fd in deposits %}
+                            <tr style="border-bottom:1px solid #f3f4f6;">
+                                <td style="padding:0.85rem 1rem;">${{ fd.principal_amount }}</td>
+                                <td style="padding:0.85rem 1rem;">{{ fd.interest_rate }}%</td>
+                                <td style="padding:0.85rem 1rem;">${{ fd.interest_amount }}</td>
+                                <td style="padding:0.85rem 1rem;">${{ fd.total_return }}</td>
+                                <td style="padding:0.85rem 1rem;">{{ fd.duration_days }} days</td>
+                                <td style="padding:0.85rem 1rem;">
+                                    {{ fd.maturity_at | date(format="%Y-%m-%d %H:%M:%S") }}
+                                </td>
+                                <td style="padding:0.85rem 1rem;">{{ fd.status }}</td>
+                                <td style="padding:0.85rem 1rem;">
+                                    {% if fd.status == "done" %}
+                                        <form method="post" action="/fixed-deposit/claim">
+                                            <input type="hidden" name="fixed_deposit_id" value="{{ fd.id }}">
+                                            <button type="submit" class="btn-primary">Claim</button>
+                                        </form>
+                                    {% else %}
+                                        Claimed
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            {% if deposits | length == 0 %}
+                            <tr>
+                                <td colspan="8" style="padding:2rem; text-align:center; color:#9ca3af;">
+                                    No fixed deposits found.
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>
