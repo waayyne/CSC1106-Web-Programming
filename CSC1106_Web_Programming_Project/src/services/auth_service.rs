@@ -291,9 +291,9 @@ fn send_password_reset_email(to_email: &str, token: &str) -> Result<(), String> 
     let email = Message::builder()
         .from(from)
         .to(to)
-        .subject("Reset your RustBank password")
+        .subject("Reset your WIVAH Bank password")
         .body(format!(
-            "You requested a RustBank password reset.\n\nOpen this link to set a new password:\n{}\n\nThis link expires in 30 minutes. If you did not request this, you can ignore this email.",
+            "You requested a WIVAH Bank password reset.\n\nOpen this link to set a new password:\n{}\n\nThis link expires in 30 minutes. If you did not request this, you can ignore this email.",
             reset_link
         ))
         .map_err(|_| "Failed to build password reset email.".to_string())?;
