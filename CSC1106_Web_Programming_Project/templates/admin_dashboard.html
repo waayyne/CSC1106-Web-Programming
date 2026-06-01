@@ -58,7 +58,8 @@
                     <div class="profile-avatar">{{ initials }}</div>
                     <div class="profile-info">
                         <h4>{{ first_name }} {{ last_name }}</h4>
-                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email }}{% elif role %}{{ role }}{% else %}Administrator{% endif %}</p>
+                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email
+                            }}{% elif role %}{{ role }}{% else %}Administrator{% endif %}</p>
                     </div>
                     <span class="profile-arrow">⌄</span>
                 </div>
@@ -92,14 +93,12 @@
                     </div>
                 </div>
 
-                {% if error %}<p class="error-message">{{ error }}</p>{% endif %}
-                {% if message %}<p class="success-message">{{ message }}</p>{% endif %}
-
                 <!-- User table -->
                 <div class="panel-card">
                     <div class="admin-panel-header">
                         <h2 class="admin-panel-title">All Users</h2>
-                        <button type="button" onclick="openModal()" class="btn-primary admin-register-button">+ Register User</button>
+                        <button type="button" onclick="openModal()" class="btn-primary admin-register-button">+ Register
+                            User</button>
                     </div>
 
                     {% if error %}<p class="error-message">{{ error }}</p>{% endif %}
@@ -150,7 +149,8 @@
                                                 </button>
                                                 {% else %}
                                                 <input type="hidden" name="new_role" value="staff">
-                                                <button type="submit" class="btn-primary admin-table-action admin-table-action--make-staff">
+                                                <button type="submit"
+                                                    class="btn-primary admin-table-action admin-table-action--make-staff">
                                                     Make Staff
                                                 </button>
                                                 {% endif %}
@@ -158,7 +158,8 @@
 
                                             <form method="post" action="/admin/users/delete/{{ user.id }}"
                                                 onsubmit="return confirm('Are you sure you want to delete {{ user.username }}?');">
-                                                <button type="submit" class="admin-table-action admin-table-action--delete">
+                                                <button type="submit"
+                                                    class="admin-table-action admin-table-action--delete">
                                                     Delete
                                                 </button>
                                             </form>
@@ -184,9 +185,19 @@
 
         </main>
 
+    </div>
+    <!-- end app-layout -->
+
+    <!-- hidden error carrier for JS to read -->
+    {% if error %}
+    <div id="server-error" data-message="{{ error }}" style="display:none;"></div>
+    {% endif %}
+
     <!-- Register User Modal -->
     <div id="register-modal" class="admin-modal-overlay">
         <div class="admin-modal-dialog">
+
+            <div id="modal-error" class="modal-error-box"></div>
 
             <div class="admin-modal-header">
                 <h2 class="admin-modal-title">Register New User</h2>
@@ -239,6 +250,10 @@
         </div>
     </div>
 
+    {% if message %}
+    <div id="server-message" data-message="{{ message }}" style="display:none;"></div>
+    {% endif %}
+
     <script>
         function openModal() {
             document.getElementById('register-modal').style.display = 'flex';
@@ -249,6 +264,18 @@
         document.getElementById('register-modal').addEventListener('click', function (e) {
             if (e.target === this) closeModal();
         });
+
+        // auto open modal and show error if registration failed
+        const errorEl = document.getElementById('server-error');
+        if (errorEl) {
+            const msg = errorEl.getAttribute('data-message');
+            if (msg) {
+                openModal();
+                const modalError = document.getElementById('modal-error');
+                modalError.textContent = msg;
+                modalError.style.display = 'block';
+            }
+        }
     </script>
 
 </body>

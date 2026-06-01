@@ -1,3 +1,5 @@
+use core::error;
+
 use actix_session::Session; // Handles session cookies for authentication
 use actix_web::{web, HttpResponse, Responder}; // Framework core for web handling
 use tera::{Context, Tera}; // Templating engine for HTML rendering
@@ -95,6 +97,10 @@ pub async fn admin_dashboard(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, ses
         context.insert("message", "User registered successfully.");
     }
 
+    if let Some(error) = query.get("error") {
+        context.insert("error", &error.replace('+', " ")); // Decode error message from query param
+    }
+
     let rendered = tmpl.render("admin_dashboard.html", &context).unwrap();
     HttpResponse::Ok().content_type("text/html").body(rendered)
 }
@@ -140,46 +146,51 @@ pub async fn admin_register_page(tmpl: web::Data<Tera>, session: Session) -> imp
 }
 
 // Handles user registration form submission
-pub async fn admin_register_user(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, session: Session, form: web::Form<AdminUserRegisterForm>) -> impl Responder {
+pub async fn admin_register_user(pool: web::Data<DbPool>, session: Session, form: web::Form<AdminUserRegisterForm>) -> impl Responder {
     let admin_id = match require_admin(&session) {
         Some(id) => id,
-        None => return HttpResponse::Found().append_header(("Location", "/dashboard")).finish(),
+        None => return HttpResponse::Found()
+            .append_header(("Location", "/dashboard"))
+            .finish(),
     };
 
     let form_data = form.into_inner();
 
     // Validate role inputs
     if form_data.role != "customer" && form_data.role != "staff" {
-        let mut context = Context::new();
-        context.insert("error", "Invalid role selected.");
-        return HttpResponse::Ok().content_type("text/html").body(tmpl.render("admin_register_user.html", &context).unwrap());
+        return HttpResponse::Found()
+            .append_header(("Location", "/admin/dashboard?error=Invalid+role+selected"))
+            .finish();
     }
 
     // Securely hash the password
     let password_hash = match auth_service::hash_password(&form_data.password) {
         Ok(h) => h,
         Err(_) => {
-            let mut context = Context::new();
-            context.insert("error", "Failed to hash password.");
-            return HttpResponse::Ok().content_type("text/html").body(tmpl.render("admin_register_user.html", &context).unwrap());
+            return HttpResponse::Found()
+                .append_header(("Location", "/admin/dashboard?error=Failed+to+hash+password"))
+                .finish();
         }
     };
 
     // Execute service-level registration
     match admin_service::register_new_user(&pool, &form_data, &password_hash).await {
-    Ok(_) => {
-        let action = format!("Admin {} registered user {}", admin_id, form_data.username);
-        let _ = audit_service::log_action(&pool, Some(admin_id), &action).await;
-        // redirect back to dashboard, modal closes naturally
-        HttpResponse::Found()
-            .append_header(("Location", "/admin/dashboard?registered=1"))
-            .finish()
+        Ok(_) => {
+            let action = format!("Admin {} registered user {}", admin_id, form_data.username);
+            let _ = audit_service::log_action(&pool, Some(admin_id), &action).await;
+            // Redirect back to dashboard with success flag, modal closes naturally
+            HttpResponse::Found()
+                .append_header(("Location", "/admin/dashboard?registered=1"))
+                .finish()
+        }
+        Err(e) => {
+            // Redirect back to dashboard with error message as query param
+            let encoded = e.replace(' ', "+");
+            HttpResponse::Found()
+                .append_header(("Location", format!("/admin/dashboard?error={}", encoded)))
+                .finish()
+        }
     }
-    Err(e) => {
-        let mut context = Context::new();
-        context.insert("error", &e);
-        HttpResponse::Ok().content_type("text/html").body(tmpl.render("admin_register_user.html", &context).unwrap())}
-}
 }
 
 // Handles profile updates (e.g., name, email) for an existing user
