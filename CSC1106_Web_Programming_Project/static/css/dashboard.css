@@ -248,6 +248,115 @@
     margin-bottom: 22px;
 }
 
+.admin-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.admin-panel-title {
+    margin: 0;
+}
+
+.admin-table-wrap {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 14px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.admin-dashboard-table {
+    margin-top: 0;
+    font-size: 0.9rem;
+}
+
+.admin-dashboard-table th,
+.admin-dashboard-table td {
+    padding: 0.85rem 1rem;
+}
+
+.admin-dashboard-table thead th {
+    border-bottom: 2px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.admin-dashboard-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+}
+
+.admin-dashboard-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.admin-username-cell {
+    font-weight: 500;
+}
+
+.admin-muted-cell {
+    color: #6b7280;
+}
+
+.admin-table-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admin-empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.role-staff {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.role-customer {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.role-other {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
 .profile-detail-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -588,44 +697,6 @@
     white-space: nowrap;
 }
 
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-    font-size: 14px;
-}
-
-.data-table th,
-.data-table td {
-    padding: 16px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.data-table thead th {
-    background: #f8fafc;
-    color: #64748b;
-    font-size: 12px;
-    text-transform: uppercase;
-}
-
-.role-badge {
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 12px;
-}
-
-.role-staff {
-    background: #ede9fe;
-    color: #6d28d9;
-}
-
-.role-customer {
-    background: #ecfdf5;
-    color: #059669;
-}
-
 @media (max-width: 1000px) {
     .dashboard-cards {
         grid-template-columns: 1fr;
@@ -678,5 +749,10 @@
     .detail-item {
         grid-template-columns: 1fr;
         gap: 4px;
+    }
+
+    .admin-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
