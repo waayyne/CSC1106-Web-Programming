@@ -25,7 +25,13 @@ A banking web application built with Rust, Actix Web, Tera Templates, and Postgr
 ├── .env.example
 ├── Cargo.toml
 ├── Cargo.lock
-├── setup_db.bat
+├── setup_all.bat
+├── stop_all.bat
+├── batScripts/
+│   ├── setup_db.bat
+│   └── setup_nginx.bat
+├── deployment/
+│   └── WIVAHbank.conf
 ├── migrations/
 │   ├── 001_create_tables.sql
 │   ├── 002_add_profile_updated_at.sql
@@ -112,7 +118,8 @@ Make sure these are installed before proceeding:
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [PostgreSQL 18](https://www.postgresql.org/download/)
-- pgAdmin 4 (optional, for GUI access)
+- [pgAdmin 4] (optional, for GUI access)
+- [Nginx](https://nginx.org/en/download.html) 
 
 ---
 
@@ -125,13 +132,20 @@ git clone <repo-link>
 cd CSC1106_Web_Programming_Project
 ```
 
-### 2. Set up the database
+### 2. Set up the database and nginx
+
+**Go to website provide on prerequistes tab download windows version at Mainline version tab**
+- This must be done before running the setup_all.bat file in your terminal
+- Make sure the downloaded nginx folder is inside your C drive (C:\nginx)
 
 **Option A — Automated (Windows, recommended)**
+**(HELPS to run querrys, create sites-enbled folder and sends deployment file to nginx\conf\sites-enabled)**
 
 ```bash
-setup_db.bat
+setup_all.bat
 ```
+
+**IF failure try running seperate batfiles**
 
 This will drop and recreate the `banking_system` database, then run `migrations/001_create_tables.sql`.
 
@@ -139,12 +153,28 @@ This will drop and recreate the `banking_system` database, then run `migrations/
 
 **Option B — Manual via pgAdmin 4**
 
+-- DB manual setup --
 1. Open pgAdmin 4
 2. Create the database:
 ```sql
 CREATE DATABASE banking_system;
 ```
 3. Open the Query Tool under `banking_system` and paste + run the contents of `migrations/001_create_tables.sql`
+
+-- Nginx manual setup--
+1. Make sure nginx is downloaded in your C drive
+2. Navigate to conf folder inside your nginx and create a newfolder called sites-enabled
+3. Put the WIVAHbank.conf file from the deployment folder of this project to sites-enabled
+
+
+### 2.5 Configure enginx conf file.
+
+1. Open your C:\nginx\conf\nginx.conf file in a IDE of your choice (make sure u downloaded nginx)
+2. Look at project folder find nginxConfFileSetup.md copy everything and put it in
+3. Make sure to save and close the file afterwards
+4. The reason why we comment the rest of the server function as well as adding the line
+    [include        C:/nginx/conf/sites-enabled/*.conf;]
+(This allows for customisability of conf files for different projects, so no two conf file will mess with the process of nginx)
 
 ### 3. Configure environment variables
 
@@ -159,7 +189,7 @@ Fill in your values:
 ```env
 DATABASE_URL=postgres://postgres:1234@localhost:5432/banking_system
 SESSION_KEY=0123456701234567012345670123456701234567012345670123456701234567
-APP_BASE_URL=http://127.0.0.1:8080
+APP_BASE_URL=http://localhost:8080
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
@@ -185,7 +215,15 @@ Connected to PostgreSQL
 Server running at http://127.0.0.1:8080
 ```
 
-Open your browser at [http://127.0.0.1:8080](http://127.0.0.1:8080)
+Open your browser at [https://localhost] (http://127.0.0.1:8080) this server is localhost now
+OR
+NOT
+(http://127.0.0.1:8080) as login cookies may not work, as this ignores Nginx.
+
+
+### 5. Safely exiting the program
+1) Click into the terminal window that is currently running the Rust website and press Ctrl + C to terminate the active process
+2) Run the stop_all.bat file. This will safely shut down the Nginx reverse proxy running in the background and clean up any remaining Rust processes
 
 ---
 
@@ -212,7 +250,7 @@ Open your browser at [http://127.0.0.1:8080](http://127.0.0.1:8080)
 | `templates/login.html` | Login page UI |
 | `templates/register.html` | Register page UI |
 | `migrations/001_create_tables.sql` | Database schema |
-| `setup_db.bat` | Database reset script (Windows) |
+| `setup_all.bat` | Database reset script (Windows), as well as Nginx setup and reset |
 
 ---
 
@@ -262,7 +300,7 @@ Cargo.toml
 Cargo.lock
 README.md
 .env.example
-setup_db.bat
+setup_all.bat
 migrations/
 src/
 templates/
