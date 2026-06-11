@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
 
     let secret_key = Key::from(session_key.as_bytes());
 
-    println!("Server running at http://localhost");
+    println!("Server running at http://localhost:8080");
 
     HttpServer::new(move || {
         App::new()
