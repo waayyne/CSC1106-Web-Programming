@@ -144,54 +144,63 @@ pub async fn claim_fixed_deposit(
     user_id: i32,
     fixed_deposit_id: i32,
 ) -> Result<(), String> {
+    let now = singapore_now();
+
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|_| "Failed to start database transaction.".to_string())?;
+
     let deposit = sqlx::query_as::<_, FixedDeposit>(
-        "SELECT * FROM fixed_deposits
-         WHERE id = $1 AND user_id = $2"
+        "SELECT *
+         FROM fixed_deposits
+         WHERE id = $1 AND user_id = $2
+         FOR UPDATE",
     )
     .bind(fixed_deposit_id)
     .bind(user_id)
-    .fetch_one(pool)
+    .fetch_one(&mut *tx)
     .await
     .map_err(|_| "Fixed deposit not found.".to_string())?;
 
     if deposit.status == "claimed" {
+        let _ = tx.rollback().await;
         return Err("This fixed deposit has already been claimed.".to_string());
     }
 
-    let now = singapore_now();
-
     if now < deposit.maturity_at {
+        let _ = tx.rollback().await;
         return Err("Fixed deposit has not matured yet.".to_string());
     }
 
-    let mut tx = pool.begin()
+    sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
+        .bind(deposit.total_return)
+        .bind(deposit.account_id)
+        .execute(&mut *tx)
         .await
-        .map_err(|_| "Failed to start database transaction.".to_string())?;
+        .map_err(|_| "Failed to return fixed deposit amount.".to_string())?;
 
-    sqlx::query(
-        "UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2"
-    )
-    .bind(deposit.total_return)
-    .bind(deposit.account_id)
-    .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to return fixed deposit amount.".to_string())?;
-
-    sqlx::query(
+    let update_result = sqlx::query(
         "UPDATE fixed_deposits
          SET status = 'claimed', claimed_at = $1
-         WHERE id = $2"
+         WHERE id = $2 AND user_id = $3 AND status != 'claimed'",
     )
     .bind(now)
     .bind(fixed_deposit_id)
+    .bind(user_id)
     .execute(&mut *tx)
     .await
     .map_err(|_| "Failed to update fixed deposit status.".to_string())?;
 
+    if update_result.rows_affected() == 0 {
+        let _ = tx.rollback().await;
+        return Err("This fixed deposit has already been claimed.".to_string());
+    }
+
     sqlx::query(
         "INSERT INTO transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
-         VALUES (NULL, $1, 'fixed_deposit_claim', $2, $3)"
+         VALUES (NULL, $1, 'fixed_deposit_claim', $2, $3)",
     )
     .bind(deposit.account_id)
     .bind(deposit.total_return)
@@ -208,4 +217,5 @@ pub async fn claim_fixed_deposit(
         .map_err(|_| "Failed to claim fixed deposit.".to_string())?;
 
     Ok(())
+
 }

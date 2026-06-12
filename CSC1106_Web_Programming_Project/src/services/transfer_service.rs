@@ -11,10 +11,7 @@ pub async fn process_transfer(
     sender_user_id: i32,
     form: TransferForm,
 ) -> Result<(), String> {
-    let amount = match Decimal::from_f64_retain(form.amount) {
-        Some(value) => value,
-        None => return Err("Invalid amount.".to_string()),
-    };
+    let amount = form.amount;
 
     if amount <= Decimal::ZERO {
         return Err("Amount must be more than 0.".to_string());

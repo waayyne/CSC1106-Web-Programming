@@ -17,10 +17,11 @@ pub struct CashFlowSummary {
 }
 
 #[derive(Deserialize)]
+
 pub struct TransferForm {
     pub transfer_by: String,
     pub recipient_identifier: String,
-    pub amount: f64,
+    pub amount: Decimal,
     pub description: Option<String>,
 }
 

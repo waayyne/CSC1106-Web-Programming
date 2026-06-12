@@ -21,7 +21,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
        .route("/admin/users", web::get().to(admin_dashboard))
        .route("/admin/users/update-role", web::post().to(update_role))
        .route("/admin/users/update", web::post().to(update_user))
-       .route("/admin/register", web::get().to(admin_register_page))
+       //.route("/admin/register", web::get().to(admin_register_page))
        .route("/admin/register", web::post().to(admin_register_user))
        .route("/admin/users/delete/{id}", web::post().to(delete_user_handler));
 }
