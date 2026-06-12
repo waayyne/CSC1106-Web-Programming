@@ -56,6 +56,14 @@ pub async fn transactions_page(
         }
     };
 
+    let cash_flow_summary = match transaction_service::get_cash_flow_summary(&pool, user_id).await {
+        Ok(summary) => summary,
+        Err(err) => {
+            println!("CASH FLOW SUMMARY LOAD ERROR: {:?}", err);
+            return HttpResponse::InternalServerError().body("Failed to load cash flow summary");
+        }
+    };
+
     let total_pages = if total_count == 0 {
         1
     } else {
@@ -114,6 +122,26 @@ pub async fn transactions_page(
     context.insert("per_page", &per_page);
     context.insert("total_count", &total_count);
     context.insert("total_pages", &total_pages);
+    context.insert("total_in", &format!("{:.2}", cash_flow_summary.total_in));
+    context.insert("total_out", &format!("{:.2}", cash_flow_summary.total_out));
+    context.insert("net_flow", &format!("{:.2}", cash_flow_summary.net_flow));
+    context.insert("deposit_total", &format!("{:.2}", cash_flow_summary.deposit_total));
+    context.insert(
+        "withdraw_total",
+        &format!("{:.2}", cash_flow_summary.withdraw_total),
+    );
+    context.insert(
+        "transfer_out_total",
+        &format!("{:.2}", cash_flow_summary.transfer_out_total),
+    );
+    context.insert(
+        "investment_out_total",
+        &format!("{:.2}", cash_flow_summary.investment_out_total),
+    );
+    context.insert(
+        "investment_return_total",
+        &format!("{:.2}", cash_flow_summary.investment_return_total),
+    );
     context.insert("query", &query.into_inner());
 
     let rendered = match tmpl.render("transaction_history.html", &context) {

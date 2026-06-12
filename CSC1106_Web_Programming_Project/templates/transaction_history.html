@@ -163,6 +163,9 @@
                 <option value="deposit" {% if query.tx_type is defined and query.tx_type == "deposit" %}selected{% endif %}>Deposit</option>
                 <option value="withdraw" {% if query.tx_type is defined and query.tx_type == "withdraw" %}selected{% endif %}>Withdraw</option>
                 <option value="transfer" {% if query.tx_type is defined and query.tx_type == "transfer" %}selected{% endif %}>Transfer</option>
+                <option value="fixed_deposit" {% if query.tx_type is defined and query.tx_type == "fixed_deposit" %}selected{% endif %}>Fixed Deposit</option>
+                <option value="risk_investment" {% if query.tx_type is defined and query.tx_type == "risk_investment" %}selected{% endif %}>Risk Investment</option>
+                <option value="risk_investment_return" {% if query.tx_type is defined and query.tx_type == "risk_investment_return" %}selected{% endif %}>Risk Investment Return</option>
               </select>
             </div>
 
@@ -210,6 +213,50 @@
         </a>
       </div>
 
+      <div class="cash-flow-summary-grid">
+        <div class="cash-flow-card cash-flow-in">
+          <p>Total Money In</p>
+          <h2>${{ total_in }}</h2>
+        </div>
+
+        <div class="cash-flow-card cash-flow-out">
+          <p>Total Money Out</p>
+          <h2>${{ total_out }}</h2>
+        </div>
+
+        <div class="cash-flow-card cash-flow-net">
+          <p>Net Cash Flow</p>
+          <h2>${{ net_flow }}</h2>
+        </div>
+      </div>
+
+      <div class="cash-flow-breakdown-card">
+        <h2>Cash Flow Breakdown</h2>
+
+        <div class="cash-flow-breakdown-grid">
+          <div>
+            <p>Deposits</p>
+            <strong>${{ deposit_total }}</strong>
+          </div>
+          <div>
+            <p>Withdrawals</p>
+            <strong>${{ withdraw_total }}</strong>
+          </div>
+          <div>
+            <p>Transfers Out</p>
+            <strong>${{ transfer_out_total }}</strong>
+          </div>
+          <div>
+            <p>Risk Investment Out</p>
+            <strong>${{ investment_out_total }}</strong>
+          </div>
+          <div>
+            <p>Investment Returns</p>
+            <strong>${{ investment_return_total }}</strong>
+          </div>
+        </div>
+      </div>
+
       <div class="nice-history-card">
         <div class="nice-table-wrapper">
           <table class="nice-table">
@@ -229,20 +276,24 @@
               <tr>
                 <td>{{ tx.created_at }}</td>
                 <td>
-                  <span class="type-badge type-{{ tx.transaction_type | replace(from="_", to="-") }}">{{ tx.transaction_type }}</span>
+                  <span class="type-badge type-{{ tx.transaction_type | replace(from="_", to="-") }}">{{ tx.transaction_type_label }}</span>
                 </td>
                 <td>
-                  {% if tx.direction == "in" %}
+                  {% if tx.direction == "In" %}
                     <span class="direction-badge direction-in">In</span>
-                  {% else %}
+                  {% elif tx.direction == "Out" %}
                     <span class="direction-badge direction-out">Out</span>
+                  {% else %}
+                    <span class="direction-badge">-</span>
                   {% endif %}
                 </td>
                 <td>
-                  {% if tx.direction == "in" %}
+                  {% if tx.direction == "In" %}
                     <span class="amount-in">${{ tx.amount }}</span>
-                  {% else %}
+                  {% elif tx.direction == "Out" %}
                     <span class="amount-out">${{ tx.amount }}</span>
+                  {% else %}
+                    ${{ tx.amount }}
                   {% endif %}
                 </td>
                 <td>{{ tx.counterparty | default(value='-') }}</td>

@@ -1,5 +1,5 @@
 use crate::db::DbPool;
-use crate::models::transaction::TransactionRecord;
+use crate::models::transaction::{CashFlowSummary, TransactionRecord};
 
 use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
@@ -11,6 +11,7 @@ pub struct TransactionView {
     pub id: i32,
     pub direction: String,
     pub transaction_type: String,
+    pub transaction_type_label: String,
     pub amount: String,
     pub description: Option<String>,
     pub counterparty: Option<String>,
@@ -22,6 +23,7 @@ pub struct StatementTransactionView {
     pub id: i32,
     pub direction: String,
     pub transaction_type: String,
+    pub transaction_type_label: String,
     pub amount: String,
     pub description: Option<String>,
     pub counterparty: Option<String>,
@@ -115,25 +117,13 @@ pub async fn fetch_transactions(
     let mut items = Vec::new();
 
     for r in records {
-        let from_id = r.from_account_id;
-        let from_acc = r.from_account_number;
-        let to_acc = r.to_account_number;
-
-        let transaction_type_lower = r.transaction_type.to_lowercase();
-
-        let (direction, counterparty) = if transaction_type_lower == "deposit" {
-            ("In".to_string(), None)
-        } else if transaction_type_lower == "withdraw" || transaction_type_lower == "withdrawal" {
-            ("Out".to_string(), None)
-        } else if from_id == Some(account_id) {
-            ("Out".to_string(), to_acc)
-        } else {
-            ("In".to_string(), from_acc)
-        };
+        let direction = get_transaction_direction(&r, account_id);
+        let counterparty = get_transaction_counterparty(&r, account_id);
 
         items.push(TransactionView {
             id: r.id,
             direction,
+            transaction_type_label: format_transaction_type_label(&r.transaction_type),
             transaction_type: r.transaction_type,
             amount: format!("{:.2}", r.amount),
             description: r.description,
@@ -194,21 +184,13 @@ pub async fn fetch_statement_transactions(
         let effect = get_transaction_effect(&r, account_id);
         running_balance += effect;
 
-        let transaction_type_lower = r.transaction_type.to_lowercase();
-
-        let (direction, counterparty) = if transaction_type_lower == "deposit" {
-            ("In".to_string(), None)
-        } else if transaction_type_lower == "withdraw" || transaction_type_lower == "withdrawal" {
-            ("Out".to_string(), None)
-        } else if r.from_account_id == Some(account_id) {
-            ("Out".to_string(), r.to_account_number)
-        } else {
-            ("In".to_string(), r.from_account_number)
-        };
+        let direction = get_transaction_direction(&r, account_id);
+        let counterparty = get_transaction_counterparty(&r, account_id);
 
         items.push(StatementTransactionView {
             id: r.id,
             direction,
+            transaction_type_label: format_transaction_type_label(&r.transaction_type),
             transaction_type: r.transaction_type,
             amount: format!("{:.2}", r.amount),
             description: r.description,
@@ -235,4 +217,177 @@ fn get_transaction_effect(tx: &TransactionRecord, account_id: i32) -> Decimal {
     } else {
         Decimal::ZERO
     }
+}
+
+fn get_transaction_direction(tx: &TransactionRecord, account_id: i32) -> String {
+    if tx.to_account_id == Some(account_id) {
+        "In".to_string()
+    } else if tx.from_account_id == Some(account_id) {
+        "Out".to_string()
+    } else {
+        "-".to_string()
+    }
+}
+
+fn get_transaction_counterparty(
+    tx: &TransactionRecord,
+    account_id: i32,
+) -> Option<String> {
+    if tx.to_account_id == Some(account_id) {
+        tx.from_account_number.clone()
+    } else if tx.from_account_id == Some(account_id) {
+        tx.to_account_number.clone()
+    } else {
+        None
+    }
+}
+
+fn format_transaction_type_label(transaction_type: &str) -> String {
+    match transaction_type.to_lowercase().as_str() {
+        "deposit" => "Deposit".to_string(),
+        "withdraw" | "withdrawal" => "Withdraw".to_string(),
+        "transfer" => "Transfer".to_string(),
+        "fixed_deposit" => "Fixed Deposit".to_string(),
+        "fixed_deposit_claim" => "Fixed Deposit Claim".to_string(),
+        "risk_investment" => "Risk Investment".to_string(),
+        "risk_investment_return" => "Risk Investment Return".to_string(),
+        other => other
+            .split('_')
+            .map(|part| {
+                let mut chars = part.chars();
+                match chars.next() {
+                    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                    None => String::new(),
+                }
+            })
+            .collect::<Vec<String>>()
+            .join(" "),
+    }
+}
+
+pub async fn get_cash_flow_summary(
+    pool: &DbPool,
+    user_id: i32,
+) -> Result<CashFlowSummary, String> {
+    let account_row = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await
+        .map_err(|err| err.to_string())?;
+
+    let account_id = match account_row {
+        Some(row) => row.get::<i32, _>("id"),
+        None => {
+            return Ok(CashFlowSummary {
+                total_in: Decimal::ZERO,
+                total_out: Decimal::ZERO,
+                net_flow: Decimal::ZERO,
+                deposit_total: Decimal::ZERO,
+                withdraw_total: Decimal::ZERO,
+                transfer_out_total: Decimal::ZERO,
+                investment_out_total: Decimal::ZERO,
+                investment_return_total: Decimal::ZERO,
+            });
+        }
+    };
+
+    let total_in: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE to_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    let total_out: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE from_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    let deposit_total: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE transaction_type = 'deposit'
+          AND to_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    let withdraw_total: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE transaction_type = 'withdraw'
+          AND from_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    let transfer_out_total: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE transaction_type = 'transfer'
+          AND from_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    let investment_out_total: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE transaction_type = 'risk_investment'
+          AND from_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    let investment_return_total: Decimal = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE transaction_type = 'risk_investment_return'
+          AND to_account_id = $1
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|err| err.to_string())?;
+
+    Ok(CashFlowSummary {
+        total_in,
+        total_out,
+        net_flow: total_in - total_out,
+        deposit_total,
+        withdraw_total,
+        transfer_out_total,
+        investment_out_total,
+        investment_return_total,
+    })
 }

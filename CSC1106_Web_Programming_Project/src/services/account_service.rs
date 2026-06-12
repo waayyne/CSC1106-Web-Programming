@@ -83,7 +83,7 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
 
         let transaction_result = sqlx::query(
             "INSERT INTO transactions (from_account_id, to_account_id, transaction_type, amount, description)
-             VALUES ($1, NULL, 'withdrawal', $2, 'ATM withdrawal')",
+               VALUES ($1, NULL, 'withdraw', $2, 'ATM withdrawal')",
         )
         .bind(account_id)
         .bind(amount)

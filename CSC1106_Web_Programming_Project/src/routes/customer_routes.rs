@@ -51,7 +51,7 @@ async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, Strin
             )
             OR
             (
-                transaction_type = 'withdrawal'
+                (transaction_type = 'withdraw' OR transaction_type = 'withdrawal')
                 AND from_account_id = $1
             )
         ORDER BY created_at DESC

@@ -68,7 +68,7 @@
         {% for tx in statement_transactions %}
         <tr>
           <td>{{ tx.created_at }}</td>
-          <td>{{ tx.transaction_type }}</td>
+          <td>{{ tx.transaction_type_label }}</td>
           <td>{{ tx.direction }}</td>
           <td>${{ tx.amount }}</td>
           <td>{{ tx.counterparty | default(value='-') }}</td>

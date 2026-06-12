@@ -4,6 +4,18 @@ use serde::Deserialize;
 use serde::Serialize;
 use sqlx::FromRow;
 
+#[derive(Serialize)]
+pub struct CashFlowSummary {
+    pub total_in: Decimal,
+    pub total_out: Decimal,
+    pub net_flow: Decimal,
+    pub deposit_total: Decimal,
+    pub withdraw_total: Decimal,
+    pub transfer_out_total: Decimal,
+    pub investment_out_total: Decimal,
+    pub investment_return_total: Decimal,
+}
+
 #[derive(Deserialize)]
 pub struct TransferForm {
     pub transfer_by: String,
