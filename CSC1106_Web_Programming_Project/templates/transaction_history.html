@@ -202,42 +202,57 @@
 
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-        <h2 style="margin:0;">Transactions</h2>
+      <div class="history-toolbar">
+        <h2>Transactions</h2>
 
         <a href="/transactions/statement" class="statement-history-btn">
           Export Statement
         </a>
       </div>
 
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+      <div class="nice-history-card">
+        <div class="nice-table-wrapper">
+          <table class="nice-table">
             <thead>
-              <tr style="border-bottom: 2px solid #e5e7eb;">
-                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Date</th>
-                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Type</th>
-                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Direction</th>
-                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Amount</th>
-                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Counterparty</th>
-                <th style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">Description</th>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Direction</th>
+                <th>Amount</th>
+                <th>Counterparty</th>
+                <th>Description</th>
               </tr>
             </thead>
 
             <tbody>
               {% for tx in transactions %}
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="padding:0.85rem 1rem; font-weight:500;">{{ tx.created_at }}</td>
-                <td style="padding:0.85rem 1rem;">{{ tx.transaction_type }}</td>
-                <td style="padding:0.85rem 1rem;">{{ tx.direction }}</td>
-                <td style="padding:0.85rem 1rem;">${{ tx.amount }}</td>
-                <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.counterparty | default(value='-') }}</td>
-                <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.description | default(value='-') }}</td>
+              <tr>
+                <td>{{ tx.created_at }}</td>
+                <td>
+                  <span class="type-badge type-{{ tx.transaction_type | replace(from="_", to="-") }}">{{ tx.transaction_type }}</span>
+                </td>
+                <td>
+                  {% if tx.direction == "in" %}
+                    <span class="direction-badge direction-in">In</span>
+                  {% else %}
+                    <span class="direction-badge direction-out">Out</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if tx.direction == "in" %}
+                    <span class="amount-in">${{ tx.amount }}</span>
+                  {% else %}
+                    <span class="amount-out">${{ tx.amount }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ tx.counterparty | default(value='-') }}</td>
+                <td>{{ tx.description | default(value='-') }}</td>
               </tr>
               {% endfor %}
 
               {% if transactions | length == 0 %}
               <tr>
-                <td colspan="6" style="padding:2rem; text-align:center; color:#9ca3af;">
+                <td colspan="6" class="empty-row">
                   No transactions found.
                 </td>
               </tr>

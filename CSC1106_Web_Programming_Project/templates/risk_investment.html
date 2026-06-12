@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WIVAH Bank - Fixed Deposit</title>
+    <title>WIVAH Bank - Risk Investment</title>
+
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/sidebar.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="/static/css/transactions.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
-<body>
 
+<body>
 <div class="app-layout">
 
     <aside class="sidebar">
         <div>
             <div class="brand">
-                <div class="brand-icon">RB</div>
+                <div class="brand-icon">WB</div>
                 <div>
                     <h2>WIVAH Bank</h2>
                     <p>Banking with Trust</p>
@@ -53,15 +53,10 @@
                     </summary>
 
                     <div class="nav-dropdown-menu">
-                        <a href="/fixed-deposit" class="nav-sub-item active">Fixed Deposit</a>
-                        <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+                        <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
+                        <a href="/risk-investment" class="nav-sub-item active">Risk Investment</a>
                     </div>
                 </details>
-
-                <a href="/loans" class="nav-item">
-                    <span class="nav-icon">$</span>
-                    <span>Loans</span>
-                </a>
 
                 <a href="/profile" class="nav-item">
                     <span class="nav-icon">⚙</span>
@@ -84,33 +79,24 @@
             <div class="welcome-box">
                 <div class="user-circle">{{ initials }}</div>
                 <div>
-                    <h3>Fixed Deposit</h3>
-                    <p>Create and claim your fixed deposits.</p>
+                    <h3>Risk Investment</h3>
+                    <p>Simulated investment with possible profit or loss.</p>
                 </div>
             </div>
 
             <div class="profile-card">
                 <div class="profile-avatar">{{ initials }}</div>
-
                 <div class="profile-info">
                     <h4>{{ first_name }} {{ last_name }}</h4>
                     <p>Account No: {{ account_number }}</p>
-                </div>
-
-                <div class="dropdown">
-                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
-                    <div class="dropdown-content">
-                        <a href="/profile">Settings</a>
-                        <a href="/logout">Log out</a>
-                    </div>
                 </div>
             </div>
         </header>
 
         <section class="page-section">
-            <h1>Fixed Deposit</h1>
+            <h1>Risk Investment</h1>
             <p class="page-subtitle">
-                Lock money into a fixed deposit and earn interest after it matures.
+                Choose an amount and risk level. The investment will either succeed or fail.
             </p>
 
             {% if success %}
@@ -125,13 +111,13 @@
                 <div class="atm-main-balance">
                     <p>Available Balance</p>
                     <h2>${{ balance }}</h2>
-                    <span>Money used for fixed deposit will be deducted immediately.</span>
+                    <span>Your balance is updated after the investment result.</span>
                 </div>
 
                 <div class="atm-mini-card">
-                    <p>Demo Duration</p>
-                    <h3>90 / 180 / 360 days</h3>
-                    <span>Simulated as 9 / 18 / 36 seconds</span>
+                    <p>Investment Outcome</p>
+                    <h3>Success or Failed</h3>
+                    <span>Success gives profit. Failed means the invested amount is lost.</span>
                 </div>
             </div>
 
@@ -141,16 +127,16 @@
                     <div class="panel-header">
                         <div class="panel-icon">◈</div>
                         <div>
-                            <h2>Create Fixed Deposit</h2>
-                            <p>Select an amount and duration for the deposit.</p>
+                            <h2>Create Risk Investment</h2>
+                            <p>Enter the amount and select risk level.</p>
                         </div>
                     </div>
 
                     <hr>
 
-                    <form method="post" action="/fixed-deposit/create" class="atm-form">
+                    <form method="post" action="/risk-investment/create" class="atm-form">
                         <div class="form-row">
-                            <label for="amount">Amount</label>
+                            <label for="amount">Investment Amount</label>
                             <input
                                 type="number"
                                 id="amount"
@@ -163,110 +149,96 @@
                         </div>
 
                         <div class="form-row">
-                            <label for="duration_days">Duration</label>
-                            <select id="duration_days" name="duration_days" required>
-                                <option value="90">90 days - 1.50% interest</option>
-                                <option value="180">180 days - 2.50% interest</option>
-                                <option value="360">360 days - 3.50% interest</option>
+                            <label for="risk_level">Risk Level</label>
+                            <select id="risk_level" name="risk_level" required>
+                                <option value="low">Low Risk</option>
+                                <option value="medium">Medium Risk</option>
+                                <option value="high">High Risk</option>
                             </select>
                         </div>
 
-                        <button type="submit" class="submit-btn">Create Fixed Deposit</button>
+                        <button type="submit" class="submit-btn">Invest Now</button>
                     </form>
                 </div>
 
                 <div class="atm-rules-section">
-                    <h2>How It Works</h2>
+                    <h2>Risk Rules</h2>
 
                     <div class="atm-rule">
                         <span>1</span>
-                        <p>The amount is deducted from your account balance.</p>
+                        <p>Low Risk: 75% success gives 5% profit. 25% failed loses the invested amount.</p>
                     </div>
 
                     <div class="atm-rule">
                         <span>2</span>
-                        <p>The deposit becomes claimable after the simulated maturity time.</p>
+                        <p>Medium Risk: 60% success gives 10% profit. 40% failed loses the invested amount.</p>
                     </div>
 
                     <div class="atm-rule">
                         <span>3</span>
-                        <p>For demo, 90 days = 9 seconds, 180 days = 18 seconds, 360 days = 36 seconds.</p>
+                        <p>High Risk: 45% success gives 20% profit. 55% failed loses the invested amount.</p>
                     </div>
                 </div>
 
             </div>
 
-            <div class="nice-history-card">
+            <div class="investment-history-card">
                 <div class="panel-header">
-                    <div class="panel-icon">◈</div>
+                    <div class="panel-icon">▤</div>
                     <div>
-                        <h2>Your Fixed Deposits</h2>
-                        <p>Track deposit amounts, interest and claim status.</p>
+                        <h2>Your Investment History</h2>
+                        <p>All previous risk investment records.</p>
                     </div>
                 </div>
 
-                <div class="nice-table-wrapper">
-                    <table class="nice-table">
+                <div class="investment-table-wrapper nice-table-wrapper">
+                    <table class="investment-table nice-table">
                         <thead>
                             <tr>
                                 <th>Amount</th>
-                                <th>Rate</th>
-                                <th>Interest</th>
+                                <th>Risk</th>
+                                <th>Result</th>
                                 <th>Return</th>
-                                <th>Duration</th>
-                                <th>Maturity Time</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th>Profit/Loss</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            {% for fd in deposits %}
+                            {% for item in investments %}
                             <tr>
+                                <td>${{ item.amount }}</td>
+
                                 <td>
-                                    <span class="amount-out">${{ fd.principal_amount }}</span>
+                                    <span class="risk-badge risk-{{ item.risk_level }}">
+                                        {{ item.risk_level }}
+                                    </span>
                                 </td>
-                                <td>{{ fd.interest_rate }}%</td>
+
                                 <td>
-                                    <span class="amount-in">${{ fd.interest_amount }}</span>
+                                    <span class="result-badge result-{{ item.result }}">
+                                        {{ item.result }}
+                                    </span>
                                 </td>
+
+                                <td>${{ item.return_amount }}</td>
+
                                 <td>
-                                    <span class="amount-in">${{ fd.total_return }}</span>
-                                </td>
-                                <td>{{ fd.duration_days }} days</td>
-                                <td>
-                                    {{ fd.maturity_at | date(format="%Y-%m-%d %H:%M:%S") }}
-                                </td>
-                                <td>
-                                    {% if fd.status == "active" %}
-                                        <span class="status-badge status-active">Active</span>
-                                    {% elif fd.status == "done" %}
-                                        <span class="status-badge status-done">Done</span>
-                                    {% elif fd.status == "matured" %}
-                                        <span class="status-badge status-matured">Matured</span>
-                                    {% elif fd.status == "cancelled" %}
-                                        <span class="status-badge status-cancelled">Cancelled</span>
+                                    {% if item.result == "success" %}
+                                        <span class="profit-text">+${{ item.profit_loss }}</span>
                                     {% else %}
-                                        <span class="status-badge status-claimed">Claimed</span>
+                                        <span class="loss-text">${{ item.profit_loss }}</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {% if fd.status == "done" %}
-                                        <form method="post" action="/fixed-deposit/claim">
-                                            <input type="hidden" name="fixed_deposit_id" value="{{ fd.id }}">
-                                            <button type="submit" class="btn-primary">Claim</button>
-                                        </form>
-                                    {% else %}
-                                        Claimed
-                                    {% endif %}
-                                </td>
+
+                                <td>{{ item.created_at }}</td>
                             </tr>
                             {% endfor %}
 
-                            {% if deposits | length == 0 %}
+                            {% if investments | length == 0 %}
                             <tr>
-                                <td colspan="8" class="empty-row">
-                                    No fixed deposits found.
+                                <td colspan="6" class="empty-row">
+                                    No risk investments yet.
                                 </td>
                             </tr>
                             {% endif %}
@@ -278,8 +250,6 @@
         </section>
 
     </main>
-
 </div>
-
 </body>
 </html>

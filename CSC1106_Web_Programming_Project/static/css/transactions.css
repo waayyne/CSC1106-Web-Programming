@@ -1,3 +1,199 @@
+.nice-history-card {
+    margin-top: 24px;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 28px 32px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.history-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.history-toolbar h2 {
+    margin: 0;
+}
+
+.investment-table-wrapper,
+.nice-table-wrapper {
+    margin-top: 20px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.investment-table,
+.nice-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.investment-table thead,
+.nice-table thead {
+    background: #f8fafc;
+}
+
+.investment-table th,
+.nice-table th {
+    padding: 14px 16px;
+    text-align: left;
+    color: #475569;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.investment-table td,
+.nice-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #0f172a;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.investment-table tbody tr:hover,
+.nice-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.risk-badge,
+.result-badge,
+.type-badge,
+.direction-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.risk-low {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.risk-medium {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.risk-high {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.result-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.result-failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-active {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-matured {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-done {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-claimed {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.type-deposit {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.type-withdraw {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.type-transfer {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.type-risk-investment {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.type-risk-investment-return {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.direction-in {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.direction-out {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.amount-in {
+    color: #15803d;
+    font-weight: 700;
+}
+
+.amount-out {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.profit-text {
+    color: #15803d;
+    font-weight: 700;
+}
+
+.loss-text {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.empty-row {
+    text-align: center;
+    padding: 32px;
+    color: #94a3b8;
+}
+
+.nice-table .empty-row,
+.investment-table .empty-row {
+    white-space: normal;
+}
+
 .pagination-box {
     margin-top: 22px;
     display: flex;
@@ -45,4 +241,23 @@
 
 .statement-history-btn:hover {
     background: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+    .nice-history-card {
+        padding: 20px;
+    }
+
+    .investment-table th,
+    .investment-table td,
+    .nice-table th,
+    .nice-table td {
+        padding: 12px;
+        font-size: 0.85rem;
+    }
+
+    .history-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

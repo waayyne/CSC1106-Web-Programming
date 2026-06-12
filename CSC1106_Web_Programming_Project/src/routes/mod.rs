@@ -6,3 +6,4 @@ pub mod transaction_routes;
 pub mod admin_routes;
 pub mod staff_routes;
 pub mod fixed_deposit_routes;
+pub mod risk_investment_routes;

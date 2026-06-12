@@ -7,3 +7,4 @@ pub mod user;
 pub mod admin;
 pub mod staff;
 pub mod fixed_deposit;
+pub mod risk_investment;

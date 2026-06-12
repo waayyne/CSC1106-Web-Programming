@@ -8,3 +8,4 @@ pub mod transaction_service;
 pub mod admin_service;
 pub mod staff_service;
 pub mod fixed_deposit_service;
+pub mod risk_investment_service;

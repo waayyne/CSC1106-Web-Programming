@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/sidebar.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
+    <link rel="stylesheet" href="/static/css/transactions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
@@ -224,41 +225,58 @@
             <div class="atm-activity-section">
                 <h2>Recent ATM Activity</h2>
 
-                {% if atm_history and atm_history | length > 0 %}
-                    {% for item in atm_history %}
-                        <div class="activity-item">
-                            <div>
-                                <h4>
-                                    {% if item.transaction_type == "deposit" %}
-                                        Deposit
-                                    {% else %}
-                                        Withdrawal
-                                    {% endif %}
-                                </h4>
+                <div class="nice-table-wrapper">
+                    <table class="nice-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Direction</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
 
-                                <p>
-                                    ${{ item.amount }} • {{ item.created_at }}
-                                </p>
-                            </div>
+                        <tbody>
+                            {% if atm_history and atm_history | length > 0 %}
+                                {% for item in atm_history %}
+                                <tr>
+                                    <td>
+                                        {% if item.transaction_type == "deposit" %}
+                                            <span class="type-badge type-deposit">Deposit</span>
+                                        {% else %}
+                                            <span class="type-badge type-withdraw">Withdrawal</span>
+                                        {% endif %}
+                                    </td>
 
-                            <span>
-                                {% if item.transaction_type == "deposit" %}
-                                    In
-                                {% else %}
-                                    Out
-                                {% endif %}
-                            </span>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="activity-item">
-                        <div>
-                            <h4>No ATM Transactions Yet</h4>
-                            <p>Your deposit and withdrawal history will appear here.</p>
-                        </div>
-                        <span>Empty</span>
-                    </div>
-                {% endif %}
+                                    <td>
+                                        {% if item.transaction_type == "deposit" %}
+                                            <span class="direction-badge direction-in">In</span>
+                                        {% else %}
+                                            <span class="direction-badge direction-out">Out</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if item.transaction_type == "deposit" %}
+                                            <span class="amount-in">${{ item.amount }}</span>
+                                        {% else %}
+                                            <span class="amount-out">${{ item.amount }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>{{ item.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="empty-row">
+                                        No ATM Transactions Yet.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </section>
