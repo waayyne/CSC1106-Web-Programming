@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WIVAH Bank - Loans</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/sidebar.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/forms.css">
+    <link rel="stylesheet" href="/static/css/transactions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">WB</div>
+                <div>
+                    <h2>WIVAH Bank</h2>
+                    <p>Banking with Trust</p>
+                </div>
+            </div>
+            <nav class="side-nav">
+                <a href="/dashboard" class="nav-item">
+                    <span class="nav-icon">⌂</span><span>Dashboard</span>
+                </a>
+                <a href="/atm" class="nav-item">
+                    <span class="nav-icon">▣</span><span>ATM Simulation</span>
+                </a>
+                <a href="/transfer" class="nav-item">
+                    <span class="nav-icon">⇄</span><span>Bank Transfer</span>
+                </a>
+                <a href="/transactions" class="nav-item">
+                    <span class="nav-icon">▤</span><span>Transactions</span>
+                </a>
+                <details class="nav-dropdown">
+                    <summary class="nav-item nav-dropdown-title">
+                        <span class="nav-icon">◈</span>
+                        <span>Investments</span>
+                        <span class="nav-arrow">⌄</span>
+                    </summary>
+                    <div class="nav-dropdown-menu">
+                        <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
+                        <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+                    </div>
+                </details>
+                <a href="/loans" class="nav-item active">
+                    <span class="nav-icon">$</span><span>Loans</span>
+                </a>
+                <a href="/profile" class="nav-item">
+                    <span class="nav-icon">⚙</span><span>Settings</span>
+                </a>
+            </nav>
+        </div>
+        <div class="logout-box">
+            <a href="/logout" class="nav-item logout">
+                <span class="nav-icon">↪</span><span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="welcome-box">
+                <div class="user-circle">{{ initials }}</div>
+                <div>
+                    <h3>Welcome back, {{ first_name }}!</h3>
+                    <p>Apply for a loan or check your application status.</p>
+                </div>
+            </div>
+            <div class="profile-card">
+                <div class="profile-avatar">{{ initials }}</div>
+                <div class="profile-info">
+                    <h4>{{ first_name }} {{ last_name }}</h4>
+                    <p>Account No: {{ account_number }}</p>
+                </div>
+                <div class="dropdown">
+                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="/profile">Settings</a>
+                        <a href="/logout">Log out</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-section">
+            <h1>Loan Management</h1>
+            <p class="page-subtitle">Submit a new loan application or track existing ones.</p>
+
+            {% if success %}
+                <div class="success-message">{{ success }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+
+            <div class="atm-overview-grid">
+                <div class="atm-main-balance">
+                    <p>Current Balance</p>
+                    <h2>${{ balance }}</h2>
+                    <span>Approved loan funds are credited directly to this account.</span>
+                </div>
+                <div class="atm-mini-card">
+                    <p>Loan Status</p>
+                    <h3>{{ loans | length }} Application(s)</h3>
+                    <span>Staff review pending applications.</span>
+                </div>
+            </div>
+
+            <div class="atm-main-grid">
+
+                <div class="atm-form-section">
+                    <div class="panel-header">
+                        <div class="panel-icon">$</div>
+                        <div>
+                            <h2>Apply for a Loan</h2>
+                            <p>Fill in the amount and your reason for applying.</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <form method="post" action="/loans/apply" class="atm-form">
+                        <div class="form-row">
+                            <label for="amount">Loan Amount ($)</label>
+                            <input type="number" id="amount" name="amount"
+                                   step="0.01" min="1" placeholder="e.g. 5000.00" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="reason">Reason</label>
+                            <input type="text" id="reason" name="reason"
+                                   placeholder="Brief reason for the loan">
+                        </div>
+                        <button type="submit" class="submit-btn">Submit Application</button>
+                    </form>
+                </div>
+
+                <div class="atm-rules-section">
+                    <h2>Loan Rules</h2>
+                    <div class="atm-rule">
+                        <span>1</span>
+                        <p>You may only have one pending application at a time.</p>
+                    </div>
+                    <div class="atm-rule">
+                        <span>2</span>
+                        <p>Staff review all applications and will approve or reject them.</p>
+                    </div>
+                    <div class="atm-rule">
+                        <span>3</span>
+                        <p>Approved funds are credited to your account immediately.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="nice-history-card">
+                <h2 style="margin-bottom: 18px;">Your Applications</h2>
+                <div class="nice-table-wrapper">
+                    <table class="nice-table">
+                        <thead>
+                            <tr>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                                <th>Applied On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in loans %}
+                            <tr>
+                                <td>${{ loan.amount }}</td>
+                                <td>
+                                    {% if loan.status == "pending" %}
+                                        <span class="status-badge status-active">Pending</span>
+                                    {% elif loan.status == "approved" %}
+                                        <span class="status-badge status-matured">Approved</span>
+                                    {% else %}
+                                        <span class="status-badge status-cancelled">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ loan.reason | default(value="-") }}</td>
+                                <td>{{ loan.created_at }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if loans | length == 0 %}
+                            <tr>
+                                <td colspan="4" class="empty-row">No loan applications yet.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+</div>
+</body>
+</html>

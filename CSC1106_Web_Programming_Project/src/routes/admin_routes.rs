@@ -1,12 +1,12 @@
-use core::error;
-
 use actix_session::Session; // Handles session cookies for authentication
 use actix_web::{web, HttpResponse, Responder}; // Framework core for web handling
 use tera::{Context, Tera}; // Templating engine for HTML rendering
 use sqlx::Row; // Helper for extracting data from SQL query rows
 use crate::db::DbPool; // Database connection pool type
+use crate::models::audit_log::AuditLog;
 use crate::services::{admin_service, audit_service, auth_service}; // Custom business logic services
 use crate::models::admin::{AdminUserRegisterForm, UpdateRoleForm, UserRow, AdminUserUpdateForm}; // Shared data models
+use crate::services::audit_service::AuditLogView;
 
 // Helper function to verify if the session user has "admin" privileges
 fn require_admin(session: &Session) -> Option<i32> {
@@ -23,7 +23,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
        .route("/admin/users/update", web::post().to(update_user))
        //.route("/admin/register", web::get().to(admin_register_page))
        .route("/admin/register", web::post().to(admin_register_user))
-       .route("/admin/users/delete/{id}", web::post().to(delete_user_handler));
+       .route("/admin/users/delete/{id}", web::post().to(delete_user_handler))
+       .route("/admin/logs", web::get().to(audit_logs_page));
 }
 
 // Helper function to prepare dashboard stats and user lists for the template
@@ -115,12 +116,12 @@ pub async fn update_role(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, session
     let form_data = form.into_inner();
     let result = admin_service::update_user_role(&pool, form_data.user_id, &form_data.new_role).await;
 
-    // Log the event for audit purposes
-    let action = format!("Admin {} changed user {} role to {}", admin_id, form_data.user_id, form_data.new_role);
-    let _ = audit_service::log_action(&pool, Some(admin_id), &action).await;
-
     match result {
-        Ok(_) => HttpResponse::Found().append_header(("Location", "/admin/dashboard")).finish(),
+        Ok(_) => {
+            let action = format!("Admin {} changed user {} role to {}", admin_id, form_data.user_id, form_data.new_role);
+            let _ = audit_service::log_action(&pool, Some(admin_id), &action).await;
+            HttpResponse::Found().append_header(("Location", "/admin/dashboard")).finish()
+        }
         Err(e) => {
             // Re-render with error if update fails
             let (mut context, _) = match load_admin_context(&pool, admin_id).await {
@@ -203,12 +204,12 @@ pub async fn update_user(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, session
     let form_data = form.into_inner();
     let result = admin_service::update_user_details(&pool, &form_data).await;
 
-    // Log update action
-    let action = format!("Admin {} updated user {} profile", admin_id, form_data.user_id);
-    let _ = audit_service::log_action(&pool, Some(admin_id), &action).await;
-
     match result {
-        Ok(_) => HttpResponse::Found().append_header(("Location", "/admin/dashboard")).finish(),
+        Ok(_) => {
+            let action = format!("Admin {} updated user {} profile", admin_id, form_data.user_id);
+            let _ = audit_service::log_action(&pool, Some(admin_id), &action).await;
+            HttpResponse::Found().append_header(("Location", "/admin/dashboard")).finish()
+        }
         Err(e) => {
             let (mut context, _) = match load_admin_context(&pool, admin_id).await {
                 Ok(result) => result,
@@ -228,8 +229,86 @@ pub async fn delete_user_handler(pool: web::Data<DbPool>, session: Session, path
     }
 
     let user_id = path.into_inner();
-    let _ = admin_service::delete_user(&pool, user_id).await;
+    if let Err(e) = admin_service::delete_user(&pool, user_id).await {
+        return HttpResponse::InternalServerError().body(e);
+    }
+
     let _ = audit_service::log_action(&pool, None, &format!("Admin deleted user {}", user_id)).await;
 
     HttpResponse::Found().append_header(("Location", "/admin/dashboard")).finish()
+}
+
+pub async fn audit_logs_page(
+    pool: web::Data<DbPool>,
+    tmpl: web::Data<Tera>,
+    session: Session,
+) -> impl Responder {
+    let admin_id = match require_admin(&session) {
+        Some(id) => id,
+        None => return HttpResponse::Found().append_header(("Location", "/dashboard")).finish(),
+    };
+
+    let admin_row = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
+        .bind(admin_id)
+        .fetch_one(pool.get_ref())
+        .await;
+
+    let (first_name, last_name) = match admin_row {
+        Ok(row) => (
+            row.get::<String, _>("first_name"),
+            row.get::<String, _>("last_name"),
+        ),
+        Err(_) => ("Admin".to_string(), "".to_string()),
+    };
+
+    let initials = format!(
+        "{}{}",
+        first_name.chars().next().unwrap_or('A'),
+        last_name.chars().next().unwrap_or('D')
+    );
+
+    let rows = sqlx::query(
+        "SELECT al.id, al.user_id,
+                COALESCE(u.username, 'System') AS username,
+                al.action,
+                al.created_at
+         FROM audit_logs al
+         LEFT JOIN users u ON al.user_id = u.id
+         ORDER BY al.created_at DESC
+         LIMIT 300",
+    )
+    .fetch_all(pool.get_ref())
+    .await
+    .unwrap_or_default();
+
+    let logs: Vec<AuditLogView> = rows
+        .into_iter()
+        .map(|row| AuditLogView {
+            id: {
+                let audit_log = AuditLog {
+                    id: row.get("id"),
+                    user_id: row.get("user_id"),
+                    action: row.get("action"),
+                    created_at: row.get("created_at"),
+                };
+                audit_log.id
+            },
+            user_id: row.get("user_id"),
+            username: row.get("username"),
+            action: row.get("action"),
+            created_at: row
+                .get::<chrono::NaiveDateTime, _>("created_at")
+                .format("%Y-%m-%d %H:%M:%S")
+                .to_string(),
+        })
+        .collect();
+
+    let mut ctx = Context::new();
+    ctx.insert("first_name", &first_name);
+    ctx.insert("last_name", &last_name);
+    ctx.insert("initials", &initials);
+    ctx.insert("logs", &logs);
+
+    let rendered = tmpl.render("audit_logs.html", &ctx).unwrap();
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
