@@ -59,6 +59,8 @@ Edit `.env` with your values:
 DATABASE_URL=postgres://postgres:<your-password>@localhost:5432/banking_system
 SESSION_KEY=<64-char hex string>
 APP_BASE_URL=http://localhost
+TURNSTILE_SITE_KEY=your-cloudflare-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-cloudflare-turnstile-secret-key
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
@@ -67,6 +69,8 @@ SMTP_FROM=your-email@gmail.com
 ```
 
 > For Gmail, `SMTP_PASSWORD` must be a [Gmail App Password](https://myaccount.google.com/apppasswords), not your regular password.
+
+> If Turnstile is enabled, the captcha appears on the auth pages and is fixed to the bottom-right corner of the viewport.
 
 ### 4. Set Up the Database
 
@@ -203,6 +207,8 @@ cargo run
 | Homepage | `/` |
 | Login | `/login` |
 | Register | `/register` |
+| Forgot Password | `/forgot-password` |
+| Verify Email | `/verify-email` |
 | Customer Dashboard | `/dashboard` |
 | Account / ATM / Transfer | `/account`, `/atm`, `/transfer` |
 | Transaction History | `/transactions` |
