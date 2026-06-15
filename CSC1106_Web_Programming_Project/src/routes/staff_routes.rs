@@ -12,7 +12,7 @@ use crate::services::staff_service;
 fn require_staff(session: &Session) -> Option<i32> {
     let user_id = session.get::<i32>("user_id").unwrap_or(None)?;
     let role = session.get::<String>("role").unwrap_or(None)?;
-    if role == "staff" || role == "admin" { Some(user_id) } else { None }
+    if role == "staff" { Some(user_id) } else { None }
 }
 
 // Handler for the staff dashboard page
@@ -24,7 +24,7 @@ pub async fn staff_dashboard(
     let staff_id = match require_staff(&session) {
         Some(id) => id,
         None => return HttpResponse::Found()
-            .append_header(("Location", "/dashboard"))
+            .append_header(("Location", "/admin/dashboard"))
             .finish(),
     };
 
@@ -49,6 +49,7 @@ pub async fn staff_dashboard(
         first_name.chars().next().unwrap_or('S'),
         last_name.chars().next().unwrap_or('T'),
     );
+    let role = session.get::<String>("role").unwrap_or(None).unwrap_or_default();
 
     // count assigned customers, also only shows customers
     let total_users: i64 = sqlx::query(
@@ -72,6 +73,7 @@ pub async fn staff_dashboard(
     context.insert("first_name", &first_name);
     context.insert("last_name", &last_name);
     context.insert("initials", &initials);
+    context.insert("role", &role);
     context.insert("total_users", &total_users);
     context.insert("pending_loans", &pending_loans);
 
@@ -94,7 +96,7 @@ pub async fn staff_table_view(
     let staff_id = match require_staff(&session) {
         Some(id) => id,
         None => return HttpResponse::Found()
-            .append_header(("Location", "/dashboard"))
+            .append_header(("Location", "/admin/dashboard"))
             .finish(),
     };
 
@@ -118,6 +120,7 @@ pub async fn staff_table_view(
         first_name.chars().next().unwrap_or('S'),
         last_name.chars().next().unwrap_or('T'),
     );
+    let role = session.get::<String>("role").unwrap_or(None).unwrap_or_default();
 
     let customers_result = match search_query.as_ref(){
         Some(q) if !q.is_empty() => {
@@ -136,6 +139,7 @@ pub async fn staff_table_view(
     context.insert("first_name", &first_name);
     context.insert("last_name", &last_name);
     context.insert("initials", &initials);
+    context.insert("role", &role);
     context.insert("table_view", &customers);
 
     if let Some(q) = search_query { // If statement for search query, so that the search box can retain the search term after searching

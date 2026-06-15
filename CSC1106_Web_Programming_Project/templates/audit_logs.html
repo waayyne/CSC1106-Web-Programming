@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WIVAH Bank - Audit Logs</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/sidebar.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/forms.css">
+    <link rel="stylesheet" href="/static/css/transactions.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">WB</div>
+                <div>
+                    <h2>WIVAH Bank</h2>
+                    <p>Banking with Trust</p>
+                </div>
+            </div>
+            <nav class="side-nav">
+                <a href="/admin/dashboard" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/logs" class="nav-item active">
+                    <span class="nav-icon">▤</span>
+                    <span>Audit Logs</span>
+                </a>
+            </nav>
+        </div>
+        <div class="logout-box">
+            <a href="/logout" class="nav-item logout">
+                <span class="nav-icon">↪</span>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="welcome-box">
+                <div class="user-circle">{{ initials }}</div>
+                <div>
+                    <h3>Audit Logs</h3>
+                    <p>Chronological record of all system and user actions.</p>
+                </div>
+            </div>
+            <div class="profile-card">
+                <div class="profile-avatar">{{ initials }}</div>
+                <div class="profile-info">
+                    <h4>{{ first_name }} {{ last_name }}</h4>
+                    <p>Administrator</p>
+                </div>
+                <span class="profile-arrow">⌄</span>
+            </div>
+        </header>
+
+        <section class="page-section">
+            <h1>Audit Logs</h1>
+            <p class="page-subtitle">Showing the 300 most recent system events.</p>
+
+            <div class="nice-history-card">
+                <div class="nice-table-wrapper">
+                    <table class="nice-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Date &amp; Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.id }}</td>
+                                <td>{{ log.username }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.created_at }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if logs | length == 0 %}
+                            <tr>
+                                <td colspan="4" class="empty-row">No audit logs found.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

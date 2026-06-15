@@ -52,6 +52,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::staff_routes::config)
             .configure(routes::fixed_deposit_routes::config)
             .configure(routes::risk_investment_routes::config)
+            .configure(routes::loan_routes::config)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

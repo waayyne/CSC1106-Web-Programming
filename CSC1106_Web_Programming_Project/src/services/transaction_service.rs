@@ -251,6 +251,7 @@ fn format_transaction_type_label(transaction_type: &str) -> String {
         "fixed_deposit_claim" => "Fixed Deposit Claim".to_string(),
         "risk_investment" => "Risk Investment".to_string(),
         "risk_investment_return" => "Risk Investment Return".to_string(),
+        "loan_disbursement" => "Loan Disbursement".to_string(),
         other => other
             .split('_')
             .map(|part| {

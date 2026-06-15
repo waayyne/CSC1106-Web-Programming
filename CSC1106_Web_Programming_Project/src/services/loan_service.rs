@@ -1,1 +1,198 @@
 
+use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
+use serde::Serialize;
+use sqlx::Row;
+
+use crate::db::DbPool;
+use crate::models::loan::Loan;
+
+#[derive(Serialize)]
+pub struct LoanView {
+    pub id: i32,
+    pub amount: String,
+    pub status: String,
+    pub reason: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Serialize)]
+pub struct LoanWithUserView {
+    pub id: i32,
+    pub user_id: i32,
+    pub username: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub amount: String,
+    pub status: String,
+    pub reason: Option<String>,
+    pub created_at: String,
+}
+
+pub async fn apply_for_loan(
+    pool: &DbPool,
+    user_id: i32,
+    amount: Decimal,
+    reason: Option<String>,
+) -> Result<(), String> {
+    if amount <= Decimal::ZERO {
+        return Err("Loan amount must be greater than $0.".to_string());
+    }
+
+    // Block duplicate pending applications
+    let pending: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM loans WHERE user_id = $1 AND status = 'pending'",
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Failed to check existing loans: {}", e))?;
+
+    if pending > 0 {
+        return Err("You already have a pending loan application.".to_string());
+    }
+
+    sqlx::query(
+        "INSERT INTO loans (user_id, amount, status, reason) VALUES ($1, $2, 'pending', $3)",
+    )
+    .bind(user_id)
+    .bind(amount)
+    .bind(reason)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to submit application: {}", e))?;
+
+    Ok(())
+}
+
+pub async fn get_user_loans(pool: &DbPool, user_id: i32) -> Result<Vec<LoanView>, String> {
+    let loans: Vec<Loan> = sqlx::query_as(
+        "SELECT id, user_id, amount, status, reason, created_at
+         FROM loans WHERE user_id = $1 ORDER BY created_at DESC",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch loans: {}", e))?;
+
+    let loans = loans
+        .into_iter()
+        .map(|loan| LoanView {
+            id: loan.id,
+            amount: format!("{:.2}", loan.amount),
+            status: loan.status,
+            reason: loan.reason,
+            created_at: loan.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+        })
+        .collect();
+
+    Ok(loans)
+}
+
+pub async fn get_all_loans(pool: &DbPool) -> Result<Vec<LoanWithUserView>, String> {
+    let rows = sqlx::query(
+        "SELECT l.id, l.user_id, u.username, u.first_name, u.last_name,
+                l.amount, l.status, l.reason, l.created_at
+         FROM loans l
+         JOIN users u ON l.user_id = u.id
+         ORDER BY l.created_at DESC",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch loans: {}", e))?;
+
+    let loans = rows
+        .into_iter()
+        .map(|row| LoanWithUserView {
+            id: row.get("id"),
+            user_id: row.get("user_id"),
+            username: row.get("username"),
+            first_name: row.get("first_name"),
+            last_name: row.get("last_name"),
+            amount: format!("{:.2}", row.get::<Decimal, _>("amount")),
+            status: row.get("status"),
+            reason: row.get("reason"),
+            created_at: row
+                .get::<NaiveDateTime, _>("created_at")
+                .format("%Y-%m-%d %H:%M:%S")
+                .to_string(),
+        })
+        .collect();
+
+    Ok(loans)
+}
+
+/// Approves the loan and credits the user's bank account in a single transaction.
+/// Rejecting simply updates the status.
+pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Result<(), String> {
+    if status != "approved" && status != "rejected" {
+        return Err("Invalid status value.".to_string());
+    }
+
+    if status == "approved" {
+        let loan: Option<Loan> = sqlx::query_as(
+            "SELECT id, user_id, amount, status, reason, created_at FROM loans WHERE id = $1 AND status = 'pending'",
+        )
+        .bind(loan_id)
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch loan: {}", e))?;
+
+        let loan = match loan {
+            Some(r) => r,
+            None => return Err("Loan not found or already processed.".to_string()),
+        };
+
+        let user_id: i32 = loan.user_id;
+        let amount: Decimal = loan.amount;
+
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|_| "Failed to start transaction.".to_string())?;
+
+        let account_row = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|_| "Bank account not found.".to_string())?;
+
+        let account_id: i32 = account_row.get("id");
+
+        sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
+            .bind(amount)
+            .bind(account_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|_| "Failed to credit account.".to_string())?;
+
+        sqlx::query(
+            "INSERT INTO transactions
+             (from_account_id, to_account_id, transaction_type, amount, description)
+             VALUES (NULL, $1, 'loan_disbursement', $2, 'Approved loan disbursed')",
+        )
+        .bind(account_id)
+        .bind(amount)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| "Failed to record disbursement.".to_string())?;
+
+        sqlx::query("UPDATE loans SET status = 'approved' WHERE id = $1")
+            .bind(loan_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|_| "Failed to update loan status.".to_string())?;
+
+        tx.commit()
+            .await
+            .map_err(|_| "Failed to commit approval.".to_string())?;
+    } else {
+        sqlx::query("UPDATE loans SET status = 'rejected' WHERE id = $1")
+            .bind(loan_id)
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Failed to reject loan: {}", e))?;
+    }
+
+    Ok(())
+}
