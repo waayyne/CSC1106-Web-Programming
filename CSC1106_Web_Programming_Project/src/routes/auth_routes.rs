@@ -1,9 +1,10 @@
 use crate::db::DbPool;
 use crate::middleware::auth_middleware;
 use crate::models::user::{
-    ForgotPasswordForm, LoginForm, RegisterForm, ResetPasswordForm, ResetPasswordQuery,
+    ForgotPasswordForm, LoginForm, RegisterForm, ResendVerificationOtpForm, ResetPasswordForm,
+    ResetPasswordQuery, VerifyEmailForm, VerifyEmailQuery,
 };
-use crate::services::auth_service;
+use crate::services::auth_service::{self, LoginResult};
 
 use actix_session::Session;
 use actix_web::{HttpResponse, Responder, web};
@@ -13,6 +14,7 @@ use tera::{Context, Tera};
 #[derive(serde::Deserialize)]
 pub struct LoginQuery {
     pub registered: Option<String>,
+    pub verified: Option<String>,
 }
 
 fn render_login_page(
@@ -75,6 +77,10 @@ fn render_register_page(
         context.insert("phone_number", value);
     }
 
+    if let Some(value) = auth_service::turnstile_site_key() {
+        context.insert("turnstile_site_key", &value);
+    }
+
     let rendered = tmpl.render("register.html", &context).unwrap();
 
     HttpResponse::Ok().content_type("text/html").body(rendered)
@@ -98,6 +104,10 @@ fn render_forgot_password_page(
 
     if let Some(value) = email {
         context.insert("email", value);
+    }
+
+    if let Some(value) = auth_service::turnstile_site_key() {
+        context.insert("turnstile_site_key", &value);
     }
 
     let rendered = tmpl.render("forgot_password.html", &context).unwrap();
@@ -130,6 +140,35 @@ fn render_reset_password_page(
     HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
+fn render_verify_email_page(
+    tmpl: &Tera,
+    error_message: Option<&str>,
+    success_message: Option<&str>,
+    email: Option<&str>,
+) -> HttpResponse {
+    let mut context = Context::new();
+
+    if let Some(message) = error_message {
+        context.insert("error_message", message);
+    }
+
+    if let Some(message) = success_message {
+        context.insert("success_message", message);
+    }
+
+    if let Some(value) = email {
+        context.insert("email", value);
+    }
+
+    if let Some(value) = auth_service::turnstile_site_key() {
+        context.insert("turnstile_site_key", &value);
+    }
+
+    let rendered = tmpl.render("verify_email.html", &context).unwrap();
+
+    HttpResponse::Ok().content_type("text/html").body(rendered)
+}
+
 pub async fn homepage(tmpl: web::Data<Tera>) -> impl Responder {
     let context = Context::new();
     let rendered = tmpl.render("home.html", &context).unwrap();
@@ -142,7 +181,16 @@ pub async fn login_page(tmpl: web::Data<Tera>, query: web::Query<LoginQuery>) ->
         return render_login_page(
             &tmpl,
             None,
-            Some("Registration successful. Please log in."),
+            Some("Registration successful. Please check your email for the verification OTP."),
+            None,
+        );
+    }
+
+    if query.verified == Some("1".to_string()) {
+        return render_login_page(
+            &tmpl,
+            None,
+            Some("Email verified successfully. Please log in."),
             None,
         );
     }
@@ -189,6 +237,13 @@ pub async fn reset_password_page(
             None,
         ),
     }
+}
+
+pub async fn verify_email_page(
+    tmpl: web::Data<Tera>,
+    query: web::Query<VerifyEmailQuery>,
+) -> impl Responder {
+    render_verify_email_page(&tmpl, None, None, query.email.as_deref())
 }
 
 pub async fn dashboard_page(
@@ -269,6 +324,30 @@ pub async fn register_user(
         );
     }
 
+    if let Err(message) = auth_service::validate_password_complexity(&form_data.password) {
+        return render_register_page(
+            &tmpl,
+            Some(message),
+            Some(&form_data.first_name),
+            Some(&form_data.last_name),
+            Some(&form_data.username),
+            Some(&form_data.email),
+            Some(&form_data.phone_number),
+        );
+    }
+
+    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
+        return render_register_page(
+            &tmpl,
+            Some(&message),
+            Some(&form_data.first_name),
+            Some(&form_data.last_name),
+            Some(&form_data.username),
+            Some(&form_data.email),
+            Some(&form_data.phone_number),
+        );
+    }
+
     let first_name = form_data.first_name.clone();
     let last_name = form_data.last_name.clone();
     let username = form_data.username.clone();
@@ -278,13 +357,25 @@ pub async fn register_user(
     let result = auth_service::register_user(&pool, form_data).await;
 
     match result {
-        Ok(_) => HttpResponse::Found()
-            .append_header(("Location", "/login?registered=1"))
-            .finish(),
+        Ok(result) => {
+            let success_message = if result.otp_email_sent {
+                Some("Registration successful. We sent a verification OTP to your email.")
+            } else {
+                None
+            };
+            let error_message = result.email_error.as_deref();
 
-        Err(_) => render_register_page(
+            render_verify_email_page(
+                &tmpl,
+                error_message,
+                success_message,
+                Some(&result.email),
+            )
+        }
+
+        Err(message) => render_register_page(
             &tmpl,
-            Some("Registration failed. Username, email, or phone number may already exist."),
+            Some(&message),
             Some(&first_name),
             Some(&last_name),
             Some(&username),
@@ -308,7 +399,7 @@ pub async fn login_user(
     let result = auth_service::login_user(&pool, identifier.clone(), password).await;
 
     match result {
-        Ok(Some((user_id, role))) => {
+        Ok(Some(LoginResult::Authenticated { user_id, role })) => {
             session.insert("user_id", user_id).unwrap();
             session.insert("role", role.clone()).unwrap(); // clone as session.insert requires ownership of the value
 
@@ -324,6 +415,13 @@ pub async fn login_user(
                 .append_header(("Location", redirecrt_url))
                 .finish()
         }
+
+        Ok(Some(LoginResult::EmailNotVerified)) => render_login_page(
+            &tmpl,
+            Some("Please verify your email before logging in."),
+            None,
+            Some(&identifier),
+        ),
 
         Ok(None) => render_login_page(
             &tmpl,
@@ -341,12 +439,80 @@ pub async fn login_user(
     }
 }
 
+pub async fn verify_email(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<DbPool>,
+    form: web::Form<VerifyEmailForm>,
+) -> impl Responder {
+    let form_data = form.into_inner();
+    let email = form_data.email.trim().to_string();
+
+    if email.is_empty() || form_data.otp.trim().is_empty() {
+        return render_verify_email_page(
+            &tmpl,
+            Some("Please enter your email and OTP."),
+            None,
+            Some(&email),
+        );
+    }
+
+    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
+        return render_verify_email_page(&tmpl, Some(&message), None, Some(&email));
+    }
+
+    match auth_service::verify_email_otp(&pool, email.clone(), form_data.otp).await {
+        Ok(_) => HttpResponse::Found()
+            .append_header(("Location", "/login?verified=1"))
+            .finish(),
+        Err(message) => render_verify_email_page(&tmpl, Some(&message), None, Some(&email)),
+    }
+}
+
+pub async fn resend_verification_otp(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<DbPool>,
+    form: web::Form<ResendVerificationOtpForm>,
+) -> impl Responder {
+    let form_data = form.into_inner();
+    let email = form_data.email.trim().to_string();
+
+    if email.is_empty() {
+        return render_verify_email_page(
+            &tmpl,
+            Some("Please enter your email address first."),
+            None,
+            Some(&email),
+        );
+    }
+
+    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
+        return render_verify_email_page(&tmpl, Some(&message), None, Some(&email));
+    }
+
+    match auth_service::resend_verification_otp(&pool, email.clone()).await {
+        Ok(true) => render_verify_email_page(
+            &tmpl,
+            None,
+            Some("A new verification OTP has been sent to your email."),
+            Some(&email),
+        ),
+        Ok(false) => render_verify_email_page(
+            &tmpl,
+            Some("No unverified account was found for that email."),
+            None,
+            Some(&email),
+        ),
+        Err(message) => render_verify_email_page(&tmpl, Some(&message), None, Some(&email)),
+    }
+}
+
 pub async fn forgot_password(
     tmpl: web::Data<Tera>,
     pool: web::Data<DbPool>,
     form: web::Form<ForgotPasswordForm>,
 ) -> impl Responder {
-    let email = form.into_inner().email;
+    let form_data = form.into_inner();
+    let email = form_data.email;
 
     if email.trim().is_empty() {
         return render_forgot_password_page(
@@ -355,6 +521,10 @@ pub async fn forgot_password(
             None,
             Some(&email),
         );
+    }
+
+    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
+        return render_forgot_password_page(&tmpl, Some(&message), None, Some(&email));
     }
 
     let result = auth_service::request_password_reset(&pool, email.clone()).await;
@@ -401,11 +571,11 @@ pub async fn reset_password(
         );
     }
 
-    if form_data.password.trim().len() < 8 {
+    if let Err(message) = auth_service::validate_password_complexity(&form_data.password) {
         return render_reset_password_page(
             &tmpl,
             Some(&token),
-            Some("Password must be at least 8 characters long."),
+            Some(message),
             None,
         );
     }
@@ -436,6 +606,12 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .route("/forgot-password", web::post().to(forgot_password))
         .route("/reset-password", web::get().to(reset_password_page))
         .route("/reset-password", web::post().to(reset_password))
+        .route("/verify-email", web::get().to(verify_email_page))
+        .route("/verify-email", web::post().to(verify_email))
+        .route(
+            "/resend-verification-otp",
+            web::post().to(resend_verification_otp),
+        )
         .route("/logout", web::get().to(logout))
         .route("/register", web::get().to(register_page))
         .route("/register", web::post().to(register_user))

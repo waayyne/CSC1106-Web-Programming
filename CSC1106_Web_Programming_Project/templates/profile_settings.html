@@ -177,10 +177,10 @@
                     <input type="password" id="current_password" name="current_password" required>
 
                     <label for="new_password">New Password</label>
-                    <input type="password" id="new_password" name="new_password" minlength="6" required>
+                    <input type="password" id="new_password" name="new_password" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}" title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character." required>
 
                     <label for="confirm_password">Confirm Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" minlength="6" required>
+                    <input type="password" id="confirm_password" name="confirm_password" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}" title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character." required>
 
                     <button type="submit" class="auth-btn">Change Password</button>
                 </form>

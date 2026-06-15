@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forgot Password - WIVAH Bank</title>
+    <title>Verify Email - WIVAH Bank</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/forms.css">
@@ -15,10 +15,10 @@
     <div class="auth-container">
         <div class="auth-card">
 
-            <div class="auth-logo">RB</div>
+            <div class="auth-logo">WB</div>
 
-            <h1>Reset Password</h1>
-            <p>Enter your account email and we will send you a reset link.</p>
+            <h1>Verify Email</h1>
+            <p>Enter the 6-digit OTP sent to your email.</p>
 
             {% if success_message %}
                 <div class="success-message">
@@ -32,7 +32,7 @@
                 </div>
             {% endif %}
 
-            <form method="post" action="/forgot-password" class="auth-form">
+            <form method="post" action="/verify-email" class="auth-form">
 
                 <label for="email">Email</label>
                 <input
@@ -44,18 +44,40 @@
                     required
                 >
 
+                <label for="otp">OTP</label>
+                <input
+                    type="text"
+                    id="otp"
+                    name="otp"
+                    placeholder="Enter 6-digit OTP"
+                    inputmode="numeric"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    title="Enter the 6-digit OTP sent to your email."
+                    required
+                >
+
                 {% if turnstile_site_key %}
                     <div class="cf-turnstile captcha-widget" data-sitekey="{{ turnstile_site_key }}"></div>
                 {% endif %}
 
                 <button type="submit" class="auth-btn">
-                    Send Reset Link
+                    Verify Email
+                </button>
+
+                <button
+                    type="submit"
+                    formaction="/resend-verification-otp"
+                    formnovalidate
+                    class="auth-btn secondary-btn"
+                >
+                    Resend OTP
                 </button>
 
             </form>
 
             <div class="auth-footer">
-                <p>Remember your password?</p>
+                <p>Already verified?</p>
                 <a href="/login">Back to login</a>
             </div>
 

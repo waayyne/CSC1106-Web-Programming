@@ -5,6 +5,8 @@ create table users (
     last_name varchar(50) not null,
     name varchar(100) not null,
     email varchar(150) unique not null,
+    email_verified boolean not null default false,
+    email_verified_at timestamp,
     password_hash text not null,
     phone_number varchar(20) unique not null,
     role varchar(20) not null default 'customer',
@@ -72,3 +74,15 @@ create table risk_investments (
     profit_loss numeric(12, 2) not null,
     created_at timestamp default (now() at time zone 'Asia/Singapore')
 );
+
+create table email_verification_otps (
+    id serial primary key,
+    user_id int not null references users(id) on delete cascade,
+    otp_hash text not null,
+    expires_at timestamp not null,
+    used_at timestamp,
+    created_at timestamp default (now() at time zone 'Asia/Singapore')
+);
+
+create index idx_email_verification_otps_user_id
+on email_verification_otps(user_id);

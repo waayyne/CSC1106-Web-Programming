@@ -6,6 +6,7 @@ use sqlx::Row;
 use crate::db::DbPool;
 use crate::middleware::auth_middleware;
 use crate::models::profile::{ChangePasswordForm, UpdateProfileForm};
+use crate::services::auth_service;
 use crate::services::profile_service;
 
 #[derive(serde::Deserialize)]
@@ -31,7 +32,7 @@ fn message_for_success(code: &str) -> &'static str {
 fn message_for_error(code: &str) -> &'static str {
     match code {
         "profile_not_found" => "Profile not found.",
-        "password_too_short" => "New password must be at least 6 characters long.",
+        "password_complexity" => auth_service::PASSWORD_COMPLEXITY_MESSAGE,
         "password_mismatch" => "New password and confirm password do not match.",
         "current_password_invalid" => "Current password is incorrect.",
         "validation_error" => "All profile fields are required.",

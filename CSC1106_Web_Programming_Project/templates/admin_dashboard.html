@@ -229,7 +229,7 @@
                 </div>
                 <div class="admin-form-group">
                     <label class="admin-form-label">Password</label>
-                    <input type="password" name="password" required class="admin-form-control">
+                    <input type="password" name="password" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}" title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character." required class="admin-form-control">
                 </div>
                 <div class="admin-form-group admin-form-group--spaced">
                     <label class="admin-form-label">Role</label>

@@ -122,8 +122,8 @@ pub async fn change_password(
     let new_password = form.new_password;
     let confirm_password = form.confirm_password;
 
-    if new_password.len() < 6 {
-        return Err("password_too_short".to_string());
+    if auth_service::validate_password_complexity(&new_password).is_err() {
+        return Err("password_complexity".to_string());
     }
 
     if new_password != confirm_password {

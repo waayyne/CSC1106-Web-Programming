@@ -89,6 +89,7 @@ psql -U postgres -d banking_system -f migrations/001_create_tables.sql
 psql -U postgres -d banking_system -f migrations/002_add_profile_updated_at.sql
 psql -U postgres -d banking_system -f migrations/003_perma_admin.sql
 psql -U postgres -d banking_system -f migrations/004_password_reset_tokens.sql
+psql -U postgres -d banking_system -f migrations/005_email_verification_otps.sql
 ```
 
 ---

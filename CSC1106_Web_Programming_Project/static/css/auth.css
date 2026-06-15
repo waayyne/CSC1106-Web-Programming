@@ -193,6 +193,16 @@
     background: #1d4ed8;
 }
 
+.captcha-widget {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+}
+
 .auth-footer {
     margin-top: 26px;
     text-align: center;
@@ -200,10 +210,18 @@
 
 .auth-link-row {
     margin-top: 16px;
-    text-align: right;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    text-align: center;
 }
 
 .auth-link-row a {
+    display: inline-flex;
+    align-items: center;
     color: #2563eb;
     font-size: 14px;
     font-weight: bold;
@@ -212,6 +230,10 @@
 
 .auth-link-row a:hover {
     text-decoration: underline;
+}
+
+.auth-link-row a + a::before {
+    content: none;
 }
 
 .auth-footer p {
@@ -270,5 +292,12 @@
 
     .auth-grid {
         grid-template-columns: 1fr;
+    }
+
+    .captcha-widget {
+        right: 12px;
+        bottom: 12px;
+        transform: scale(0.9);
+        transform-origin: bottom right;
     }
 }

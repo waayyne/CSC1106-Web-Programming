@@ -93,8 +93,8 @@ pub async fn register_new_user(
     let full_name = format!("{} {}", form.first_name.trim(), form.last_name.trim());
 
     let row = sqlx::query(
-        "INSERT INTO users (username, first_name, last_name, name, email, password_hash, phone_number, role)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+        "INSERT INTO users (username, first_name, last_name, name, email, email_verified, email_verified_at, password_hash, phone_number, role)
+         VALUES ($1, $2, $3, $4, $5, true, current_timestamp, $6, $7, $8) RETURNING id"
     )
     .bind(&form.username)
     .bind(&form.first_name)

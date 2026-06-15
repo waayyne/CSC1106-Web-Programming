@@ -164,6 +164,13 @@ pub async fn admin_register_user(pool: web::Data<DbPool>, session: Session, form
             .finish();
     }
 
+    if let Err(message) = auth_service::validate_password_complexity(&form_data.password) {
+        let encoded = message.replace(' ', "+");
+        return HttpResponse::Found()
+            .append_header(("Location", format!("/admin/dashboard?error={}", encoded)))
+            .finish();
+    }
+
     // Securely hash the password
     let password_hash = match auth_service::hash_password(&form_data.password) {
         Ok(h) => h,
