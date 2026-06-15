@@ -214,6 +214,24 @@ cargo run
 
 ---
 
+## User Roles
+
+### Customer
+- Manage personal banking activities
+- Submit loan applications
+- View loan status
+
+### Staff
+- Review customer loan applications
+- Approve or reject loans
+
+### Administrator
+- Manage users and staff
+- View audit logs
+- Monitor system activities
+
+---
+
 ## Common Issues
 
 **`http://localhost` doesn't work but `:8080` does** — Nginx isn't running or the config isn't loaded. Check that `WIVAHbank.conf` is in the right folder and Nginx has been reloaded.
