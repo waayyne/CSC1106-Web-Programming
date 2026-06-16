@@ -1,94 +1,130 @@
-# WIVAH Bank — Banking System
+# WIVAH Bank — CSC1106 Web Programming Project
 
-CSC1106 Web Programming Project
+WIVAH Bank is a banking web app we built for CSC1106. It has normal banking features such as login, deposits, withdrawals, transfers, loans, fixed deposits, risk investment simulation, and separate dashboards for customers, staff, and admins.
 
-Built with **Rust**, **Actix Web**, **Tera Templates**, **PostgreSQL**, and **Nginx**.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Rust |
-| Web Framework | Actix Web |
-| Template Engine | Tera Templates |
-| Database | PostgreSQL |
-| Frontend | HTML, CSS, JavaScript |
-| Reverse Proxy | Nginx |
+Built with Rust, Actix Web, Tera Templates, PostgreSQL, and Nginx.
 
 ---
 
-## How It Works
+## Roles
 
-The Actix server runs on port `8080`. Nginx listens on port `80` and proxies requests to it.
+**Customer** — register/login, verify email, deposit/withdraw/transfer money, view transaction history, export statement, apply for loans, use fixed deposit and risk investment simulation, update profile
 
-- Direct: `http://localhost:8080`
-- Via Nginx: `http://localhost` ← use this for the final setup
+**Staff** — review and manage customer loan applications
+
+**Admin** — manage users and accounts, view audit logs
 
 ---
 
-## Quick Start
+## How transfers work
 
-### 1. Install Prerequisites
+Transfers use a database transaction with row-level locking on the sender's account so two transfers cannot read the same balance at the same time. If anything fails during the transfer, it rolls back.
 
-- **Rust**: https://www.rust-lang.org/tools/install
-- **PostgreSQL**: https://www.postgresql.org/download/
-- **Nginx**:
-  - Windows: download the ZIP from https://nginx.org/en/download.html, extract it, and rename the folder to `nginx`, then move it to `C:\`. The final path must be `C:\nginx` and it must directly contain `nginx.exe`, `conf\`, `html\`, `logs\` — not another nested folder like `C:\nginx\nginx-1.31.1\`.
-  - macOS: `brew install nginx`
-  - Linux: `sudo apt install nginx`
+---
 
-### 2. Clone the Repo
+## Installation and Running Instructions
+
+Follow the steps below in order to install and run the project.
+
+### 1. Install these first
+
+* Rust → https://www.rust-lang.org/tools/install
+* PostgreSQL → https://www.postgresql.org/download/
+* Nginx → https://nginx.org/en/download.html
+
+For Windows, extract Nginx and put it at:
+
+```text
+C:\nginx
+```
+
+Make sure these are directly inside `C:\nginx`:
+
+```text
+nginx.exe
+conf\
+html\
+logs\
+```
+
+Do not leave them inside another nested folder like:
+
+```text
+C:\nginx\nginx-1.31.1\
+```
+
+### 2. Open the project folder
+
+Extract the project ZIP, then open the project folder:
 
 ```bash
-git clone <repo-link>
 cd CSC1106_Web_Programming_Project
 ```
 
-### 3. Configure Environment
+### 3. Set up `.env`
+
+Copy the example environment file.
+
+Windows:
+
+```bat
+copy .env.example .env
+```
+
+Mac/Linux:
 
 ```bash
-copy .env.example .env   # Windows
-cp .env.example .env     # macOS/Linux
+cp .env.example .env
 ```
 
-Edit `.env` with your values:
+Fill in `.env`:
 
 ```env
-DATABASE_URL=postgres://postgres:<your-password>@localhost:5432/banking_system
-SESSION_KEY=<64-char hex string>
+DATABASE_URL=postgres://postgres:your_password@localhost:5432/banking_system
+SESSION_KEY=your_64_character_session_key
 APP_BASE_URL=http://localhost
-TURNSTILE_SITE_KEY=your-cloudflare-turnstile-site-key
-TURNSTILE_SECRET_KEY=your-cloudflare-turnstile-secret-key
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-gmail-app-password
-SMTP_FROM=your-email@gmail.com
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_gmail_app_password
+SMTP_FROM=your_email@gmail.com
+TURNSTILE_SITE_KEY=your_turnstile_site_key
+TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
-> For Gmail, `SMTP_PASSWORD` must be a [Gmail App Password](https://myaccount.google.com/apppasswords), not your regular password.
+For Gmail, `SMTP_PASSWORD` has to be an App Password, not your actual password:
 
-> If Turnstile is enabled, the captcha appears on the auth pages and is fixed to the bottom-right corner of the viewport.
+```text
+https://myaccount.google.com/apppasswords
+```
 
-### 4. Set Up the Database
+If email or Turnstile is not being tested, dummy values can be used, but the related features may not work.
 
-**Windows:**
+### 4. Database
+
+#### Windows
+
+Run:
 
 ```bat
 setup_all.bat
 ```
 
-This creates `banking_system`, runs all migrations, copies `WIVAHbank.conf` into Nginx, tests the Nginx config, then starts Nginx (or reloads it if already running). ⚠️ It resets the database.
+This creates the database, runs all migration files, sets up Nginx, and starts it.
 
-> Nginx must be at `C:\nginx` for the script to work. If the config test fails, it will print an error and stop before starting Nginx.
+Note: this resets the database if it already exists.
 
+#### Mac/Linux
 
-**macOS/Linux:**
+Create the database:
 
 ```bash
 createdb banking_system
+```
+
+Run the migration files:
+
+```bash
 psql -U postgres -d banking_system -f migrations/001_create_tables.sql
 psql -U postgres -d banking_system -f migrations/002_add_profile_updated_at.sql
 psql -U postgres -d banking_system -f migrations/003_perma_admin.sql
@@ -96,175 +132,218 @@ psql -U postgres -d banking_system -f migrations/004_password_reset_tokens.sql
 psql -U postgres -d banking_system -f migrations/005_email_verification_otps.sql
 ```
 
----
-
-### 5. Configure Nginx
+### 5. Nginx
 
 #### Windows
 
-**Step 1 — Replace the main Nginx config**
+A full Nginx config file is provided in:
 
-Open `C:\nginx\conf\nginx.conf` and replace its contents with everything in `nginxConfFileSetup.md` from this project. This adds the following line inside the `http { }` block, which tells Nginx to load project-specific configs:
-
-```nginx
-include C:/nginx/conf/sites-enabled/*.conf;
+```text
+nginxConfFilesetup.md
 ```
 
-**Step 2 — Copy the project config**
+Open `nginxConfFilesetup.md`, copy everything inside it, and paste it into:
 
-`setup_all.bat` handles this automatically. It creates `C:\nginx\conf\sites-enabled\` if it doesn't exist and copies `deployment\WIVAHbank.conf` there.
+```text
+C:\nginx\conf\nginx.conf
+```
 
-> Note: `setup_all.bat` does **not** replace `nginx.conf` — you must do Step 1 manually first.
+Save the file.
 
-**Step 3 — Test and start Nginx**
+Then run:
+
+```bat
+setup_all.bat
+```
+
+The script copies `WIVAHbank.conf` to the correct Nginx folder and starts Nginx.
+
+To test/start/stop manually:
 
 ```bat
 cd /d C:\nginx
 nginx.exe -t
 start nginx.exe
+nginx.exe -s stop
 ```
 
-To reload after config changes:
-
-```bat
-nginx.exe -s reload
-```
-
-#### macOS (Homebrew)
-
-Nginx config is at `/opt/homebrew/etc/nginx/` (Apple Silicon) or `/usr/local/etc/nginx/` (Intel).
+#### Mac
 
 ```bash
 mkdir -p /opt/homebrew/etc/nginx/servers
 cp deployment/WIVAHbank.conf /opt/homebrew/etc/nginx/servers/WIVAHbank.conf
+nginx -t && brew services restart nginx
 ```
 
-Make sure the main `nginx.conf` has this inside the `http { }` block:
+Make sure `nginx.conf` has this inside the `http { }` block:
 
 ```nginx
 include servers/*;
 ```
 
-Test and restart:
-
-```bash
-nginx -t
-brew services restart nginx
-```
-
-#### Linux (Ubuntu/Debian)
+#### Linux
 
 ```bash
 sudo cp deployment/WIVAHbank.conf /etc/nginx/sites-available/WIVAHbank.conf
 sudo ln -s /etc/nginx/sites-available/WIVAHbank.conf /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ### 6. Run
 
-**Windows:**
-
-1. Run `setup_all.bat` (sets up the database, configures and starts Nginx)
-2. Run the Rust server:
-
-```bat
-cargo run
-```
-
-3. Open `http://localhost`
-
-**macOS/Linux:**
-
-1. Start Nginx:
-
-```bash
-brew services start nginx      # macOS
-sudo systemctl start nginx     # Linux
-```
-
-2. Run the Rust server:
+Start the Rust server:
 
 ```bash
 cargo run
 ```
 
-3. Open `http://localhost`
+Open:
+
+```text
+http://localhost
+```
+
+If Nginx is not set up yet, use:
+
+```text
+http://localhost:8080
+```
 
 ### 7. Stop
 
-- Rust server: `Ctrl+C`
-- Nginx on Windows: `cd /d C:\nginx && nginx.exe -s stop` or run `stop_all.bat`
-- Nginx on macOS: `brew services stop nginx`
-- Nginx on Linux: `sudo systemctl stop nginx`
+Rust server:
+
+```text
+Ctrl+C
+```
+
+Nginx on Windows:
+
+```bat
+nginx.exe -s stop
+```
+
+Or run:
+
+```bat
+stop_all.bat
+```
+
+Nginx on Mac:
+
+```bash
+brew services stop nginx
+```
+
+Nginx on Linux:
+
+```bash
+sudo systemctl stop nginx
+```
 
 ---
 
 ## Pages
 
-| Page | URL |
-|---|---|
-| Homepage | `/` |
-| Login | `/login` |
-| Register | `/register` |
-| Forgot Password | `/forgot-password` |
-| Verify Email | `/verify-email` |
-| Customer Dashboard | `/dashboard` |
-| Account / ATM / Transfer | `/account`, `/atm`, `/transfer` |
-| Transaction History | `/transactions` |
-| Loan Application | `/loans` |
-| Profile Settings | `/profile` |
-| Admin Dashboard | `/admin` |
-| Staff Dashboard | `/staff` |
-| Audit Logs | `/audit-logs` |
+```text
+/                  Homepage
+/login             Login
+/register          Register
+/verify-email      Email verification
+/forgot-password   Forgot password
+/dashboard         Customer dashboard
+/account           Account info
+/atm               Deposit / withdraw
+/transfer          Transfer money
+/transactions      Transaction history
+/loans             Loans
+/profile           Profile settings
+/admin             Admin dashboard
+/staff             Staff dashboard
+/audit-logs        Audit logs
+```
 
 ---
 
-## User Roles
+## Default admin account
 
-### Customer
-- Manage personal banking activities
-- Submit loan applications
-- View loan status
+Created by the migration file:
 
-### Staff
-- Review customer loan applications
-- Approve or reject loans
+```text
+Username: BankAdmin
+Email: admin@bank.com
+Password: check migrations/003_perma_admin.sql
+```
 
-### Administrator
-- Manage users and staff
-- View audit logs
-- Monitor system activities
+You can also change the admin password before running the project.
 
 ---
 
-## Common Issues
+## Common issues
 
-**`http://localhost` doesn't work but `:8080` does** — Nginx isn't running or the config isn't loaded. Check that `WIVAHbank.conf` is in the right folder and Nginx has been reloaded.
+### `localhost` does not work but `localhost:8080` works
 
-**Port 80 already in use** — find and stop the conflicting process:
+Nginx is not running or the config is not loaded correctly.
+
+Check that `WIVAHbank.conf` is in the correct folder and reload Nginx.
+
+### Database connection error
+
+Make sure PostgreSQL is running and `DATABASE_URL` in `.env` is correct.
+
+### Nginx config error
+
+Run this on Windows:
+
 ```bat
-netstat -ano | findstr :80       # Windows
-sudo lsof -i :80                 # macOS/Linux
+cd /d C:\nginx
+nginx.exe -t
 ```
 
-**SQLx `.env` error** — make sure there are no spaces around `=` and no stray characters in `.env`.
+Run this on Mac/Linux:
 
-**Database connection failed** — confirm PostgreSQL is running, the `banking_system` database exists, and `DATABASE_URL` credentials are correct.
+```bash
+nginx -t
+```
+
+### Port 80 or 8080 already in use
+
+Something else may already be using the port.
+
+Windows:
+
+```bat
+netstat -ano | findstr :80
+netstat -ano | findstr :8080
+```
+
+Mac/Linux:
+
+```bash
+sudo lsof -i :80
+sudo lsof -i :8080
+```
+
+### SQLx `.env` error
+
+Check that there are no spaces around `=` in the `.env` file.
+
+Correct:
+
+```env
+DATABASE_URL=postgres://postgres:password@localhost:5432/banking_system
+```
+
+Wrong:
+
+```env
+DATABASE_URL = postgres://postgres:password@localhost:5432/banking_system
+```
 
 ---
 
-## .gitignore
+## `.gitignore` reminder
 
-```gitignore
-/target/
-.env
-*.pdb
-.vscode/
-.idea/
-Thumbs.db
-.DS_Store
-*.log
-```
+Do not commit `.env`.
 
-Do not commit `.env`. Commit `.env.example`.
+Commit `.env.example`.
