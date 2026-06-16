@@ -104,11 +104,10 @@
                     <h2>${{ balance }}</h2>
                     <span>Approved loan funds are credited directly to this account.</span>
                 </div>
-                <div class="atm-mini-card">
-                    <p>Loan Status</p>
-                    <h3>{{ loans | length }} Application(s)</h3>
-                    <span>Staff review pending applications.</span>
-                </div>
+            <div class="atm-mini-card">
+                <p>Pending Loans</p>
+                <h3>{{ pending_loan_count }} Pending</h3>
+                <span>Staff review pending applications.</span>
             </div>
 
             <div class="atm-main-grid">

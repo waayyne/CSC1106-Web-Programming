@@ -75,8 +75,13 @@ pub async fn loan_page(
     );
 
     let loans = loan_service::get_user_loans(&pool, user_id)
-        .await
-        .unwrap_or_default();
+    .await
+    .unwrap_or_default();
+
+    let pending_loan_count = loans
+        .iter()
+        .filter(|loan| loan.status == "pending")
+        .count();
 
     let mut ctx = Context::new();
     ctx.insert("first_name", &first_name);
@@ -85,6 +90,7 @@ pub async fn loan_page(
     ctx.insert("account_number", &account_number);
     ctx.insert("balance", &format!("{:.2}", balance));
     ctx.insert("loans", &loans);
+    ctx.insert("pending_loan_count", &pending_loan_count);
     ctx.insert("success", &query.success);
     ctx.insert("error", &query.error);
 
