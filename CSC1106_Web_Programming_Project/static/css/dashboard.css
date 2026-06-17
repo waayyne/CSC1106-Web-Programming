@@ -4,7 +4,15 @@
     margin-left: 270px;
     width: calc(100% - 270px);
     min-height: 100vh;
+    transition: margin-left 0.25s ease, width 0.25s ease;
 }
+
+/* Shift main content when sidebar is collapsed */
+.main-content-collapsed {
+    margin-left: 72px;
+    width: calc(100% - 72px);
+}
+
 
 /* Topbar */
 

@@ -12,6 +12,8 @@
     top: 0;
     bottom: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.25s ease, padding 0.25s ease;
 }
 
 .brand {
@@ -24,12 +26,18 @@
 .brand-icon {
     width: 46px;
     height: 46px;
+    min-width: 46px;
     border-radius: 14px;
     background: linear-gradient(135deg, #2563eb, #7c3aed);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 22px;
+    /* Reset button styles */
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
 }
 
 .brand h2 {
@@ -59,6 +67,7 @@
     font-size: 15px;
     font-weight: 600;
     transition: 0.2s;
+    white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -92,6 +101,7 @@
     margin-left: auto;
     transition: transform 0.2s ease;
     color: #94a3b8;
+    font-size: 12px;
 }
 
 .nav-dropdown:hover .nav-arrow,
@@ -142,8 +152,12 @@
 
 .nav-icon {
     width: 22px;
+    min-width: 22px;
     text-align: center;
-    font-size: 18px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .logout-box {
@@ -153,6 +167,45 @@
 
 .logout {
     color: #cbd5e1;
+}
+
+/* ── Collapsible Sidebar ── */
+
+.sidebar-collapsed {
+    width: 72px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.sidebar-collapsed .brand-copy {
+    display: none;
+}
+
+.sidebar-collapsed .brand {
+    justify-content: center;
+    gap: 0;
+}
+
+.sidebar-collapsed .nav-item > span:not(.nav-icon),
+.sidebar-collapsed .nav-dropdown-title > span:not(.nav-icon),
+.sidebar-collapsed .nav-arrow {
+    display: none;
+}
+
+.sidebar-collapsed .nav-item,
+.sidebar-collapsed .nav-dropdown-title {
+    justify-content: center;
+    gap: 0;
+    padding: 12px 0;
+}
+
+.sidebar-collapsed .nav-dropdown-menu {
+    display: none !important;
+}
+
+.sidebar-collapsed .logout-box .nav-item {
+    justify-content: center;
+    gap: 0;
 }
 
 @media (max-width: 768px) {
