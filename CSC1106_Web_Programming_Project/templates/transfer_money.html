@@ -19,13 +19,25 @@
 
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
-                <div class="brand">
-                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
-                        aria-expanded="false">WB</button>
-                    <div class="brand-copy">
-                        <h2>WIVAH Bank</h2>
-                        <p>Banking with Trust</p>
+                <div class="brand-wrapper">
+
+                    <button type="button"
+                        class="sidebar-menu-btn"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="brand">
+                        <div class="brand-icon">WB</div>
+
+                        <div class="brand-copy">
+                            <h2>WIVAH Bank</h2>
+                            <p>Banking with Trust</p>
+                        </div>
                     </div>
+
                 </div>
 
                 <nav class="side-nav">
@@ -129,7 +141,7 @@
                             </div>
                         </div>
 
-                        <hr>
+                        <hr><br>
 
                         {% if message %}
                         <div class="success-message">
@@ -190,24 +202,24 @@
 
                     <div class="transfer-side-card">
 
-                        <h2>Account Summary</h2>
+                        <h2>Account Summary</h2><br>
 
                         <div class="summary-box">
                             <p>Current Balance</p>
                             <h3>${{ balance | default(value="0.00") }}</h3>
                         </div>
-
+                        <br>
                         <div class="summary-box">
                             <p>Your Account Number</p>
                             <h3>{{ account_number }}</h3>
                         </div>
-
+                        <br>
                         <div class="summary-box">
                             <p>Transfer Status</p>
                             <h3>Active</h3>
                         </div>
 
-                        <hr>
+                        <br><hr><br>
 
                         <h2>Recent Transfers</h2>
 

@@ -18,13 +18,25 @@
 
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
-                <div class="brand">
-                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
-                        aria-expanded="false">WB</button>
-                    <div class="brand-copy">
-                        <h2>WIVAH Bank</h2>
-                        <p>Banking with Trust</p>
+                <div class="brand-wrapper">
+
+                    <button type="button"
+                        class="sidebar-menu-btn"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="brand">
+                        <div class="brand-icon">WB</div>
+
+                        <div class="brand-copy">
+                            <h2>WIVAH Bank</h2>
+                            <p>Banking with Trust</p>
+                        </div>
                     </div>
+
                 </div>
 
                 <nav class="side-nav">
@@ -125,7 +137,7 @@
                     </div>
                     <div class="atm-mini-card">
                         <p>Pending Loans</p>
-                        <h3>{{ pending_loan_count }} Pending</h3>
+                        <h3>{{ pending_loan_count }} Pending</h3><br>
                         <span>Staff review pending applications.</span>
                     </div>
 

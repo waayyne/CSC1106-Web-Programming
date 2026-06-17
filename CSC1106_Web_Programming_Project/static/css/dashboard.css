@@ -1,5 +1,3 @@
-/* Main Content */
-
 .main-content {
     margin-left: 270px;
     width: calc(100% - 270px);
@@ -7,14 +5,10 @@
     transition: margin-left 0.25s ease, width 0.25s ease;
 }
 
-/* Shift main content when sidebar is collapsed */
 .main-content-collapsed {
     margin-left: 72px;
     width: calc(100% - 72px);
 }
-
-
-/* Topbar */
 
 .topbar {
     height: 135px;
@@ -144,7 +138,6 @@
     background-color: #f1f1f1;
 }
 
-/* Page */
 
 .page-section {
     padding: 34px 44px;
@@ -160,8 +153,6 @@
     font-size: 17px;
     margin-bottom: 30px;
 }
-
-/* Dashboard Cards */
 
 .dashboard-cards {
     display: grid;
@@ -235,7 +226,6 @@
     font-size: 14px;
 }
 
-/* Lower Content */
 
 .content-grid {
     display: grid;
@@ -279,8 +269,7 @@
     font-size: 14px;
 }
 
-.data-table th,
-.data-table td {
+.data-table th, .data-table td {
     padding: 16px;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
@@ -298,8 +287,7 @@
     font-size: 0.9rem;
 }
 
-.admin-dashboard-table th,
-.admin-dashboard-table td {
+.admin-dashboard-table th, .admin-dashboard-table td {
     padding: 0.85rem 1rem;
 }
 
@@ -468,7 +456,6 @@
     white-space: nowrap;
 }
 
-/* Shared content panels */
 
 .panel-header {
     display: flex;
@@ -776,3 +763,4 @@
         padding: 20px;
     }
 }
+

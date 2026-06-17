@@ -18,13 +18,25 @@
 
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
-                <div class="brand">
-                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
-                        aria-expanded="false">WB</button>
-                    <div class="brand-copy">
-                        <h2>WIVAH Bank</h2>
-                        <p>Banking with Trust</p>
+                <div class="brand-wrapper">
+
+                    <button type="button"
+                        class="sidebar-menu-btn"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="brand">
+                        <div class="brand-icon">WB</div>
+
+                        <div class="brand-copy">
+                            <h2>WIVAH Bank</h2>
+                            <p>Banking with Trust</p>
+                        </div>
                     </div>
+
                 </div>
 
                 <nav class="side-nav">
@@ -65,7 +77,12 @@
                         <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email
                             }}{% elif role %}{{ role }}{% else %}Administrator{% endif %}</p>
                     </div>
-                    <span class="profile-arrow">⌄</span>
+                    <div class="dropdown">
+                        <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                        <div class="dropdown-content">
+                            <a href="/logout">Log out</a>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -73,7 +90,6 @@
                 <h1>Admin Dashboard</h1>
                 <p class="page-subtitle">Manage all users, assign roles, and oversee the system.</p>
 
-                <!-- Stats row including register button as a card -->
                 <div class="dashboard-cards">
                     <div class="balance-card">
                         <div>
@@ -85,19 +101,18 @@
                     </div>
 
                     <div class="small-card">
-                        <p>Staff Members</p>
-                        <h3>{{ total_staff }}</h3>
+                        <p>Staff Members</p><br>
+                        <h3>{{ total_staff }}</h3><br>
                         <span>Active staff accounts</span>
                     </div>
 
                     <div class="small-card">
-                        <p>Customers</p>
-                        <h3>{{ total_customers }}</h3>
-                        <span>Active customer accounts</span>
+                        <p>Customers</p><br>
+                        <h3>{{ total_customers }}</h3><br>
+                        <span>Active customer accounts</span><br>
                     </div>
                 </div>
 
-                <!-- User table -->
                 <div class="panel-card">
                     <div class="admin-panel-header">
                         <h2 class="admin-panel-title">All Users</h2>
@@ -190,14 +205,11 @@
         </main>
 
     </div>
-    <!-- end app-layout -->
 
-    <!-- hidden error carrier for JS to read -->
     {% if error %}
     <div id="server-error" data-message="{{ error }}" style="display:none;"></div>
     {% endif %}
 
-    <!-- Register User Modal -->
     <div id="register-modal" class="admin-modal-overlay">
         <div class="admin-modal-dialog">
 

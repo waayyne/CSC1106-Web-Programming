@@ -18,13 +18,25 @@
 
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
-                <div class="brand">
-                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
-                        aria-expanded="false">WB</button>
-                    <div class="brand-copy">
-                        <h2>WIVAH Bank</h2>
-                        <p>Banking with Trust</p>
+                <div class="brand-wrapper">
+
+                    <button type="button"
+                        class="sidebar-menu-btn"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="brand">
+                        <div class="brand-icon">WB</div>
+
+                        <div class="brand-copy">
+                            <h2>WIVAH Bank</h2>
+                            <p>Banking with Trust</p>
+                        </div>
                     </div>
+
                 </div>
 
                 <nav class="side-nav">
@@ -96,16 +108,16 @@
                             <h2>{{ total_users }}</h2>
                             <span>Registered customers</span>
                         </div>
-                        <div class="card-icon">☰</div>
                     </div>
+
                     <div class="small-card">
-                        <p>Pending Loans</p>
-                        <h3>{{ pending_loans }}</h3>
+                        <p>Pending Loans</p><br>
+                        <h3>{{ pending_loans }}</h3><br>
                         <span>Awaiting review</span>
                     </div>
                     <div class="small-card">
-                        <p>Staff Status</p>
-                        <h3>Active</h3>
+                        <p>Staff Status</p><br>
+                        <h3>Active</h3><br>
                         <span>You are currently on duty</span>
                     </div>
                 </div>
@@ -115,13 +127,13 @@
                         <h2>Quick Actions</h2>
                         <div class="quick-actions">
                             <a href="/staff/table_view" class="quick-action-link">
-                                <span>☰</span> View Users
+                            <span class="nav-icon"><i class="fa fa-users"></i></span>View Users
                             </a>
                             <a href="/staff/loans" class="quick-action-link">
                                 <span>$</span> Loan Approvals
                             </a>
                             <a href="/staff/transactions" class="quick-action-link">
-                                <span>▤</span> View Transactions
+                            <span class="nav-icon"><i class="fa fa-list-alt"></i></span>View Transactions
                             </a>
                         </div>
                     </div>

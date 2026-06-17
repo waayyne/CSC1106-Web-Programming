@@ -18,13 +18,25 @@
 
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
-                <div class="brand">
-                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
-                        aria-expanded="false">WB</button>
-                    <div class="brand-copy">
-                        <h2>WIVAH Bank</h2>
-                        <p>Banking with Trust</p>
+                <div class="brand-wrapper">
+
+                    <button type="button"
+                        class="sidebar-menu-btn"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="brand">
+                        <div class="brand-icon">WB</div>
+
+                        <div class="brand-copy">
+                            <h2>WIVAH Bank</h2>
+                            <p>Banking with Trust</p>
+                        </div>
                     </div>
+
                 </div>
 
                 <nav class="side-nav">
@@ -124,18 +136,17 @@
                             <h2>${{ balance }}</h2>
                             <span>Primary Savings Account</span>
                         </div>
-                        <div class="card-icon">▤</div>
                     </div>
 
                     <div class="small-card">
-                        <p>Account Number</p>
-                        <h3>{{ account_number }}</h3>
+                        <p>Account Number</p><br>
+                        <h3>{{ account_number }}</h3><br>
                         <span>WIVAH Bank Savings</span>
                     </div>
 
                     <div class="small-card">
-                        <p>Account Status</p>
-                        <h3>Active</h3>
+                        <p>Account Status</p><br>
+                        <h3 class="active-status">Active</h3><br>
                         <span>Your account is currently active</span>
                     </div>
 
@@ -147,28 +158,23 @@
                         <h2>Quick Actions</h2>
 
                         <div class="quick-actions">
-                            <a href="/atm" class="quick-action-link">
-                                <span>▣</span>
-                                ATM Simulation
-                            </a>
-
-                            <a href="/transfer" class="quick-action-link">
-                                <span>⇄</span>
-                                Bank Transfer
-                            </a>
-
                             <a href="/transactions" class="quick-action-link">
-                                <span>▤</span>
+                                <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
                                 Transaction History
                             </a>
 
-                            <a href="/loans" class="quick-action-link">
-                                <span>$</span>
-                                Loan Management
+                            <a href="/fixed-deposit" class="quick-action-link">
+                                <span class="nav-icon"><i class="fa fa-line-chart"></i></span>
+                                Fixed Deposit Investment
                             </a>
 
+                            <a href="/loans" class="quick-action-link">
+                                <span class="nav-icon"><i class="fa fa-university"></i></span>
+                                Loan Management
+                            </a>                                
+                            
                             <a href="/profile" class="quick-action-link">
-                                <span>⚙</span>
+                                <span class="nav-icon"><i class="fa fa-cog"></i></span>
                                 Settings
                             </a>
                         </div>
