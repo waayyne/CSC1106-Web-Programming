@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="/static/js/main.js"></script>
 </head>
 <body>
 
@@ -197,17 +198,5 @@
 
 </div>
 
-<script src="/static/js/main.js"></script>
-<script>
-  const sidebarToggle = document.getElementById('sidebarToggle');
-  const sidebar = document.getElementById('sidebar');
-  const mainContent = document.getElementById('mainContent');
-
-  sidebarToggle.addEventListener('click', function () {
-    const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
-    mainContent.classList.toggle('main-content-collapsed', isCollapsed);
-    sidebarToggle.setAttribute('aria-expanded', !isCollapsed);
-  });
-</script>
 </body>
 </html>

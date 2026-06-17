@@ -9,17 +9,18 @@
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="/static/js/main.js"></script>
 </head>
 
 <body>
 
     <div class="app-layout">
 
-        <aside class="sidebar">
+        <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
                 <div class="brand">
-                    <div class="brand-icon">RB</div>
-                    <div>
+                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">WB</button>
+                    <div class="brand-copy">
                         <h2>WIVAH Bank</h2>
                         <p>Banking with Trust</p>
                     </div>
@@ -27,15 +28,15 @@
 
                 <nav class="side-nav">
                     <a href="/staff/table_view" class="nav-item">
-                        <span class="nav-icon">☰</span>
+                        <span class="nav-icon"><i class="fa fa-users"></i></span>
                         <span>View Users</span>
                     </a>
                     <a href="/staff/loans" class="nav-item">
-                        <span class="nav-icon">$</span>
+                        <span class="nav-icon"><i class="fa fa-university"></i></span>
                         <span>Loan Approvals</span>
                     </a>
                     <a href="/staff/transactions" class="nav-item">
-                        <span class="nav-icon">▤</span>
+                        <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
                         <span>Transactions</span>
                     </a>
                 </nav>
@@ -43,13 +44,13 @@
 
             <div class="logout-box">
                 <a href="/logout" class="nav-item logout">
-                    <span class="nav-icon">↪</span>
+                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
                     <span>Log Out</span>
                 </a>
             </div>
         </aside>
 
-        <main class="main-content">
+        <main class="main-content main-content-collapsed" id="mainContent">
 
             <header class="topbar">
                 <div class="welcome-box">

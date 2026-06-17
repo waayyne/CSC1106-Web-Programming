@@ -181,14 +181,24 @@
     display: none;
 }
 
+.sidebar-collapsed .brand > :not(.brand-icon) {
+    display: none !important;
+}
+
 .sidebar-collapsed .brand {
     justify-content: center;
     gap: 0;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .brand-icon {
+    margin: 0 auto;
 }
 
 .sidebar-collapsed .nav-item > span:not(.nav-icon),
 .sidebar-collapsed .nav-dropdown-title > span:not(.nav-icon),
-.sidebar-collapsed .nav-arrow {
+.sidebar-collapsed .nav-arrow,
+.sidebar-collapsed .nav-dropdown-title .nav-arrow {
     display: none;
 }
 
