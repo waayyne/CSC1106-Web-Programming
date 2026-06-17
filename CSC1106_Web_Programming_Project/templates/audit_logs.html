@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>WIVAH Bank - Audit Logs</title>
@@ -11,91 +12,97 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="/static/js/main.js"></script>
 </head>
+
 <body>
-<div class="app-layout">
+    <div class="app-layout">
 
-    <aside class="sidebar sidebar-collapsed" id="sidebar">
-        <div>
-            <div class="brand">
-                <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">WB</button>
-                <div class="brand-copy">
-                    <h2>WIVAH Bank</h2>
-                    <p>Banking with Trust</p>
+        <aside class="sidebar sidebar-collapsed" id="sidebar">
+            <div>
+                <div class="brand">
+                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
+                        aria-expanded="false">WB</button>
+                    <div class="brand-copy">
+                        <h2>WIVAH Bank</h2>
+                        <p>Banking with Trust</p>
+                    </div>
                 </div>
+
+                <nav class="side-nav">
+                    <a href="/admin/dashboard" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-home"></i></span>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="/admin/logs" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-file-text-o"></i></span>
+                        <span>Audit Logs</span>
+                    </a>
+                </nav>
             </div>
-            <nav class="side-nav">
-                <a href="/admin/dashboard" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-home"></i></span>
-                    <span>Dashboard</span>
+
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
+                    <span>Log Out</span>
                 </a>
-                <a href="/admin/logs" class="nav-item active">
-                    <span class="nav-icon"><i class="fa fa-file-text-o"></i></span>
-                    <span>Audit Logs</span>
-                </a>
-            </nav>
-        </div>
-        <div class="logout-box">
-            <a href="/logout" class="nav-item logout">
-                <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
-                <span>Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <main class="main-content main-content-collapsed" id="mainContent">
-        <header class="topbar">
-            <div class="welcome-box">
-                <div class="user-circle">{{ initials }}</div>
-                <div>
-                    <h3>Audit Logs</h3>
-                    <p>Chronological record of all system and user actions.</p>
-                </div>
             </div>
-            <div class="profile-card">
-                <div class="profile-avatar">{{ initials }}</div>
-                <div class="profile-info">
-                    <h4>{{ first_name }} {{ last_name }}</h4>
-                    <p>Administrator</p>
-                </div>
-                <span class="profile-arrow">⌄</span>
-            </div>
-        </header>
+        </aside>
 
-        <section class="page-section">
-            <h1>Audit Logs</h1>
-            <p class="page-subtitle">Showing the 300 most recent system events.</p>
-
-            <div class="nice-history-card">
-                <div class="nice-table-wrapper">
-                    <table class="nice-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>User</th>
-                                <th>Action</th>
-                                <th>Date &amp; Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for log in logs %}
-                            <tr>
-                                <td>{{ log.id }}</td>
-                                <td>{{ log.username }}</td>
-                                <td>{{ log.action }}</td>
-                                <td>{{ log.created_at }}</td>
-                            </tr>
-                            {% endfor %}
-                            {% if logs | length == 0 %}
-                            <tr>
-                                <td colspan="4" class="empty-row">No audit logs found.</td>
-                            </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+        <main class="main-content main-content-collapsed" id="mainContent">
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Audit Logs</h3>
+                        <p>Chronological record of all system and user actions.</p>
+                    </div>
                 </div>
-            </div>
-        </section>
-    </main>
-</div>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>Administrator</p>
+                    </div>
+                    <span class="profile-arrow">⌄</span>
+                </div>
+            </header>
+
+            <section class="page-section">
+                <h1>Audit Logs</h1>
+                <p class="page-subtitle">Showing the 300 most recent system events.</p>
+
+                <div class="nice-history-card">
+                    <div class="nice-table-wrapper">
+                        <table class="nice-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Date &amp; Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.id }}</td>
+                                    <td>{{ log.username }}</td>
+                                    <td>{{ log.action }}</td>
+                                    <td>{{ log.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% if logs | length == 0 %}
+                                <tr>
+                                    <td colspan="4" class="empty-row">No audit logs found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 </body>
+
 </html>

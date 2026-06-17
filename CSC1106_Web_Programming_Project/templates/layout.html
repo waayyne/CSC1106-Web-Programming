@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<title>WIVAH Bank</title>
@@ -9,77 +10,79 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<script src="/static/js/main.js"></script>
 </head>
+
 <body>
 
-<div class="app-layout">
-	<aside class="sidebar sidebar-collapsed" id="sidebar">
-		<div>
+	<div class="app-layout">
+		<aside class="sidebar sidebar-collapsed" id="sidebar">
+			<div>
 				<div class="brand">
-					<button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">WB</button>
+					<button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
+						aria-expanded="false">WB</button>
 					<div class="brand-copy">
 						<h2>WIVAH Bank</h2>
 						<p>Banking with Trust</p>
 					</div>
 				</div>
 
-			<nav class="side-nav">
-				<a href="/dashboard" class="nav-item">
-					<span class="nav-icon"><i class="fa fa-home"></i></span>
-					<span>Dashboard</span>
+				<nav class="side-nav">
+					<a href="/dashboard" class="nav-item">
+						<span class="nav-icon"><i class="fa fa-home"></i></span>
+						<span>Dashboard</span>
+					</a>
+
+					<a href="/atm" class="nav-item">
+						<span class="nav-icon"><i class="fa fa-credit-card"></i></span>
+						<span>ATM Simulation</span>
+					</a>
+
+					<a href="/transfer" class="nav-item">
+						<span class="nav-icon"><i class="fa fa-exchange"></i></span>
+						<span>Bank Transfer</span>
+					</a>
+
+					<a href="/transactions" class="nav-item">
+						<span class="nav-icon"><i class="fa fa-list-alt"></i></span>
+						<span>Transactions</span>
+					</a>
+
+					<details class="nav-dropdown">
+						<summary class="nav-item nav-dropdown-title">
+							<span class="nav-icon"><i class="fa fa-line-chart"></i></span>
+							<span>Investments</span>
+							<span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
+						</summary>
+						<div class="nav-dropdown-menu">
+							<a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
+							<a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+						</div>
+					</details>
+
+					<a href="/loans" class="nav-item">
+						<span class="nav-icon"><i class="fa fa-university"></i></span>
+						<span>Loans</span>
+					</a>
+
+					<a href="/profile" class="nav-item">
+						<span class="nav-icon"><i class="fa fa-cog"></i></span>
+						<span>Settings</span>
+					</a>
+				</nav>
+			</div>
+
+			<div class="logout-box">
+				<a href="/logout" class="nav-item logout">
+					<span class="nav-icon"><i class="fa fa-sign-out"></i></span>
+					<span>Log Out</span>
 				</a>
+			</div>
+		</aside>
 
-				<a href="/profile" class="nav-item">
-					<span class="nav-icon"><i class="fa fa-cog"></i></span>
-					<span>Profile Settings</span>
-				</a>
-
-				<a href="/atm" class="nav-item">
-					<span class="nav-icon"><i class="fa fa-credit-card"></i></span>
-					<span>ATM Simulation</span>
-				</a>
-
-				<a href="/transfer" class="nav-item">
-					<span class="nav-icon"><i class="fa fa-exchange"></i></span>
-					<span>Bank Transfer</span>
-				</a>
-
-				<a href="/transactions" class="nav-item">
-					<span class="nav-icon"><i class="fa fa-list-alt"></i></span>
-					<span>Transactions</span>
-				</a>
-
-				<details class="nav-dropdown">
-					<summary class="nav-item nav-dropdown-title">
-						<span class="nav-icon"><i class="fa fa-line-chart"></i></span>
-						<span>Investments</span>
-						<span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
-					</summary>
-					<div class="nav-dropdown-menu">
-						<a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
-						<a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
-					</div>
-				</details>
-
-				<a href="/loans" class="nav-item">
-					<span class="nav-icon"><i class="fa fa-university"></i></span>
-					<span>Loans</span>
-				</a>
-			</nav>
-		</div>
-
-		<div class="logout-box">
-			<a href="/logout" class="nav-item logout">
-				<span class="nav-icon"><i class="fa fa-sign-out"></i></span>
-				<span>Log Out</span>
-			</a>
-		</div>
-	</aside>
-
-	<main class="main-content main-content-collapsed" id="mainContent">
-		{% block content %}{% endblock content %}
-	</main>
-</div>
+		<main class="main-content main-content-collapsed" id="mainContent">
+			{% block content %}{% endblock content %}
+		</main>
+	</div>
 
 </body>
-</html>
 
+</html>

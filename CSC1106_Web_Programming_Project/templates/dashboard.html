@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>WIVAH Bank - Dashboard</title>
@@ -10,193 +11,197 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="/static/js/main.js"></script>
 </head>
+
 <body>
 
-<div class="app-layout">
+    <div class="app-layout">
 
-    <aside class="sidebar sidebar-collapsed" id="sidebar">
-        <div>
+        <aside class="sidebar sidebar-collapsed" id="sidebar">
+            <div>
                 <div class="brand">
-                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">WB</button>
+                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
+                        aria-expanded="false">WB</button>
                     <div class="brand-copy">
                         <h2>WIVAH Bank</h2>
                         <p>Banking with Trust</p>
                     </div>
                 </div>
 
-            <nav class="side-nav">
-                <a href="/dashboard" class="nav-item active">
-                    <span class="nav-icon"><i class="fa fa-home"></i></span>
-                    <span>Dashboard</span>
-                </a>
+                <nav class="side-nav">
+                    <a href="/dashboard" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-home"></i></span>
+                        <span>Dashboard</span>
+                    </a>
 
-                <a href="/atm" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-credit-card"></i></span>
-                    <span>ATM Simulation</span>
-                </a>
+                    <a href="/atm" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-credit-card"></i></span>
+                        <span>ATM Simulation</span>
+                    </a>
 
-                <a href="/transfer" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-exchange"></i></span>
-                    <span>Bank Transfer</span>
-                </a>
+                    <a href="/transfer" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-exchange"></i></span>
+                        <span>Bank Transfer</span>
+                    </a>
 
-                <a href="/transactions" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
-                    <span>Transactions</span>
-                </a>
+                    <a href="/transactions" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
+                        <span>Transactions</span>
+                    </a>
 
-                <details class="nav-dropdown">
-                    <summary class="nav-item nav-dropdown-title">
-                        <span class="nav-icon"><i class="fa fa-line-chart"></i></span>
-                        <span>Investments</span>
-                        <span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
-                    </summary>
-                    <div class="nav-dropdown-menu">
-                        <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
-                        <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
-                    </div>
-                </details>
+                    <details class="nav-dropdown">
+                        <summary class="nav-item nav-dropdown-title">
+                            <span class="nav-icon"><i class="fa fa-line-chart"></i></span>
+                            <span>Investments</span>
+                            <span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
+                        </summary>
+                        <div class="nav-dropdown-menu">
+                            <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
+                            <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+                        </div>
+                    </details>
 
-                <a href="/loans" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-university"></i></span>
-                    <span>Loans</span>
-                </a>
+                    <a href="/loans" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-university"></i></span>
+                        <span>Loans</span>
+                    </a>
 
-                <a href="/profile" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-cog"></i></span>
-                    <span>Settings</span>
-                </a>
-            </nav>
-        </div>
-
-        <div class="logout-box">
-            <a href="/logout" class="nav-item logout">
-                <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
-                <span>Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <main class="main-content main-content-collapsed" id="mainContent">
-
-        <header class="topbar">
-            <div class="welcome-box">
-                <div class="user-circle">{{ initials }}</div>
-                <div>
-                    <h3>Welcome back, {{ first_name }}!</h3>
-                    <p>Here’s what's happening with your bank today.</p>
-                </div>
+                    <a href="/profile" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-cog"></i></span>
+                        <span>Settings</span>
+                    </a>
+                </nav>
             </div>
 
-            <div class="profile-card">
-                <div class="profile-avatar">{{ initials }}</div>
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
 
-                <div class="profile-info">
-                    <h4>{{ first_name }} {{ last_name }}</h4>
-                    <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email }}{% elif role %}{{ role }}{% endif %}</p>
+        <main class="main-content main-content-collapsed" id="mainContent">
+
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Welcome back, {{ first_name }}!</h3>
+                        <p>Here’s what's happening with your bank today.</p>
+                    </div>
                 </div>
 
-                <div class="dropdown">
-                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email
+                            }}{% elif role %}{{ role }}{% endif %}</p>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
                         <div class="dropdown-content">
                             <a href="/profile">Settings</a>
                             <a href="/logout">Log out</a>
                         </div>
-                </div>
-            </div>
-        </header>
-
-        <section class="page-section">
-            <h1>Account Overview</h1>
-            <p class="page-subtitle">
-                Review your account balance and recent banking activity.
-            </p>
-
-            <div class="dashboard-cards">
-
-                <div class="balance-card">
-                    <div>
-                        <p>Available Balance</p>
-                        <h2>${{ balance }}</h2>
-                        <span>Primary Savings Account</span>
-                    </div>
-                    <div class="card-icon">▤</div>
-                </div>
-
-                <div class="small-card">
-                    <p>Account Number</p>
-                    <h3>{{ account_number }}</h3>
-                    <span>WIVAH Bank Savings</span>
-                </div>
-
-                <div class="small-card">
-                    <p>Account Status</p>
-                    <h3>Active</h3>
-                    <span>Your account is currently active</span>
-                </div>
-
-            </div>
-
-            <div class="content-grid">
-
-                <div class="panel-card">
-                    <h2>Quick Actions</h2>
-
-                    <div class="quick-actions">
-                        <a href="/atm" class="quick-action-link">
-                            <span>▣</span>
-                            ATM Simulation
-                        </a>
-
-                        <a href="/transfer" class="quick-action-link">
-                            <span>⇄</span>
-                            Bank Transfer
-                        </a>
-
-                        <a href="/transactions" class="quick-action-link">
-                            <span>▤</span>
-                            Transaction History
-                        </a>
-
-                        <a href="/loans" class="quick-action-link">
-                            <span>$</span>
-                            Loan Management
-                        </a>
-
-                        <a href="/profile" class="quick-action-link">
-                            <span>⚙</span>
-                            Settings
-                        </a>
                     </div>
                 </div>
+            </header>
 
-                <div class="panel-card">
-                    <h2>Recent Activity</h2>
+            <section class="page-section">
+                <h1>Account Overview</h1>
+                <p class="page-subtitle">
+                    Review your account balance and recent banking activity.
+                </p>
 
-                    <div class="activity-item">
+                <div class="dashboard-cards">
+
+                    <div class="balance-card">
                         <div>
-                            <h4>Account Created</h4>
-                            <p>Your WIVAH Bank account is ready to use.</p>
+                            <p>Available Balance</p>
+                            <h2>${{ balance }}</h2>
+                            <span>Primary Savings Account</span>
                         </div>
-                        <span>Today</span>
+                        <div class="card-icon">▤</div>
                     </div>
 
-                    <div class="activity-item">
-                        <div>
-                            <h4>ATM Available</h4>
-                            <p>You can deposit or withdraw using the ATM Simulation page.</p>
-                        </div>
-                        <span>New</span>
+                    <div class="small-card">
+                        <p>Account Number</p>
+                        <h3>{{ account_number }}</h3>
+                        <span>WIVAH Bank Savings</span>
                     </div>
+
+                    <div class="small-card">
+                        <p>Account Status</p>
+                        <h3>Active</h3>
+                        <span>Your account is currently active</span>
+                    </div>
+
                 </div>
 
-            </div>
+                <div class="content-grid">
 
-        </section>
+                    <div class="panel-card">
+                        <h2>Quick Actions</h2>
 
-    </main>
+                        <div class="quick-actions">
+                            <a href="/atm" class="quick-action-link">
+                                <span>▣</span>
+                                ATM Simulation
+                            </a>
 
-</div>
+                            <a href="/transfer" class="quick-action-link">
+                                <span>⇄</span>
+                                Bank Transfer
+                            </a>
+
+                            <a href="/transactions" class="quick-action-link">
+                                <span>▤</span>
+                                Transaction History
+                            </a>
+
+                            <a href="/loans" class="quick-action-link">
+                                <span>$</span>
+                                Loan Management
+                            </a>
+
+                            <a href="/profile" class="quick-action-link">
+                                <span>⚙</span>
+                                Settings
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <h2>Recent Activity</h2>
+
+                        <div class="activity-item">
+                            <div>
+                                <h4>Account Created</h4>
+                                <p>Your WIVAH Bank account is ready to use.</p>
+                            </div>
+                            <span>Today</span>
+                        </div>
+
+                        <div class="activity-item">
+                            <div>
+                                <h4>ATM Available</h4>
+                                <p>You can deposit or withdraw using the ATM Simulation page.</p>
+                            </div>
+                            <span>New</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
 
 </body>
+
 </html>

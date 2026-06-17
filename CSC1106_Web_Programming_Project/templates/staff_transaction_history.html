@@ -3,19 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>WIVAH Bank - View Users</title>
+    <title>Staff - Audit Ledger</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/sidebar.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/transactions.css">
     <link rel="stylesheet" href="/static/css/forms.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="/static/js/main.js"></script>
 </head>
 
 <body>
-
     <div class="app-layout">
-
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
                 <div class="brand">
@@ -64,8 +64,8 @@
                 <div class="welcome-box">
                     <div class="user-circle">{{ initials }}</div>
                     <div>
-                        <h3>Customer List</h3>
-                        <p>Viewing all registered customers.</p>
+                        <h3>Audit Ledger</h3>
+                        <p>Viewing transaction history for {{ customer_name }}</p>
                     </div>
                 </div>
                 <div class="profile-card">
@@ -77,60 +77,80 @@
                     <span class="profile-arrow">⌄</span>
                 </div>
             </header>
-            <section class="page-section">
-                <h1>Customers</h1>
-                <p class="page-subtitle">All registered customer accounts.</p>
 
-                <div class="panel-card">
+            <section class="page-section">
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <div>
+                        <h1>Audit: {{ customer_name }}</h1>
+                        <p class="page-subtitle">Viewing transaction history and cash flow.</p>
+                    </div>
+                    <a href="/staff/transactions" class="submit-btn"
+                        style="background-color: #6c757d; text-decoration: none; width: max-content; display: inline-block; padding: 8px 16px; font-size: 0.9rem; white-space: nowrap;">&larr;
+                        Back to Transactions</a>
+                </div>
+
+                <div class="cash-flow-summary-grid">
+                    <div class="cash-flow-card cash-flow-in">
+                        <p>Total Money In</p>
+                        <h2>${{ total_in }}</h2>
+                    </div>
+                    <div class="cash-flow-card cash-flow-out">
+                        <p>Total Money Out</p>
+                        <h2>${{ total_out }}</h2>
+                    </div>
+                    <div class="cash-flow-card cash-flow-net">
+                        <p>Net Cash Flow</p>
+                        <h2>${{ net_flow }}</h2>
+                    </div>
+                </div>
+
+                <div class="panel-card" style="margin-top: 20px;">
                     <div style="overflow-x:auto;">
-                        <form action="/staff/table_view" method="get" style="margin-bottom: 20px;">
-                            <input type="text" name="query" placeholder="Search..."
-                                value="{{ query | default(value='') }}">
-                            <button type="submit">Search</button>
-                            <a href="/staff/table_view">Clear</a>
-                        </form>
                         <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
                             <thead>
                                 <tr style="border-bottom: 2px solid #e5e7eb;">
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Username</th>
+                                        Date</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        First Name</th>
+                                        Type</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Last Name</th>
+                                        Direction</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Email</th>
+                                        Amount</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Phone No.</th>
+                                        Counterparty</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Balance</th>
-
+                                        Description</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for user in table_view %}
-                                <tr style="border-bottom:1px solid #f3f4f6; transition: background 0.15s;"
+                                {% for tx in transactions %}
+                                <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.15s;"
                                     onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-                                    <td style="padding:0.85rem 1rem; font-weight:500;">{{ user.username }}</td>
-                                    <td style="padding:0.85rem 1rem;">{{ user.first_name }}</td>
-                                    <td style="padding:0.85rem 1rem;">{{ user.last_name }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.email }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.phone }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">${{ user.balance }}</td>
-
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.created_at }}</td>
+                                    <td style="padding:0.85rem 1rem;"><span class="type-badge">{{
+                                            tx.transaction_type_label }}</span></td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.direction }}</td>
+                                    <td style="padding:0.85rem 1rem; font-weight:500;">${{ tx.amount }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.counterparty |
+                                        default(value='-') }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ tx.description |
+                                        default(value='-') }}</td>
                                 </tr>
                                 {% endfor %}
 
-                                {% if table_view | length == 0 %}
+                                {% if transactions | length == 0 %}
                                 <tr>
                                     <td colspan="6" style="padding:2rem; text-align:center; color:#9ca3af;">
-                                        No customers found.
+                                        No transactions found.
                                     </td>
                                 </tr>
                                 {% endif %}
@@ -139,11 +159,13 @@
                     </div>
                 </div>
 
-            </section>
+                <div class="pagination-box" style="margin-top: 20px; text-align: center;">
+                    <span class="pagination-info">Page {{ page }} of {{ total_pages }}</span>
+                </div>
 
+            </section>
         </main>
     </div>
-
 </body>
 
 </html>

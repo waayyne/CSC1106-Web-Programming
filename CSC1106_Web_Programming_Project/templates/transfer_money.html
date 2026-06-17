@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>WIVAH Bank - Bank Transfer</title>
@@ -9,230 +10,218 @@
     <link rel="stylesheet" href="/static/css/forms.css">
     <script src="/static/js/main.js"></script>
 </head>
+
 <body>
 
-<div class="app-layout">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <div class="app-layout">
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <aside class="sidebar sidebar-collapsed" id="sidebar">
-        <div>
-            <div class="brand">
-                <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">WB</button>
-                <div class="brand-copy">
-                    <h2>WIVAH Bank</h2>
-                    <p>Banking with Trust</p>
-                </div>
-            </div>
-
-            <nav class="side-nav">
-                <a href="/dashboard" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-home"></i></span>
-                    <span>Dashboard</span>
-                </a>
-
-                <a href="/atm" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-credit-card"></i></span>
-                    <span>ATM Simulation</span>
-                </a>
-
-                <a href="/transfer" class="nav-item active">
-                    <span class="nav-icon"><i class="fa fa-exchange"></i></span>
-                    <span>Bank Transfer</span>
-                </a>
-
-                <a href="/transactions" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
-                    <span>Transactions</span>
-                </a>
-
-                <details class="nav-dropdown">
-                    <summary class="nav-item nav-dropdown-title">
-                        <span class="nav-icon"><i class="fa fa-line-chart"></i></span>
-                        <span>Investments</span>
-                        <span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
-                    </summary>
-                    <div class="nav-dropdown-menu">
-                        <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
-                        <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+        <aside class="sidebar sidebar-collapsed" id="sidebar">
+            <div>
+                <div class="brand">
+                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
+                        aria-expanded="false">WB</button>
+                    <div class="brand-copy">
+                        <h2>WIVAH Bank</h2>
+                        <p>Banking with Trust</p>
                     </div>
-                </details>
-
-                <a href="/loans" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-university"></i></span>
-                    <span>Loans</span>
-                </a>
-
-                <a href="/profile" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-cog"></i></span>
-                    <span>Settings</span>
-                </a>
-            </nav>
-        </div>
-
-        <div class="logout-box">
-            <a href="/logout" class="nav-item logout">
-                <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
-                <span>Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <main class="main-content main-content-collapsed" id="mainContent">
-
-        <header class="topbar">
-            <div class="welcome-box">
-                <div class="user-circle">{{ initials }}</div>
-                <div>
-                    <h3>Welcome back, {{ first_name }}!</h3>
-                    <p>Transfer money securely to another WIVAH Bank account.</p>
                 </div>
+
+                <nav class="side-nav">
+                    <a href="/dashboard" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-home"></i></span>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="/atm" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-credit-card"></i></span>
+                        <span>ATM Simulation</span>
+                    </a>
+
+                    <a href="/transfer" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-exchange"></i></span>
+                        <span>Bank Transfer</span>
+                    </a>
+
+                    <a href="/transactions" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
+                        <span>Transactions</span>
+                    </a>
+
+                    <details class="nav-dropdown">
+                        <summary class="nav-item nav-dropdown-title">
+                            <span class="nav-icon"><i class="fa fa-line-chart"></i></span>
+                            <span>Investments</span>
+                            <span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
+                        </summary>
+                        <div class="nav-dropdown-menu">
+                            <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
+                            <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+                        </div>
+                    </details>
+
+                    <a href="/loans" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-university"></i></span>
+                        <span>Loans</span>
+                    </a>
+
+                    <a href="/profile" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-cog"></i></span>
+                        <span>Settings</span>
+                    </a>
+                </nav>
             </div>
 
-            <div class="profile-card">
-                <div class="profile-avatar">{{ initials }}</div>
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
 
-                <div class="profile-info">
-                    <h4>{{ first_name }} {{ last_name }}</h4>
-                    <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email }}{% elif role %}{{ role }}{% endif %}</p>
+        <main class="main-content main-content-collapsed" id="mainContent">
+
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Welcome back, {{ first_name }}!</h3>
+                        <p>Transfer money securely to another WIVAH Bank account.</p>
+                    </div>
                 </div>
 
-                <div class="dropdown">
-                    <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email
+                            }}{% elif role %}{{ role }}{% endif %}</p>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
                         <div class="dropdown-content">
                             <a href="/profile">Settings</a>
                             <a href="/logout">Log out</a>
                         </div>
-                </div>
-            </div>
-        </header>
-
-        <section class="page-section">
-            <h1>Bank Transfer</h1>
-            <p class="page-subtitle">
-                Transfer money securely using a bank account number or phone number.
-            </p>
-
-            <div class="transfer-page-grid">
-
-                <div class="transfer-form-card">
-
-                    <div class="panel-header">
-                        <div class="panel-icon">⇄</div>
-                        <div>
-                            <h2>Transfer Money</h2>
-                            <p>Enter the recipient details and amount below.</p>
-                        </div>
                     </div>
+                </div>
+            </header>
 
-                    <hr>
+            <section class="page-section">
+                <h1>Bank Transfer</h1>
+                <p class="page-subtitle">
+                    Transfer money securely using a bank account number or phone number.
+                </p>
 
-                    {% if message %}
+                <div class="transfer-page-grid">
+
+                    <div class="transfer-form-card">
+
+                        <div class="panel-header">
+                            <div class="panel-icon">⇄</div>
+                            <div>
+                                <h2>Transfer Money</h2>
+                                <p>Enter the recipient details and amount below.</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        {% if message %}
                         <div class="success-message">
                             {{ message }}
                         </div>
-                    {% endif %}
+                        {% endif %}
 
-                    {% if error %}
+                        {% if error %}
                         <div class="error-message">
                             {{ error }}
                         </div>
-                    {% endif %}
+                        {% endif %}
 
-                    <form method="post" action="/transfer" class="atm-form">
+                        <form method="post" action="/transfer" class="atm-form">
 
-                        <div class="form-row">
-                            <label for="transfer_by">Transfer By</label>
-                            <select id="transfer_by" name="transfer_by" required>
-                                <option value="account_number">Bank Account Number</option>
-                                <option value="phone_number">Phone Number</option>
-                            </select>
-                        </div>
-
-                        <div class="form-row">
-                            <label for="recipient_identifier">Recipient Account / Phone</label>
-                            <input
-                                type="text"
-                                id="recipient_identifier"
-                                name="recipient_identifier"
-                                placeholder="Enter account number or phone number"
-                                required
-                            >
-                        </div>
-
-                        <div class="form-row">
-                            <label for="amount">Amount</label>
-                            <input
-                                type="number"
-                                id="amount"
-                                name="amount"
-                                placeholder="100.00"
-                                step="0.01"
-                                min="1"
-                                required
-                            >
-                        </div>
-
-                        <div class="form-row">
-                            <label for="description">Description</label>
-                            <input
-                                type="text"
-                                id="description"
-                                name="description"
-                                placeholder="Optional transfer note"
-                            >
-                        </div>
-
-                        <button type="submit" class="submit-btn">
-                            Submit Transfer
-                        </button>
-
-                    </form>
-
-                    <div class="validation-box">
-                        <div class="info-icon">i</div>
-                        <p>
-                            <strong>Transfer rules:</strong>
-                            recipient must exist, amount must be more than $0,
-                            and transfer amount cannot exceed your current balance.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="transfer-side-card">
-
-                    <h2>Account Summary</h2>
-
-                    <div class="summary-box">
-                        <p>Current Balance</p>
-                        <h3>${{ balance | default(value="0.00") }}</h3>
-                    </div>
-
-                    <div class="summary-box">
-                        <p>Your Account Number</p>
-                        <h3>{{ account_number }}</h3>
-                    </div>
-
-                    <div class="summary-box">
-                        <p>Transfer Status</p>
-                        <h3>Active</h3>
-                    </div>
-
-                    <hr>
-
-                    <h2>Recent Transfers</h2>
-
-                    {% if transfer_history and transfer_history | length > 0 %}
-                        {% for item in transfer_history %}
-                            <div class="mini-transfer-item">
-                                <div>
-                                    <h4>{{ item.transaction_type }}</h4>
-                                    <p>${{ item.amount }} • {{ item.created_at }}</p>
-                                </div>
-                                <span>Done</span>
+                            <div class="form-row">
+                                <label for="transfer_by">Transfer By</label>
+                                <select id="transfer_by" name="transfer_by" required>
+                                    <option value="account_number">Bank Account Number</option>
+                                    <option value="phone_number">Phone Number</option>
+                                </select>
                             </div>
+
+                            <div class="form-row">
+                                <label for="recipient_identifier">Recipient Account / Phone</label>
+                                <input type="text" id="recipient_identifier" name="recipient_identifier"
+                                    placeholder="Enter account number or phone number" required>
+                            </div>
+
+                            <div class="form-row">
+                                <label for="amount">Amount</label>
+                                <input type="number" id="amount" name="amount" placeholder="100.00" step="0.01" min="1"
+                                    required>
+                            </div>
+
+                            <div class="form-row">
+                                <label for="description">Description</label>
+                                <input type="text" id="description" name="description"
+                                    placeholder="Optional transfer note">
+                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                Submit Transfer
+                            </button>
+
+                        </form>
+
+                        <div class="validation-box">
+                            <div class="info-icon">i</div>
+                            <p>
+                                <strong>Transfer rules:</strong>
+                                recipient must exist, amount must be more than $0,
+                                and transfer amount cannot exceed your current balance.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="transfer-side-card">
+
+                        <h2>Account Summary</h2>
+
+                        <div class="summary-box">
+                            <p>Current Balance</p>
+                            <h3>${{ balance | default(value="0.00") }}</h3>
+                        </div>
+
+                        <div class="summary-box">
+                            <p>Your Account Number</p>
+                            <h3>{{ account_number }}</h3>
+                        </div>
+
+                        <div class="summary-box">
+                            <p>Transfer Status</p>
+                            <h3>Active</h3>
+                        </div>
+
+                        <hr>
+
+                        <h2>Recent Transfers</h2>
+
+                        {% if transfer_history and transfer_history | length > 0 %}
+                        {% for item in transfer_history %}
+                        <div class="mini-transfer-item">
+                            <div>
+                                <h4>{{ item.transaction_type }}</h4>
+                                <p>${{ item.amount }} • {{ item.created_at }}</p>
+                            </div>
+                            <span>Done</span>
+                        </div>
                         {% endfor %}
-                    {% else %}
+                        {% else %}
                         <div class="mini-transfer-item">
                             <div>
                                 <h4>No Transfers Yet</h4>
@@ -240,16 +229,17 @@
                             </div>
                             <span>Empty</span>
                         </div>
-                    {% endif %}
+                        {% endif %}
+
+                    </div>
 
                 </div>
+            </section>
 
-            </div>
-        </section>
+        </main>
 
-    </main>
-
-</div>
+    </div>
 
 </body>
+
 </html>

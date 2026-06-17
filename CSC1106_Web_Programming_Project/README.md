@@ -127,7 +127,7 @@ Run the migration files:
 ```bash
 psql -U postgres -d banking_system -f migrations/001_create_tables.sql
 psql -U postgres -d banking_system -f migrations/002_add_profile_updated_at.sql
-psql -U postgres -d banking_system -f migrations/003_perma_admin.sql
+psql -U postgres -d banking_system -f migrations/003_perma_users.sql
 psql -U postgres -d banking_system -f migrations/004_password_reset_tokens.sql
 psql -U postgres -d banking_system -f migrations/005_email_verification_otps.sql
 ```
@@ -153,6 +153,9 @@ Save the file.
 Then run:
 
 ```bat
+-----------------------------------------------------------
+Sets up Nginx and runs Nginx while also setting up database
+-----------------------------------------------------------
 setup_all.bat
 ```
 
@@ -195,6 +198,11 @@ Start the Rust server:
 
 ```bash
 cargo run
+```
+or
+
+```text
+Run the start_all.bat
 ```
 
 Open:
@@ -241,7 +249,21 @@ Nginx on Linux:
 sudo systemctl stop nginx
 ```
 
+### 8. Starting again
+
+```text
+- After closing the server with Cntrl + C and stopping ngix server
+- To start the server again without starting the database again
+
+1) Run start_all.bat to initiate rust and nginx
+2) "Terminate batch job (Y/N) will appear after pressing Cntrl + C, press yes
+3) Run stop_all.bat to close nginx as well as any other processes still running
+
+```
+
+
 ---
+
 
 ## Pages
 
@@ -265,17 +287,32 @@ sudo systemctl stop nginx
 
 ---
 
-## Default admin account
+## Default User accounts
 
 Created by the migration file:
 
 ```text
+Admin:
 Username: BankAdmin
 Email: admin@bank.com
-Password: check migrations/003_perma_admin.sql
+Password: check migrations/003_perma_users.sql
 ```
 
-You can also change the admin password before running the project.
+```text
+Staff:
+Username: BankStaff
+Email: staff@bank.com
+Password: check migrations/003_perma_users.sql
+```
+
+```text
+Customer:
+Username: BankUser
+Email: user@bank.com
+Password: check migrations/003_perma_users.sql
+```
+
+You can also change the passwords of the demo users in 003_perma_users.sql before running the project.
 
 ---
 

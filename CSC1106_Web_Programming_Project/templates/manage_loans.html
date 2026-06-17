@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>WIVAH Bank - Loan Approvals</title>
@@ -11,142 +12,155 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="/static/js/main.js"></script>
 </head>
+
 <body>
-<div class="app-layout">
+    <div class="app-layout">
 
-    <aside class="sidebar sidebar-collapsed" id="sidebar">
-        <div>
-            <div class="brand">
-                <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">WB</button>
-                <div class="brand-copy">
-                    <h2>WIVAH Bank</h2>
-                    <p>Banking with Trust</p>
+        <aside class="sidebar sidebar-collapsed" id="sidebar">
+            <div>
+                <div class="brand">
+                    <button type="button" class="brand-icon brand-toggle" id="sidebarToggle" aria-label="Toggle sidebar"
+                        aria-expanded="false">WB</button>
+                    <div class="brand-copy">
+                        <h2>WIVAH Bank</h2>
+                        <p>Banking with Trust</p>
+                    </div>
                 </div>
+
+                <nav class="side-nav">
+                    <a href="/staff/dashboard" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-home"></i></span>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="/staff/table_view" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-users"></i></span>
+                        <span>View Users</span>
+                    </a>
+
+                    <a href="/staff/loans" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-university"></i></span>
+                        <span>Loan Approvals</span>
+                    </a>
+
+                    <a href="/staff/transactions" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
+                        <span>Transactions</span>
+                    </a>
+                </nav>
             </div>
-            <nav class="side-nav">
-                <a href="/staff/dashboard" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-home"></i></span><span>Dashboard</span>
-                </a>
-                <a href="/staff/table_view" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-users"></i></span><span>View Users</span>
-                </a>
-                <a href="/staff/loans" class="nav-item active">
-                    <span class="nav-icon"><i class="fa fa-university"></i></span><span>Loan Approvals</span>
-                </a>
-                <a href="/staff/transactions" class="nav-item">
-                    <span class="nav-icon"><i class="fa fa-list-alt"></i></span><span>Transactions</span>
-                </a>
-            </nav>
-        </div>
-        <div class="logout-box">
-            <a href="/logout" class="nav-item logout">
-                <span class="nav-icon"><i class="fa fa-sign-out"></i></span><span>Log Out</span>
-            </a>
-        </div>
-    </aside>
 
-    <main class="main-content main-content-collapsed" id="mainContent">
+            <div class="logout-box">
+                <a href="/logout" class="nav-item logout">
+                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
 
-        <header class="topbar">
-            <div class="welcome-box">
-                <div class="user-circle">{{ initials }}</div>
-                <div>
-                    <h3>Loan Approvals</h3>
-                    <p>Review and action pending customer loan applications.</p>
+        <main class="main-content main-content-collapsed" id="mainContent">
+
+            <header class="topbar">
+                <div class="welcome-box">
+                    <div class="user-circle">{{ initials }}</div>
+                    <div>
+                        <h3>Loan Approvals</h3>
+                        <p>Review and action pending customer loan applications.</p>
+                    </div>
                 </div>
-            </div>
-            <div class="profile-card">
-                <div class="profile-avatar">{{ initials }}</div>
-                <div class="profile-info">
-                    <h4>{{ first_name }} {{ last_name }}</h4>
-                    <p>Staff Member</p>
+                <div class="profile-card">
+                    <div class="profile-avatar">{{ initials }}</div>
+                    <div class="profile-info">
+                        <h4>{{ first_name }} {{ last_name }}</h4>
+                        <p>Staff Member</p>
+                    </div>
+                    <span class="profile-arrow">⌄</span>
                 </div>
-                <span class="profile-arrow">⌄</span>
-            </div>
-        </header>
+            </header>
 
-        <section class="page-section">
-            <h1>Loan Approvals</h1>
-            <p class="page-subtitle">{{ pending_count }} application(s) awaiting review.</p>
+            <section class="page-section">
+                <h1>Loan Approvals</h1>
+                <p class="page-subtitle">{{ pending_count }} application(s) awaiting review.</p>
 
-            {% if success %}
+                {% if success %}
                 <div class="success-message">{{ success }}</div>
-            {% endif %}
-            {% if error %}
+                {% endif %}
+                {% if error %}
                 <div class="error-message">{{ error }}</div>
-            {% endif %}
+                {% endif %}
 
-            <div class="nice-history-card">
-                <div class="nice-table-wrapper">
-                    <table class="nice-table">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Reason</th>
-                                <th>Status</th>
-                                <th>Applied On</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for loan in loans %}
-                            <tr>
-                                <td>
-                                    <strong>{{ loan.username }}</strong><br>
-                                    <span style="color:#64748b; font-size:0.85rem;">
-                                        {{ loan.first_name }} {{ loan.last_name }}
-                                    </span>
-                                </td>
-                                <td>${{ loan.amount }}</td>
-                                <td>{{ loan.reason | default(value="-") }}</td>
-                                <td>
-                                    {% if loan.status == "pending" %}
+                <div class="nice-history-card">
+                    <div class="nice-table-wrapper">
+                        <table class="nice-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Applied On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loan in loans %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ loan.username }}</strong><br>
+                                        <span style="color:#64748b; font-size:0.85rem;">
+                                            {{ loan.first_name }} {{ loan.last_name }}
+                                        </span>
+                                    </td>
+                                    <td>${{ loan.amount }}</td>
+                                    <td>{{ loan.reason | default(value="-") }}</td>
+                                    <td>
+                                        {% if loan.status == "pending" %}
                                         <span class="status-badge status-active">Pending</span>
-                                    {% elif loan.status == "approved" %}
+                                        {% elif loan.status == "approved" %}
                                         <span class="status-badge status-matured">Approved</span>
-                                    {% else %}
+                                        {% else %}
                                         <span class="status-badge status-cancelled">Rejected</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ loan.created_at }}</td>
-                                <td>
-                                    {% if loan.status == "pending" %}
-                                    <div style="display:flex; gap:8px;">
-                                        <form method="post" action="/staff/loans/action">
-                                            <input type="hidden" name="loan_id" value="{{ loan.id }}">
-                                            <input type="hidden" name="action" value="approve">
-                                            <button type="submit" class="btn-primary admin-table-action">
-                                                Approve
-                                            </button>
-                                        </form>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ loan.created_at }}</td>
+                                    <td>
+                                        {% if loan.status == "pending" %}
+                                        <div style="display:flex; gap:8px;">
+                                            <form method="post" action="/staff/loans/action">
+                                                <input type="hidden" name="loan_id" value="{{ loan.id }}">
+                                                <input type="hidden" name="action" value="approve">
+                                                <button type="submit" class="btn-primary admin-table-action">
+                                                    Approve
+                                                </button>
+                                            </form>
                                             <form method="post" action="/staff/loans/action"
-                                              onsubmit="return confirm('Reject this loan?');">
-                                            <input type="hidden" name="loan_id" value="{{ loan.id }}">
-                                            <input type="hidden" name="action" value="reject">
-                                            <button type="submit" class="btn-danger admin-table-action">
-                                                Reject
-                                            </button>
-                                        </form>
-                                    </div>
-                                    {% else %}
+                                                onsubmit="return confirm('Reject this loan?');">
+                                                <input type="hidden" name="loan_id" value="{{ loan.id }}">
+                                                <input type="hidden" name="action" value="reject">
+                                                <button type="submit" class="btn-danger admin-table-action">
+                                                    Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% else %}
                                         <span style="color:#94a3b8; font-size:0.85rem;">Processed</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            {% if loans | length == 0 %}
-                            <tr>
-                                <td colspan="6" class="empty-row">No loan applications found.</td>
-                            </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if loans | length == 0 %}
+                                <tr>
+                                    <td colspan="6" class="empty-row">No loan applications found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-        </section>
-    </main>
-</div>
+            </section>
+        </main>
+    </div>
 </body>
+
 </html>

@@ -1,6 +1,16 @@
 use serde::Serialize;
 use rust_decimal::Decimal;
 
+
+#[derive(Serialize)]
+pub struct CustomerOverview {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub account_number: String,
+    pub balance: String,
+}
+
 // Struct to represent user information for service-level operations
 #[derive(Serialize)]
 pub struct CustInfo {

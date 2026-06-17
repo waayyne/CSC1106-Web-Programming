@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>WIVAH Bank - View Users</title>
+    <title>Staff - Select Customer</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/sidebar.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
@@ -13,9 +13,7 @@
 </head>
 
 <body>
-
     <div class="app-layout">
-
         <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
                 <div class="brand">
@@ -64,8 +62,8 @@
                 <div class="welcome-box">
                     <div class="user-circle">{{ initials }}</div>
                     <div>
-                        <h3>Customer List</h3>
-                        <p>Viewing all registered customers.</p>
+                        <h3>Transactions</h3>
+                        <p>Select a customer to audit.</p>
                     </div>
                 </div>
                 <div class="profile-card">
@@ -77,59 +75,52 @@
                     <span class="profile-arrow">⌄</span>
                 </div>
             </header>
+
             <section class="page-section">
-                <h1>Customers</h1>
-                <p class="page-subtitle">All registered customer accounts.</p>
+                <h1>Customer Accounts</h1>
+                <p class="page-subtitle">Select a customer below to audit their transaction history.</p>
 
                 <div class="panel-card">
                     <div style="overflow-x:auto;">
-                        <form action="/staff/table_view" method="get" style="margin-bottom: 20px;">
-                            <input type="text" name="query" placeholder="Search..."
-                                value="{{ query | default(value='') }}">
-                            <button type="submit">Search</button>
-                            <a href="/staff/table_view">Clear</a>
-                        </form>
                         <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
                             <thead>
                                 <tr style="border-bottom: 2px solid #e5e7eb;">
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Username</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        First Name</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Last Name</th>
+                                        Customer Name</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
                                         Email</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Phone No.</th>
+                                        Account Number</th>
                                     <th
                                         style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Balance</th>
-
+                                        Current Balance</th>
+                                    <th
+                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
+                                        Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for user in table_view %}
+                                {% for customer in customers %}
                                 <tr style="border-bottom:1px solid #f3f4f6; transition: background 0.15s;"
                                     onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-                                    <td style="padding:0.85rem 1rem; font-weight:500;">{{ user.username }}</td>
-                                    <td style="padding:0.85rem 1rem;">{{ user.first_name }}</td>
-                                    <td style="padding:0.85rem 1rem;">{{ user.last_name }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.email }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.phone }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">${{ user.balance }}</td>
-
+                                    <td style="padding:0.85rem 1rem; font-weight:500;">{{ customer.name }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ customer.email }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ customer.account_number }}</td>
+                                    <td style="padding:0.85rem 1rem; color:#6b7280;">${{ customer.balance }}</td>
+                                    <td style="padding:0.85rem 1rem;">
+                                        <a href="/staff/transactions/{{ customer.id }}" class="submit-btn"
+                                            style="padding: 5px 15px; text-decoration: none; font-size: 0.85rem;">View
+                                            Ledger</a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
 
-                                {% if table_view | length == 0 %}
+                                {% if customers | length == 0 %}
                                 <tr>
-                                    <td colspan="6" style="padding:2rem; text-align:center; color:#9ca3af;">
+                                    <td colspan="5" style="padding:2rem; text-align:center; color:#9ca3af;">
                                         No customers found.
                                     </td>
                                 </tr>
@@ -138,12 +129,9 @@
                         </table>
                     </div>
                 </div>
-
             </section>
-
         </main>
     </div>
-
 </body>
 
 </html>
