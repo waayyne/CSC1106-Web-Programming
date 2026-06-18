@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -14,6 +15,7 @@ pub struct ProfileRecord {
     pub role: String,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub daily_transfer_limit: Decimal,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -28,6 +30,7 @@ pub struct ProfileView {
     pub role: String,
     pub created_at: String,
     pub updated_at: String,
+    pub daily_transfer_limit: Decimal,
 }
 
 impl From<ProfileRecord> for ProfileView {
@@ -43,6 +46,7 @@ impl From<ProfileRecord> for ProfileView {
             role: record.role,
             created_at: record.created_at.format("%Y-%m-%d %H:%M:%S").to_string(),
             updated_at: record.updated_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+            daily_transfer_limit: record.daily_transfer_limit,
         }
     }
 }
@@ -60,4 +64,9 @@ pub struct ChangePasswordForm {
     pub current_password: String,
     pub new_password: String,
     pub confirm_password: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateTransferLimitForm {
+    pub daily_transfer_limit: Decimal,
 }

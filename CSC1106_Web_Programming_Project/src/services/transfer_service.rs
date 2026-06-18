@@ -113,6 +113,62 @@ pub async fn process_transfer(
         return Err("Insufficient balance.".to_string());
     }
 
+    let limit_result = sqlx::query(
+    "SELECT daily_transfer_limit
+     FROM users
+     WHERE id = $1",
+    )
+    .bind(sender_user_id)
+    .fetch_one(&mut *tx)
+    .await;
+
+    let limit_row = match limit_result {
+        Ok(row) => row,
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to check daily transfer limit.".to_string());
+        }
+    };
+
+    let daily_limit: Decimal = limit_row.get("daily_transfer_limit");
+
+    let daily_total_result = sqlx::query(
+        "SELECT COALESCE(SUM(amount), 0)::TEXT AS total
+        FROM transactions
+        WHERE from_account_id = $1
+        AND transaction_type = 'transfer'
+        AND created_at::date = (now() at time zone 'Asia/Singapore')::date",
+    )
+    .bind(sender_account_id)
+    .fetch_one(&mut *tx)
+    .await;
+
+    let daily_total_row = match daily_total_result {
+        Ok(row) => row,
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to check daily transfer total.".to_string());
+        }
+    };
+
+    let daily_total_text: String = daily_total_row.get("total");
+
+    let daily_total = match daily_total_text.parse::<Decimal>() {
+        Ok(value) => value,
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Failed to read daily transfer total.".to_string());
+        }
+    };
+
+    if daily_total + amount > daily_limit {
+        let _ = tx.rollback().await;
+        return Err(format!(
+            "Daily transfer limit exceeded. Your daily limit is ${}. You have already transferred ${} today.",
+            daily_limit, daily_total
+        ));
+    }
+
     let deduct_result = sqlx::query(
         "UPDATE bank_accounts
          SET balance = balance - $1

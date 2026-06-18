@@ -37,6 +37,10 @@ echo Running email verification migration file...
 %PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/005_email_verification_otps.sql
 
 echo.
+echo Running email verification migration file...
+%PSQL% -U %DB_USER% -h localhost -p 5432 -d %DB_NAME% -f migrations/006_add_daily_transfer_limit.sql
+
+echo.
 echo ========================================
 echo Database setup completed.
 echo ========================================

@@ -5,7 +5,7 @@ use sqlx::Row;
 
 use crate::db::DbPool;
 use crate::middleware::auth_middleware;
-use crate::models::profile::{ChangePasswordForm, UpdateProfileForm};
+use crate::models::profile::{ChangePasswordForm, UpdateProfileForm, UpdateTransferLimitForm};
 use crate::services::auth_service;
 use crate::services::profile_service;
 
@@ -26,6 +26,7 @@ fn message_for_success(code: &str) -> &'static str {
         "profile_updated" => "Profile updated successfully.",
         "password_changed" => "Password changed successfully.",
         _ => "Success.",
+        "limit_updated" => "Daily transfer limit updated successfully.",
     }
 }
 
@@ -38,6 +39,7 @@ fn message_for_error(code: &str) -> &'static str {
         "validation_error" => "All profile fields are required.",
         "database_error" => "Something went wrong. Please try again.",
         _ => "Something went wrong. Please try again.",
+        "limit_invalid" => "Daily transfer limit must be more than 0.",
     }
 }
 
@@ -92,6 +94,24 @@ pub async fn profile_page(
         .body(rendered)
 }
 
+pub async fn update_transfer_limit(
+    pool: web::Data<DbPool>,
+    session: Session,
+    form: web::Form<UpdateTransferLimitForm>,
+) -> impl Responder {
+    let user_id = match auth_middleware::get_user_id(&session) {
+        Some(user_id) => user_id,
+        None => return auth_middleware::redirect_to_login(),
+    };
+
+    let result = profile_service::update_transfer_limit(&pool, user_id, form.into_inner()).await;
+
+    match result {
+        Ok(_) => profile_redirect("success=limit_updated"),
+        Err(error) => profile_redirect(&format!("error={}", error)),
+    }
+}
+
 pub async fn update_profile(
     pool: web::Data<DbPool>,
     session: Session,
@@ -133,6 +153,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         web::scope("/profile")
             .route("", web::get().to(profile_page))
             .route("/update", web::post().to(update_profile))
+            .route("/transfer-limit", web::post().to(update_transfer_limit))
             .route("/password", web::post().to(change_password)),
     );
 }

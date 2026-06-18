@@ -1,13 +1,15 @@
 use sqlx::Row;
 
 use crate::db::DbPool;
-use crate::models::profile::{ChangePasswordForm, ProfileRecord, ProfileView, UpdateProfileForm};
+use crate::models::profile::{
+    ChangePasswordForm, ProfileRecord, ProfileView, UpdateProfileForm, UpdateTransferLimitForm,
+};
 use crate::services::auth_service;
 
 pub async fn get_profile(pool: &DbPool, user_id: i32) -> Result<ProfileView, String> {
     let record_result = sqlx::query_as::<_, ProfileRecord>(
-        "select id, username, first_name, last_name, name, email, phone_number, role, created_at, updated_at
-         from users where id = $1",
+        "select id, username, first_name, last_name, name, email, phone_number, role, daily_transfer_limit, created_at, updated_at
+        from users where id = $1",
     )
     .bind(user_id)
     .fetch_one(pool)
@@ -112,7 +114,46 @@ pub async fn update_profile(
         Err(_) => Err("database_error".to_string()),
     }
 }
+pub async fn update_transfer_limit(
+    pool: &DbPool,
+    user_id: i32,
+    form: UpdateTransferLimitForm,
+) -> Result<(), String> {
+    let daily_transfer_limit = form.daily_transfer_limit;
 
+    if daily_transfer_limit <= rust_decimal::Decimal::ZERO {
+        return Err("limit_invalid".to_string());
+    }
+
+    let update_result = sqlx::query(
+        "update users set daily_transfer_limit = $1, updated_at = current_timestamp
+         where id = $2",
+    )
+    .bind(daily_transfer_limit)
+    .bind(user_id)
+    .execute(pool)
+    .await;
+
+    let result = match update_result {
+        Ok(result) => result,
+        Err(_) => return Err("database_error".to_string()),
+    };
+
+    if result.rows_affected() == 0 {
+        return Err("profile_not_found".to_string());
+    }
+
+    let audit_result = sqlx::query("insert into audit_logs (user_id, action) values ($1, $2)")
+        .bind(user_id)
+        .bind("Daily transfer limit updated")
+        .execute(pool)
+        .await;
+
+    match audit_result {
+        Ok(_) => Ok(()),
+        Err(_) => Err("database_error".to_string()),
+    }
+}
 pub async fn change_password(
     pool: &DbPool,
     user_id: i32,
@@ -187,4 +228,6 @@ pub async fn change_password(
         Ok(_) => Ok(()),
         Err(_) => Err("database_error".to_string()),
     }
+
+
 }
