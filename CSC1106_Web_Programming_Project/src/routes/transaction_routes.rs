@@ -70,35 +70,33 @@ pub async fn transactions_page(
         (total_count + per_page - 1) / per_page
     };
 
-    let user_row = match sqlx::query(
-        "SELECT first_name, last_name, username FROM users WHERE id = $1",
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
-        Ok(r) => r,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
-    };
+    let user_row =
+        match sqlx::query("SELECT first_name, last_name, username FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_one(pool.get_ref())
+            .await
+        {
+            Ok(r) => r,
+            Err(_) => {
+                return HttpResponse::Found()
+                    .append_header(("Location", "/login"))
+                    .finish();
+            }
+        };
 
-    let account_row = match sqlx::query(
-        "SELECT account_number, balance FROM bank_accounts WHERE user_id = $1",
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
-        Ok(r) => r,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
-    };
+    let account_row =
+        match sqlx::query("SELECT account_number, balance FROM bank_accounts WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(pool.get_ref())
+            .await
+        {
+            Ok(r) => r,
+            Err(_) => {
+                return HttpResponse::Found()
+                    .append_header(("Location", "/login"))
+                    .finish();
+            }
+        };
 
     let first_name: String = user_row.get("first_name");
     let last_name: String = user_row.get("last_name");
@@ -125,7 +123,10 @@ pub async fn transactions_page(
     context.insert("total_in", &format!("{:.2}", cash_flow_summary.total_in));
     context.insert("total_out", &format!("{:.2}", cash_flow_summary.total_out));
     context.insert("net_flow", &format!("{:.2}", cash_flow_summary.net_flow));
-    context.insert("deposit_total", &format!("{:.2}", cash_flow_summary.deposit_total));
+    context.insert(
+        "deposit_total",
+        &format!("{:.2}", cash_flow_summary.deposit_total),
+    );
     context.insert(
         "withdraw_total",
         &format!("{:.2}", cash_flow_summary.withdraw_total),
@@ -169,12 +170,10 @@ pub async fn transaction_statement_page(
         }
     };
 
-    let user_row = match sqlx::query(
-        "SELECT first_name, last_name FROM users WHERE id = $1",
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
+    let user_row = match sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await
     {
         Ok(r) => r,
         Err(_) => {
@@ -184,20 +183,19 @@ pub async fn transaction_statement_page(
         }
     };
 
-    let account_row = match sqlx::query(
-        "SELECT account_number, balance FROM bank_accounts WHERE user_id = $1",
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
-        Ok(r) => r,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
-    };
+    let account_row =
+        match sqlx::query("SELECT account_number, balance FROM bank_accounts WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(pool.get_ref())
+            .await
+        {
+            Ok(r) => r,
+            Err(_) => {
+                return HttpResponse::Found()
+                    .append_header(("Location", "/login"))
+                    .finish();
+            }
+        };
 
     let first_name: String = user_row.get("first_name");
     let last_name: String = user_row.get("last_name");

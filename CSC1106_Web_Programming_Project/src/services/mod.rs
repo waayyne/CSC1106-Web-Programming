@@ -1,11 +1,11 @@
 pub mod account_service;
+pub mod admin_service;
 pub mod audit_service;
 pub mod auth_service;
+pub mod fixed_deposit_service;
 pub mod loan_service;
 pub mod profile_service;
-pub mod transfer_service;
-pub mod transaction_service;
-pub mod admin_service;
-pub mod staff_service;
-pub mod fixed_deposit_service;
 pub mod risk_investment_service;
+pub mod staff_service;
+pub mod transaction_service;
+pub mod transfer_service;

@@ -20,13 +20,11 @@ pub async fn create_fixed_deposit(
         return Err("Amount must be more than $0.".to_string());
     }
 
-    let account_row = sqlx::query(
-        "SELECT id, balance FROM bank_accounts WHERE user_id = $1"
-    )
-    .bind(user_id)
-    .fetch_one(pool)
-    .await
-    .map_err(|_| "Bank account not found.".to_string())?;
+    let account_row = sqlx::query("SELECT id, balance FROM bank_accounts WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_one(pool)
+        .await
+        .map_err(|_| "Bank account not found.".to_string())?;
 
     let account_id: i32 = account_row.get("id");
     let balance: Decimal = account_row.get("balance");
@@ -55,24 +53,23 @@ pub async fn create_fixed_deposit(
     let now = singapore_now();
     let maturity_at = now + Duration::seconds(maturity_seconds.into());
 
-    let mut tx = pool.begin()
+    let mut tx = pool
+        .begin()
         .await
         .map_err(|_| "Failed to start database transaction.".to_string())?;
 
-    sqlx::query(
-        "UPDATE bank_accounts SET balance = balance - $1 WHERE id = $2"
-    )
-    .bind(amount)
-    .bind(account_id)
-    .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to deduct account balance.".to_string())?;
+    sqlx::query("UPDATE bank_accounts SET balance = balance - $1 WHERE id = $2")
+        .bind(amount)
+        .bind(account_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| "Failed to deduct account balance.".to_string())?;
 
     sqlx::query(
         "INSERT INTO fixed_deposits
          (user_id, account_id, principal_amount, interest_rate, interest_amount, total_return,
           duration_days, maturity_seconds, status, created_at, maturity_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10)"
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10)",
     )
     .bind(user_id)
     .bind(account_id)
@@ -91,7 +88,7 @@ pub async fn create_fixed_deposit(
     sqlx::query(
         "INSERT INTO transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
-         VALUES ($1, NULL, 'fixed_deposit', $2, $3)"
+         VALUES ($1, NULL, 'fixed_deposit', $2, $3)",
     )
     .bind(account_id)
     .bind(amount)
@@ -118,7 +115,7 @@ pub async fn get_user_fixed_deposits(
          SET status = 'done'
          WHERE user_id = $1
            AND status = 'active'
-           AND maturity_at <= $2"
+           AND maturity_at <= $2",
     )
     .bind(user_id)
     .bind(now)
@@ -129,7 +126,7 @@ pub async fn get_user_fixed_deposits(
     let deposits = sqlx::query_as::<_, FixedDeposit>(
         "SELECT * FROM fixed_deposits
          WHERE user_id = $1
-         ORDER BY created_at DESC"
+         ORDER BY created_at DESC",
     )
     .bind(user_id)
     .fetch_all(pool)
@@ -217,5 +214,4 @@ pub async fn claim_fixed_deposit(
         .map_err(|_| "Failed to claim fixed deposit.".to_string())?;
 
     Ok(())
-
 }

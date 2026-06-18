@@ -139,12 +139,10 @@ pub async fn fetch_statement_transactions(
     pool: &DbPool,
     user_id: i32,
 ) -> Result<Vec<StatementTransactionView>, sqlx::Error> {
-    let account_row = sqlx::query(
-        "SELECT id, balance FROM bank_accounts WHERE user_id = $1"
-    )
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+    let account_row = sqlx::query("SELECT id, balance FROM bank_accounts WHERE user_id = $1")
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?;
 
     let account_row = match account_row {
         Some(row) => row,
@@ -229,10 +227,7 @@ fn get_transaction_direction(tx: &TransactionRecord, account_id: i32) -> String 
     }
 }
 
-fn get_transaction_counterparty(
-    tx: &TransactionRecord,
-    account_id: i32,
-) -> Option<String> {
+fn get_transaction_counterparty(tx: &TransactionRecord, account_id: i32) -> Option<String> {
     if tx.to_account_id == Some(account_id) {
         tx.from_account_number.clone()
     } else if tx.from_account_id == Some(account_id) {
@@ -266,10 +261,7 @@ fn format_transaction_type_label(transaction_type: &str) -> String {
     }
 }
 
-pub async fn get_cash_flow_summary(
-    pool: &DbPool,
-    user_id: i32,
-) -> Result<CashFlowSummary, String> {
+pub async fn get_cash_flow_summary(pool: &DbPool, user_id: i32) -> Result<CashFlowSummary, String> {
     let account_row = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
         .bind(user_id)
         .fetch_optional(pool)

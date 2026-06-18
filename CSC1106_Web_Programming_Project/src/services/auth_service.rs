@@ -1,5 +1,5 @@
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
-use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use chrono::{Duration, Utc};
 use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
@@ -45,7 +45,10 @@ pub fn validate_password_complexity(password: &str) -> Result<(), &'static str> 
     }
 }
 
-pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<RegistrationResult, String> {
+pub async fn register_user(
+    pool: &DbPool,
+    form: RegisterForm,
+) -> Result<RegistrationResult, String> {
     validate_password_complexity(&form.password).map_err(|message| message.to_string())?;
 
     let full_name = format!("{} {}", form.first_name.trim(), form.last_name.trim());

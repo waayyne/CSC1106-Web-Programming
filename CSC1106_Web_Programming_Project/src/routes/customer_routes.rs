@@ -1,5 +1,5 @@
 use actix_session::Session;
-use actix_web::{HttpResponse, Responder, web};
+use actix_web::{web, HttpResponse, Responder};
 use serde::Serialize;
 use sqlx::Row;
 use tera::{Context, Tera};

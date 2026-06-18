@@ -30,13 +30,12 @@ pub async fn update_profile(
 ) -> Result<(), String> {
     let email = form.email.trim();
     let phone_number = form.phone_number.trim();
-    
+
     let current = match get_profile(pool, user_id).await {
         Ok(p) => p,
         Err(_) => return Err("profile_not_found".to_string()),
     };
 
-    
     let first_name = match form.first_name {
         Some(s) => s.trim().to_string(),
         None => current.first_name.clone(),
@@ -47,7 +46,6 @@ pub async fn update_profile(
         None => current.last_name.clone(),
     };
 
-    
     if current.role == "customer" {
         if email.is_empty() || phone_number.is_empty() {
             return Err("validation_error".to_string());
@@ -72,8 +70,10 @@ pub async fn update_profile(
             return Err("profile_not_found".to_string());
         }
     } else {
-        
-        if first_name.is_empty() || last_name.is_empty() || email.is_empty() || phone_number.is_empty()
+        if first_name.is_empty()
+            || last_name.is_empty()
+            || email.is_empty()
+            || phone_number.is_empty()
         {
             return Err("validation_error".to_string());
         }
@@ -228,6 +228,4 @@ pub async fn change_password(
         Ok(_) => Ok(()),
         Err(_) => Err("database_error".to_string()),
     }
-
-
 }

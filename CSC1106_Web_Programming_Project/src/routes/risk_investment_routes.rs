@@ -30,12 +30,10 @@ pub async fn show_risk_investment_page(
         }
     };
 
-    let user_row = match sqlx::query(
-        "select first_name, last_name from users where id = $1"
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
+    let user_row = match sqlx::query("select first_name, last_name from users where id = $1")
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await
     {
         Ok(row) => row,
         Err(_) => {
@@ -45,20 +43,19 @@ pub async fn show_risk_investment_page(
         }
     };
 
-    let account_row = match sqlx::query(
-        "select account_number, balance from bank_accounts where user_id = $1"
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
-        Ok(row) => row,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
-    };
+    let account_row =
+        match sqlx::query("select account_number, balance from bank_accounts where user_id = $1")
+            .bind(user_id)
+            .fetch_one(pool.get_ref())
+            .await
+        {
+            Ok(row) => row,
+            Err(_) => {
+                return HttpResponse::Found()
+                    .append_header(("Location", "/login"))
+                    .finish();
+            }
+        };
 
     let first_name: String = user_row.get("first_name");
     let last_name: String = user_row.get("last_name");
@@ -120,11 +117,12 @@ pub async fn create_risk_investment(
     .await;
 
     match result {
-        Ok(_) => {
-            HttpResponse::Found()
-                .append_header(("Location", "/risk-investment?success=Risk investment completed"))
-                .finish()
-        }
+        Ok(_) => HttpResponse::Found()
+            .append_header((
+                "Location",
+                "/risk-investment?success=Risk investment completed",
+            ))
+            .finish(),
         Err(error) => {
             let url = format!("/risk-investment?error={}", error);
             HttpResponse::Found()
@@ -136,5 +134,8 @@ pub async fn create_risk_investment(
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("/risk-investment", web::get().to(show_risk_investment_page));
-    cfg.route("/risk-investment/create", web::post().to(create_risk_investment));
+    cfg.route(
+        "/risk-investment/create",
+        web::post().to(create_risk_investment),
+    );
 }

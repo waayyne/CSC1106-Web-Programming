@@ -29,10 +29,12 @@ pub struct MessageQuery {
 fn require_staff(session: &Session) -> Option<i32> {
     let user_id = session.get::<i32>("user_id").unwrap_or(None)?;
     let role = session.get::<String>("role").unwrap_or(None)?;
-    if role == "staff" { Some(user_id) } else { None }
+    if role == "staff" {
+        Some(user_id)
+    } else {
+        None
+    }
 }
-
-
 
 pub async fn loan_page(
     tmpl: web::Data<Tera>,
@@ -42,7 +44,11 @@ pub async fn loan_page(
 ) -> impl Responder {
     let user_id = match session.get::<i32>("user_id").unwrap_or(None) {
         Some(id) => id,
-        None => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+        None => {
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish()
+        }
     };
 
     let user_row = match sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
@@ -51,7 +57,11 @@ pub async fn loan_page(
         .await
     {
         Ok(r) => r,
-        Err(_) => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+        Err(_) => {
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish()
+        }
     };
 
     let account_row =
@@ -61,7 +71,11 @@ pub async fn loan_page(
             .await
         {
             Ok(r) => r,
-            Err(_) => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+            Err(_) => {
+                return HttpResponse::Found()
+                    .append_header(("Location", "/login"))
+                    .finish()
+            }
         };
 
     let first_name: String = user_row.get("first_name");
@@ -75,13 +89,10 @@ pub async fn loan_page(
     );
 
     let loans = loan_service::get_user_loans(&pool, user_id)
-    .await
-    .unwrap_or_default();
+        .await
+        .unwrap_or_default();
 
-    let pending_loan_count = loans
-        .iter()
-        .filter(|loan| loan.status == "pending")
-        .count();
+    let pending_loan_count = loans.iter().filter(|loan| loan.status == "pending").count();
 
     let mut ctx = Context::new();
     ctx.insert("first_name", &first_name);
@@ -111,7 +122,11 @@ pub async fn apply_loan(
 ) -> impl Responder {
     let user_id = match session.get::<i32>("user_id").unwrap_or(None) {
         Some(id) => id,
-        None => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+        None => {
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish()
+        }
     };
 
     let result =
@@ -120,8 +135,7 @@ pub async fn apply_loan(
     match result {
         Ok(_) => {
             let _ =
-                audit_service::log_action(&pool, Some(user_id), "Submitted loan application")
-                    .await;
+                audit_service::log_action(&pool, Some(user_id), "Submitted loan application").await;
             HttpResponse::Found()
                 .append_header(("Location", "/loans?success=Loan+application+submitted"))
                 .finish()
@@ -129,16 +143,11 @@ pub async fn apply_loan(
         Err(e) => {
             let encoded = e.replace(' ', "+");
             HttpResponse::Found()
-                .append_header((
-                    "Location",
-                    format!("/loans?error={}", encoded),
-                ))
+                .append_header(("Location", format!("/loans?error={}", encoded)))
                 .finish()
         }
     }
 }
-
-
 
 pub async fn staff_loans_page(
     tmpl: web::Data<Tera>,
@@ -161,7 +170,11 @@ pub async fn staff_loans_page(
         .await
     {
         Ok(r) => r,
-        Err(_) => return HttpResponse::Found().append_header(("Location", "/login")).finish(),
+        Err(_) => {
+            return HttpResponse::Found()
+                .append_header(("Location", "/login"))
+                .finish()
+        }
     };
 
     let first_name: String = staff_row.get("first_name");
@@ -171,7 +184,10 @@ pub async fn staff_loans_page(
         first_name.chars().next().unwrap_or('S'),
         last_name.chars().next().unwrap_or('T')
     );
-    let role = session.get::<String>("role").unwrap_or(None).unwrap_or_default();
+    let role = session
+        .get::<String>("role")
+        .unwrap_or(None)
+        .unwrap_or_default();
 
     let loans = loan_service::get_all_loans(&pool).await.unwrap_or_default();
 
@@ -245,5 +261,5 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("/loans", web::get().to(loan_page))
         .route("/loans/apply", web::post().to(apply_loan))
         .route("/staff/loans", web::get().to(staff_loans_page))
-    .route("/staff/loans/action", web::post().to(handle_loan_action));
+        .route("/staff/loans/action", web::post().to(handle_loan_action));
 }

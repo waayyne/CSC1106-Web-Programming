@@ -1,6 +1,5 @@
 use serde::Serialize;
 
-
 #[derive(Serialize)]
 pub struct CustomerOverview {
     pub id: i32,
@@ -9,7 +8,6 @@ pub struct CustomerOverview {
     pub account_number: String,
     pub balance: String,
 }
-
 
 #[derive(Serialize)]
 pub struct CustInfo {

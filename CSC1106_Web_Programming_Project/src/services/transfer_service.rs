@@ -1,5 +1,3 @@
-
-
 use rust_decimal::Decimal;
 use sqlx::Row;
 
@@ -114,7 +112,7 @@ pub async fn process_transfer(
     }
 
     let limit_result = sqlx::query(
-    "SELECT daily_transfer_limit
+        "SELECT daily_transfer_limit
      FROM users
      WHERE id = $1",
     )

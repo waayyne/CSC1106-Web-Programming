@@ -1,7 +1,7 @@
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Responder};
-use tera::{Context, Tera};
 use sqlx::Row;
+use tera::{Context, Tera};
 
 use crate::db::DbPool;
 use crate::middleware::auth_middleware;
@@ -68,7 +68,6 @@ pub async fn profile_page(
     context.insert("profile", &profile);
     context.insert("initials", &initials);
 
-    
     let account_row = sqlx::query("select account_number from bank_accounts where user_id = $1")
         .bind(user_id)
         .fetch_one(pool.get_ref())
@@ -89,9 +88,7 @@ pub async fn profile_page(
 
     let rendered = tmpl.render("profile_settings.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub async fn update_transfer_limit(

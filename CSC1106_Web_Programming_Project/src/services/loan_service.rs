@@ -1,4 +1,3 @@
-
 use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
 use serde::Serialize;
@@ -39,14 +38,12 @@ pub async fn apply_for_loan(
         return Err("Loan amount must be greater than $0.".to_string());
     }
 
-    
-    let pending: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM loans WHERE user_id = $1 AND status = 'pending'",
-    )
-    .bind(user_id)
-    .fetch_one(pool)
-    .await
-    .map_err(|e| format!("Failed to check existing loans: {}", e))?;
+    let pending: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM loans WHERE user_id = $1 AND status = 'pending'")
+            .bind(user_id)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("Failed to check existing loans: {}", e))?;
 
     if pending > 0 {
         return Err("You already have a pending loan application.".to_string());
@@ -121,8 +118,6 @@ pub async fn get_all_loans(pool: &DbPool) -> Result<Vec<LoanWithUserView>, Strin
 
     Ok(loans)
 }
-
-
 
 pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Result<(), String> {
     if status != "approved" && status != "rejected" {

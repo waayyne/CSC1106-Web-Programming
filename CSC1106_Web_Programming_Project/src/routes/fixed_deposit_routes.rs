@@ -40,12 +40,10 @@ pub async fn fixed_deposit_page(
         }
     };
 
-    let user_row = match sqlx::query(
-        "SELECT first_name, last_name FROM users WHERE id = $1",
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
+    let user_row = match sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await
     {
         Ok(row) => row,
         Err(_) => {
@@ -55,20 +53,19 @@ pub async fn fixed_deposit_page(
         }
     };
 
-    let account_row = match sqlx::query(
-        "SELECT account_number, balance FROM bank_accounts WHERE user_id = $1",
-    )
-    .bind(user_id)
-    .fetch_one(pool.get_ref())
-    .await
-    {
-        Ok(row) => row,
-        Err(_) => {
-            return HttpResponse::Found()
-                .append_header(("Location", "/login"))
-                .finish();
-        }
-    };
+    let account_row =
+        match sqlx::query("SELECT account_number, balance FROM bank_accounts WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(pool.get_ref())
+            .await
+        {
+            Ok(row) => row,
+            Err(_) => {
+                return HttpResponse::Found()
+                    .append_header(("Location", "/login"))
+                    .finish();
+            }
+        };
 
     let first_name: String = user_row.get("first_name");
     let last_name: String = user_row.get("last_name");
@@ -154,12 +151,8 @@ pub async fn claim_fixed_deposit(
         }
     };
 
-    let result = fixed_deposit_service::claim_fixed_deposit(
-        &pool,
-        user_id,
-        form.fixed_deposit_id,
-    )
-    .await;
+    let result =
+        fixed_deposit_service::claim_fixed_deposit(&pool, user_id, form.fixed_deposit_id).await;
 
     let redirect_url = match result {
         Ok(_) => "/fixed-deposit?success=Fixed deposit claimed successfully".to_string(),
@@ -173,6 +166,9 @@ pub async fn claim_fixed_deposit(
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("/fixed-deposit", web::get().to(fixed_deposit_page));
-    cfg.route("/fixed-deposit/create", web::post().to(create_fixed_deposit));
+    cfg.route(
+        "/fixed-deposit/create",
+        web::post().to(create_fixed_deposit),
+    );
     cfg.route("/fixed-deposit/claim", web::post().to(claim_fixed_deposit));
 }

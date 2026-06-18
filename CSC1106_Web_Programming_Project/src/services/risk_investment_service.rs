@@ -26,20 +26,12 @@ pub async fn create_risk_investment(
         .await
         .map_err(|_| "Failed to start transaction.".to_string())?;
 
-    
-
-
-
-
-
-
-    let account_row = sqlx::query(
-        "select id, balance from bank_accounts where user_id = $1 for update"
-    )
-    .bind(user_id)
-    .fetch_one(&mut *tx)
-    .await
-    .map_err(|_| "Bank account not found.".to_string())?;
+    let account_row =
+        sqlx::query("select id, balance from bank_accounts where user_id = $1 for update")
+            .bind(user_id)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(|_| "Bank account not found.".to_string())?;
 
     let account_id: i32 = account_row.get("id");
     let balance: Decimal = account_row.get("balance");
@@ -53,7 +45,7 @@ pub async fn create_risk_investment(
     let (result, return_amount) = match risk_level.as_str() {
         "low" => {
             if random_number <= 75 {
-                ("success", amount * Decimal::new(105, 2)) 
+                ("success", amount * Decimal::new(105, 2))
             } else {
                 ("failed", Decimal::ZERO)
             }
@@ -61,7 +53,7 @@ pub async fn create_risk_investment(
 
         "medium" => {
             if random_number <= 60 {
-                ("success", amount * Decimal::new(110, 2)) 
+                ("success", amount * Decimal::new(110, 2))
             } else {
                 ("failed", Decimal::ZERO)
             }
@@ -69,7 +61,7 @@ pub async fn create_risk_investment(
 
         "high" => {
             if random_number <= 45 {
-                ("success", amount * Decimal::new(120, 2)) 
+                ("success", amount * Decimal::new(120, 2))
             } else {
                 ("failed", Decimal::ZERO)
             }
@@ -81,19 +73,17 @@ pub async fn create_risk_investment(
     let profit_loss = return_amount - amount;
     let new_balance = balance - amount + return_amount;
 
-    sqlx::query(
-        "update bank_accounts set balance = $1 where id = $2"
-    )
-    .bind(new_balance)
-    .bind(account_id)
-    .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to update balance.".to_string())?;
+    sqlx::query("update bank_accounts set balance = $1 where id = $2")
+        .bind(new_balance)
+        .bind(account_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| "Failed to update balance.".to_string())?;
 
     sqlx::query(
         "insert into risk_investments
          (user_id, account_id, amount, risk_level, result, return_amount, profit_loss)
-         values ($1, $2, $3, $4, $5, $6, $7)"
+         values ($1, $2, $3, $4, $5, $6, $7)",
     )
     .bind(user_id)
     .bind(account_id)
@@ -106,14 +96,10 @@ pub async fn create_risk_investment(
     .await
     .map_err(|_| "Failed to save risk investment.".to_string())?;
 
-    
-
-
-
     sqlx::query(
         "insert into transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
-         values ($1, null, 'risk_investment', $2, $3)"
+         values ($1, null, 'risk_investment', $2, $3)",
     )
     .bind(account_id)
     .bind(amount)
@@ -125,16 +111,11 @@ pub async fn create_risk_investment(
     .await
     .map_err(|_| "Failed to save investment out transaction.".to_string())?;
 
-    
-
-
-
-
     if result == "success" {
         sqlx::query(
             "insert into transactions
              (from_account_id, to_account_id, transaction_type, amount, description)
-             values (null, $1, 'risk_investment_return', $2, $3)"
+             values (null, $1, 'risk_investment_return', $2, $3)",
         )
         .bind(account_id)
         .bind(return_amount)
@@ -171,7 +152,7 @@ pub async fn get_risk_investments(
             created_at
          from risk_investments
          where user_id = $1
-         order by created_at desc"
+         order by created_at desc",
     )
     .bind(user_id)
     .fetch_all(pool)

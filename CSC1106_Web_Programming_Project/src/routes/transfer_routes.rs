@@ -96,9 +96,7 @@ pub async fn transfer_page(
 
     let rendered = tmpl.render("transfer_money.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub async fn process_transfer(
@@ -130,9 +128,7 @@ pub async fn process_transfer(
 
     let rendered = tmpl.render("transfer_money.html", &context).unwrap();
 
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(rendered)
+    HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {

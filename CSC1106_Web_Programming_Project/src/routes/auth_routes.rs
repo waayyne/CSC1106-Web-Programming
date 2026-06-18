@@ -7,7 +7,7 @@ use crate::models::user::{
 use crate::services::auth_service::{self, LoginResult};
 
 use actix_session::Session;
-use actix_web::{HttpResponse, Responder, web};
+use actix_web::{web, HttpResponse, Responder};
 use sqlx::Row;
 use tera::{Context, Tera};
 
@@ -341,12 +341,7 @@ pub async fn register_user(
             };
             let error_message = result.email_error.as_deref();
 
-            render_verify_email_page(
-                &tmpl,
-                error_message,
-                success_message,
-                Some(&result.email),
-            )
+            render_verify_email_page(&tmpl, error_message, success_message, Some(&result.email))
         }
 
         Err(message) => render_register_page(
@@ -377,14 +372,13 @@ pub async fn login_user(
     match result {
         Ok(Some(LoginResult::Authenticated { user_id, role })) => {
             session.insert("user_id", user_id).unwrap();
-            session.insert("role", role.clone()).unwrap(); 
+            session.insert("role", role.clone()).unwrap();
 
             let redirecrt_url = match role.as_str() {
-                
                 "admin" => "/admin/dashboard",
                 "staff" => "/staff/dashboard",
                 "customer" => "/dashboard",
-                _ => "/dashboard", 
+                _ => "/dashboard",
             };
 
             HttpResponse::Found()
@@ -510,7 +504,9 @@ pub async fn forgot_password(
             eprintln!("Password reset email error: {error}");
             render_forgot_password_page(
                 &tmpl,
-                Some("Unable to send the reset email. Please check the mail settings and try again."),
+                Some(
+                    "Unable to send the reset email. Please check the mail settings and try again.",
+                ),
                 None,
                 Some(&email),
             )
@@ -536,12 +532,7 @@ pub async fn reset_password(
     }
 
     if let Err(message) = auth_service::validate_password_complexity(&form_data.password) {
-        return render_reset_password_page(
-            &tmpl,
-            Some(&token),
-            Some(message),
-            None,
-        );
+        return render_reset_password_page(&tmpl, Some(&token), Some(message), None);
     }
 
     match auth_service::reset_password(&pool, token.clone(), form_data.password).await {

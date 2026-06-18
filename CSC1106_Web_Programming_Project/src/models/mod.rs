@@ -1,10 +1,9 @@
 pub mod account;
-pub mod audit_log;
+pub mod admin;
+pub mod fixed_deposit;
 pub mod loan;
 pub mod profile;
+pub mod risk_investment;
+pub mod staff;
 pub mod transaction;
 pub mod user;
-pub mod admin;
-pub mod staff;
-pub mod fixed_deposit;
-pub mod risk_investment;
