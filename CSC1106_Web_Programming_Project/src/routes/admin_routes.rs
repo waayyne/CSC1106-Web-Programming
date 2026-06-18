@@ -221,16 +221,26 @@ pub async fn update_user(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, session
 
 // Deletes a user record by their unique ID
 pub async fn delete_user_handler(pool: web::Data<DbPool>, session: Session, path: web::Path<i32>) -> impl Responder {
-    if require_admin(&session).is_none() {
-        return HttpResponse::Found().append_header(("Location", "/dashboard")).finish();
-    }
+    let admin_id = match require_admin(&session) {
+        Some(id) => id,
+        None => return HttpResponse::Found().append_header(("Location", "/dashboard")).finish(),
+    };
 
     let user_id = path.into_inner();
-    if let Err(e) = admin_service::delete_user(&pool, user_id).await {
-        return HttpResponse::InternalServerError().body(e);
+    if user_id == admin_id {
+        return HttpResponse::Found()
+            .append_header(("Location", "/admin/dashboard?error=You+cannot+delete+your+own+admin+account"))
+            .finish();
     }
 
-    let _ = audit_service::log_action(&pool, None, &format!("Admin deleted user {}", user_id)).await;
+    if let Err(e) = admin_service::delete_user(&pool, user_id).await {
+        let encoded = e.replace(' ', "+");
+        return HttpResponse::Found()
+            .append_header(("Location", format!("/admin/dashboard?error={}", encoded)))
+            .finish();
+    }
+
+    let _ = audit_service::log_action(&pool, Some(admin_id), &format!("Admin deleted user {}", user_id)).await;
 
     HttpResponse::Found().append_header(("Location", "/admin/dashboard")).finish()
 }

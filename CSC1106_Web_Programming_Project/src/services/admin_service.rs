@@ -126,11 +126,52 @@ pub async fn register_new_user(
 
 // Delete a user by ID (used when admin deletes a user)
 pub async fn delete_user(pool: &DbPool, user_id: i32) -> Result<(), String> {
-    sqlx::query("DELETE FROM users WHERE id = $1")
-        .bind(user_id)
-        .execute(pool)
+    let mut transaction = pool
+        .begin()
         .await
-        .map_err(|e| format!("Failed to cleanup orphaned user: {}", e))?;
+        .map_err(|e| format!("Failed to start delete transaction: {}", e))?;
+
+    sqlx::query(
+        "UPDATE transactions
+         SET from_account_id = NULL
+         WHERE from_account_id IN (SELECT id FROM bank_accounts WHERE user_id = $1)"
+    )
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| format!("Failed to detach sent transactions: {}", e))?;
+
+    sqlx::query(
+        "UPDATE transactions
+         SET to_account_id = NULL
+         WHERE to_account_id IN (SELECT id FROM bank_accounts WHERE user_id = $1)"
+    )
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| format!("Failed to detach received transactions: {}", e))?;
+
+    sqlx::query("UPDATE audit_logs SET user_id = NULL WHERE user_id = $1")
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| format!("Failed to detach audit logs: {}", e))?;
+
+    let result = sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| format!("Failed to delete user: {}", e))?;
+
+    if result.rows_affected() == 0 {
+        return Err("User not found.".to_string());
+    }
+
+    transaction
+        .commit()
+        .await
+        .map_err(|e| format!("Failed to finish delete transaction: {}", e))?;
+
     Ok(())
 }
 
