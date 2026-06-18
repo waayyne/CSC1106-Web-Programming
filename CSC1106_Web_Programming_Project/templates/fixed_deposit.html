@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <title>WIVAH Bank - Fixed Deposit</title>
+
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/sidebar.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="/static/css/transactions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <script src="/static/js/main.js"></script>
 </head>
 
@@ -66,6 +68,7 @@
                             <span>Investments</span>
                             <span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
                         </summary>
+
                         <div class="nav-dropdown-menu">
                             <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
                             <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
@@ -97,6 +100,7 @@
             <header class="topbar">
                 <div class="welcome-box">
                     <div class="user-circle">{{ initials }}</div>
+
                     <div>
                         <h3>Fixed Deposit</h3>
                         <p>Create and claim your fixed deposits.</p>
@@ -112,7 +116,10 @@
                     </div>
 
                     <div class="dropdown">
-                        <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
+                        <button class="dropbtn">
+                            <i class="fa fa-caret-down"></i>
+                        </button>
+
                         <div class="dropdown-content">
                             <a href="/profile">Settings</a>
                             <a href="/logout">Log out</a>
@@ -123,6 +130,7 @@
 
             <section class="page-section">
                 <h1>Fixed Deposit</h1>
+
                 <p class="page-subtitle">
                     Lock money into a fixed deposit and earn interest after it matures.
                 </p>
@@ -143,7 +151,7 @@
                     </div>
 
                     <div class="atm-mini-card">
-                        <p>Demo Duration</p><br>
+                        <p>Demo Duration</p>
                         <h3>90 / 180 / 360 days</h3>
                         <span>Simulated as 9 / 18 / 36 seconds</span>
                     </div>
@@ -153,7 +161,10 @@
 
                     <div class="atm-form-section">
                         <div class="panel-header">
-                            <div class="panel-icon">◈</div>
+                            <div class="panel-icon">
+                                <i class="fa fa-diamond"></i>
+                            </div>
+
                             <div>
                                 <h2>Create Fixed Deposit</h2>
                                 <p>Select an amount and duration for the deposit.</p>
@@ -165,8 +176,14 @@
                         <form method="post" action="/fixed-deposit/create" class="atm-form">
                             <div class="form-row">
                                 <label for="amount">Amount</label>
-                                <input type="number" id="amount" name="amount" step="0.01" min="1"
-                                    placeholder="Enter amount" required>
+                                <input
+                                    type="number"
+                                    id="amount"
+                                    name="amount"
+                                    step="0.01"
+                                    min="1"
+                                    placeholder="Enter amount"
+                                    required>
                             </div>
 
                             <div class="form-row">
@@ -178,7 +195,9 @@
                                 </select>
                             </div>
 
-                            <button type="submit" class="submit-btn">Create Fixed Deposit</button>
+                            <button type="submit" class="submit-btn">
+                                Create Fixed Deposit
+                            </button>
                         </form>
                     </div>
 
@@ -205,7 +224,10 @@
 
                 <div class="nice-history-card">
                     <div class="panel-header">
-                        <div class="panel-icon">◈</div>
+                        <div class="panel-icon">
+                            <i class="fa fa-diamond"></i>
+                        </div>
+
                         <div>
                             <h2>Your Fixed Deposits</h2>
                             <p>Track deposit amounts, interest and claim status.</p>
@@ -233,38 +255,49 @@
                                     <td>
                                         <span class="amount-out">${{ fd.principal_amount }}</span>
                                     </td>
+
                                     <td>{{ fd.interest_rate }}%</td>
+
                                     <td>
                                         <span class="amount-in">${{ fd.interest_amount }}</span>
                                     </td>
+
                                     <td>
                                         <span class="amount-in">${{ fd.total_return }}</span>
                                     </td>
+
                                     <td>{{ fd.duration_days }} days</td>
+
                                     <td>
                                         {{ fd.maturity_at | date(format="%Y-%m-%d %H:%M:%S") }}
                                     </td>
+
                                     <td>
                                         {% if fd.status == "active" %}
                                         <span class="status-badge status-active">Active</span>
                                         {% elif fd.status == "done" %}
                                         <span class="status-badge status-done">Done</span>
-                                        {% elif fd.status == "matured" %}
-                                        <span class="status-badge status-matured">Matured</span>
+                                        {% elif fd.status == "claimed" %}
+                                        <span class="status-badge status-claimed">Claimed</span>
                                         {% elif fd.status == "cancelled" %}
                                         <span class="status-badge status-cancelled">Cancelled</span>
                                         {% else %}
-                                        <span class="status-badge status-claimed">Claimed</span>
+                                        <span class="status-badge status-other">{{ fd.status }}</span>
                                         {% endif %}
                                     </td>
+
                                     <td>
                                         {% if fd.status == "done" %}
                                         <form method="post" action="/fixed-deposit/claim">
                                             <input type="hidden" name="fixed_deposit_id" value="{{ fd.id }}">
                                             <button type="submit" class="btn-primary">Claim</button>
                                         </form>
-                                        {% else %}
+                                        {% elif fd.status == "active" %}
+                                        Not ready
+                                        {% elif fd.status == "claimed" %}
                                         Claimed
+                                        {% else %}
+                                        -
                                         {% endif %}
                                     </td>
                                 </tr>
