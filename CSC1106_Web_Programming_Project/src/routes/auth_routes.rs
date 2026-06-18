@@ -374,7 +374,7 @@ pub async fn login_user(
             session.insert("user_id", user_id).unwrap();
             session.insert("role", role.clone()).unwrap();
 
-            let redirecrt_url = match role.as_str() {
+            let redirect_url = match role.as_str() {
                 "admin" => "/admin/dashboard",
                 "staff" => "/staff/dashboard",
                 "customer" => "/dashboard",
@@ -382,7 +382,7 @@ pub async fn login_user(
             };
 
             HttpResponse::Found()
-                .append_header(("Location", redirecrt_url))
+                .append_header(("Location", redirect_url))
                 .finish()
         }
 

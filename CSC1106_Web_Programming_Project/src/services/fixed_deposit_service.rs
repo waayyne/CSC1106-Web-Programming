@@ -20,11 +20,15 @@ pub async fn create_fixed_deposit(
         return Err("Amount must be more than $0.".to_string());
     }
 
-    let account_row = sqlx::query("SELECT id, balance FROM bank_accounts WHERE user_id = $1")
+    let account_lookup = sqlx::query("SELECT id, balance FROM bank_accounts WHERE user_id = $1")
         .bind(user_id)
         .fetch_one(pool)
-        .await
-        .map_err(|_| "Bank account not found.".to_string())?;
+        .await;
+
+    let account_row = match account_lookup {
+        Ok(row) => row,
+        Err(_) => return Err("Bank account not found.".to_string()),
+    };
 
     let account_id: i32 = account_row.get("id");
     let balance: Decimal = account_row.get("balance");
@@ -53,17 +57,21 @@ pub async fn create_fixed_deposit(
     let now = singapore_now();
     let maturity_at = now + Duration::seconds(maturity_seconds.into());
 
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|_| "Failed to start database transaction.".to_string())?;
+    let mut tx = match pool.begin().await {
+        Ok(tx) => tx,
+        Err(_) => return Err("Failed to start database transaction.".to_string()),
+    };
 
-    sqlx::query("UPDATE bank_accounts SET balance = balance - $1 WHERE id = $2")
-        .bind(amount)
-        .bind(account_id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to deduct account balance.".to_string())?;
+    let deduct_result =
+        sqlx::query("UPDATE bank_accounts SET balance = balance - $1 WHERE id = $2")
+            .bind(amount)
+            .bind(account_id)
+            .execute(&mut *tx)
+            .await;
+
+    if deduct_result.is_err() {
+        return Err("Failed to deduct account balance.".to_string());
+    }
 
     sqlx::query(
         "INSERT INTO fixed_deposits
@@ -85,7 +93,7 @@ pub async fn create_fixed_deposit(
     .await
     .map_err(|e| format!("Failed to create fixed deposit: {}", e))?;
 
-    sqlx::query(
+    let transaction_result = sqlx::query(
         "INSERT INTO transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
          VALUES ($1, NULL, 'fixed_deposit', $2, $3)",
@@ -94,12 +102,15 @@ pub async fn create_fixed_deposit(
     .bind(amount)
     .bind(format!("Fixed deposit created for {} days", duration_days))
     .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to record transaction.".to_string())?;
+    .await;
 
-    tx.commit()
-        .await
-        .map_err(|_| "Failed to save fixed deposit.".to_string())?;
+    if transaction_result.is_err() {
+        return Err("Failed to record transaction.".to_string());
+    }
+
+    if tx.commit().await.is_err() {
+        return Err("Failed to save fixed deposit.".to_string());
+    }
 
     Ok(())
 }
@@ -143,12 +154,12 @@ pub async fn claim_fixed_deposit(
 ) -> Result<(), String> {
     let now = singapore_now();
 
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|_| "Failed to start database transaction.".to_string())?;
+    let mut tx = match pool.begin().await {
+        Ok(tx) => tx,
+        Err(_) => return Err("Failed to start database transaction.".to_string()),
+    };
 
-    let deposit = sqlx::query_as::<_, FixedDeposit>(
+    let deposit_lookup = sqlx::query_as::<_, FixedDeposit>(
         "SELECT *
          FROM fixed_deposits
          WHERE id = $1 AND user_id = $2
@@ -157,8 +168,12 @@ pub async fn claim_fixed_deposit(
     .bind(fixed_deposit_id)
     .bind(user_id)
     .fetch_one(&mut *tx)
-    .await
-    .map_err(|_| "Fixed deposit not found.".to_string())?;
+    .await;
+
+    let deposit = match deposit_lookup {
+        Ok(deposit) => deposit,
+        Err(_) => return Err("Fixed deposit not found.".to_string()),
+    };
 
     if deposit.status == "claimed" {
         let _ = tx.rollback().await;
@@ -170,14 +185,18 @@ pub async fn claim_fixed_deposit(
         return Err("Fixed deposit has not matured yet.".to_string());
     }
 
-    sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
-        .bind(deposit.total_return)
-        .bind(deposit.account_id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to return fixed deposit amount.".to_string())?;
+    let return_result =
+        sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
+            .bind(deposit.total_return)
+            .bind(deposit.account_id)
+            .execute(&mut *tx)
+            .await;
 
-    let update_result = sqlx::query(
+    if return_result.is_err() {
+        return Err("Failed to return fixed deposit amount.".to_string());
+    }
+
+    let status_update = sqlx::query(
         "UPDATE fixed_deposits
          SET status = 'claimed', claimed_at = $1
          WHERE id = $2 AND user_id = $3 AND status != 'claimed'",
@@ -186,15 +205,19 @@ pub async fn claim_fixed_deposit(
     .bind(fixed_deposit_id)
     .bind(user_id)
     .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to update fixed deposit status.".to_string())?;
+    .await;
+
+    let update_result = match status_update {
+        Ok(result) => result,
+        Err(_) => return Err("Failed to update fixed deposit status.".to_string()),
+    };
 
     if update_result.rows_affected() == 0 {
         let _ = tx.rollback().await;
         return Err("This fixed deposit has already been claimed.".to_string());
     }
 
-    sqlx::query(
+    let claim_transaction = sqlx::query(
         "INSERT INTO transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
          VALUES (NULL, $1, 'fixed_deposit_claim', $2, $3)",
@@ -206,12 +229,15 @@ pub async fn claim_fixed_deposit(
         deposit.interest_amount
     ))
     .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to record claim transaction.".to_string())?;
+    .await;
 
-    tx.commit()
-        .await
-        .map_err(|_| "Failed to claim fixed deposit.".to_string())?;
+    if claim_transaction.is_err() {
+        return Err("Failed to record claim transaction.".to_string());
+    }
+
+    if tx.commit().await.is_err() {
+        return Err("Failed to claim fixed deposit.".to_string());
+    }
 
     Ok(())
 }

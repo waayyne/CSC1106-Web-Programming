@@ -12,7 +12,7 @@ if not exist "%NGINX_PATH%\conf\sites-enabled" (
     mkdir "%NGINX_PATH%\conf\sites-enabled"
 )
 
-:: Copys the nginx configuration file for WIVAHbank to the sites-enabled directory
+:: Copies the nginx configuration file for WIVAHbank to the sites-enabled directory
 echo Copying configuration file...
 copy "%~dp0..\deployment\WIVAHbank.conf" "C:\nginx\conf\sites-enabled\WIVAHbank.conf"
 
