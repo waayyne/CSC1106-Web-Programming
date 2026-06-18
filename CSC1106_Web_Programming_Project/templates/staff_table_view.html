@@ -9,6 +9,116 @@
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .staff-search-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .staff-search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0.7rem 0.9rem;
+            min-width: 280px;
+            max-width: 420px;
+            flex: 1;
+        }
+
+        .staff-search-box i {
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
+
+        .staff-search-box input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            font-size: 0.9rem;
+            color: #111827;
+        }
+
+        .staff-search-box input::placeholder {
+            color: #9ca3af;
+        }
+
+        .staff-search-btn {
+            border: none;
+            background: #111827;
+            color: white;
+            padding: 0.7rem 1.1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .staff-search-btn:hover {
+            background: #374151;
+        }
+
+        .staff-clear-btn {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 10px;
+        }
+
+        .staff-clear-btn:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .customer-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .customer-table thead tr {
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .customer-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .customer-table td {
+            padding: 0.85rem 1rem;
+        }
+
+        .customer-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.15s;
+        }
+
+        .customer-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .customer-table .muted {
+            color: #6b7280;
+        }
+
+        .empty-row {
+            padding: 2rem;
+            text-align: center;
+            color: #9ca3af;
+        }
+    </style>
+
     <script src="/static/js/main.js"></script>
 </head>
 
@@ -80,12 +190,14 @@
                         <p>Viewing all registered customers.</p>
                     </div>
                 </div>
+
                 <div class="profile-card">
                     <div class="profile-avatar">{{ initials }}</div>
                     <div class="profile-info">
                         <h4>{{ first_name }} {{ last_name }}</h4>
                         <p>Staff Member</p>
                     </div>
+
                     <div class="dropdown">
                         <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
                         <div class="dropdown-content">
@@ -95,65 +207,62 @@
                     </div>
                 </div>
             </header>
+
             <section class="page-section">
                 <h1>Customers</h1>
                 <p class="page-subtitle">All registered customer accounts.</p>
 
                 <div class="panel-card">
                     <div style="overflow-x:auto;">
-                        <form action="/staff/table_view" method="get" style="margin-bottom: 20px;">
-                            <input type="text" name="query" placeholder="Search..."
-                                value="{{ query | default(value='') }}">
-                            <button type="submit">Search</button>
-                            <a href="/staff/table_view">Clear</a>
-                        </form>
-                        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #e5e7eb;">
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Username</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        First Name</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Last Name</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Email</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Phone No.</th>
-                                    <th
-                                        style="text-align:left; padding:0.75rem 1rem; color:#6b7280; font-weight:600; white-space:nowrap;">
-                                        Balance</th>
 
+                        <form action="/staff/table_view" method="get" class="staff-search-bar">
+                            <div class="staff-search-box">
+                                <i class="fa fa-search"></i>
+                                <input type="text"
+                                    name="query"
+                                    placeholder="Search by name, email, phone..."
+                                    value="{{ query | default(value='') }}">
+                            </div>
+
+                            <button type="submit" class="staff-search-btn">Search</button>
+
+                            <a href="/staff/table_view" class="staff-clear-btn">Clear</a>
+                        </form>
+
+                        <table class="customer-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                    <th>Phone No.</th>
+                                    <th>Balance</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 {% for user in table_view %}
-                                <tr style="border-bottom:1px solid #f3f4f6; transition: background 0.15s;"
-                                    onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-                                    <td style="padding:0.85rem 1rem; font-weight:500;">{{ user.username }}</td>
-                                    <td style="padding:0.85rem 1rem;">{{ user.first_name }}</td>
-                                    <td style="padding:0.85rem 1rem;">{{ user.last_name }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.email }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">{{ user.phone }}</td>
-                                    <td style="padding:0.85rem 1rem; color:#6b7280;">${{ user.balance }}</td>
-
+                                <tr>
+                                    <td style="font-weight:500;">{{ user.username }}</td>
+                                    <td>{{ user.first_name }}</td>
+                                    <td>{{ user.last_name }}</td>
+                                    <td class="muted">{{ user.email }}</td>
+                                    <td class="muted">{{ user.phone }}</td>
+                                    <td class="muted">${{ user.balance }}</td>
                                 </tr>
                                 {% endfor %}
 
                                 {% if table_view | length == 0 %}
                                 <tr>
-                                    <td colspan="6" style="padding:2rem; text-align:center; color:#9ca3af;">
+                                    <td colspan="6" class="empty-row">
                                         No customers found.
                                     </td>
                                 </tr>
                                 {% endif %}
                             </tbody>
                         </table>
+
                     </div>
                 </div>
 
