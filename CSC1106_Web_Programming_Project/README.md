@@ -154,9 +154,6 @@ Save the file.
 Then run:
 
 ```bat
------------------------------------------------------------
-Sets up Nginx and runs Nginx while also setting up database
------------------------------------------------------------
 setup_all.bat
 ```
 
@@ -195,15 +192,18 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ### 6. Run
 
-Start the Rust server:
+Start the server:
+
+```bat
+start_all.bat
+```
+
+This starts Nginx and runs `cargo run` automatically.
+
+Or if you just want to run the Rust server manually:
 
 ```bash
 cargo run
-```
-or
-
-```text
-Run the start_all.bat
 ```
 
 Open:
@@ -252,15 +252,21 @@ sudo systemctl stop nginx
 
 ### 8. Starting again
 
-```text
-- After closing the server with Cntrl + C and stopping ngix server
-- To start the server again without starting the database again
+To start the server again without resetting the database, just run:
 
-1) Run start_all.bat to initiate rust and nginx
-2) "Terminate batch job (Y/N) will appear after pressing Cntrl + C, press yes
-3) Run stop_all.bat to close nginx as well as any other processes still running
-
+```bat
+start_all.bat
 ```
+
+This will start Nginx and run `cargo run` automatically.
+
+To stop everything, run:
+
+```bat
+stop_all.bat
+```
+
+If `Terminate batch job (Y/N)` appears after pressing `Ctrl+C`, press `Y`.
 
 
 ---
@@ -380,8 +386,3 @@ DATABASE_URL = postgres://postgres:password@localhost:5432/banking_system
 
 ---
 
-## `.gitignore` reminder
-
-Do not commit `.env`.
-
-Commit `.env.example`.
