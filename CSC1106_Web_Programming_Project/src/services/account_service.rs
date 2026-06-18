@@ -15,10 +15,10 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
         return Err("Invalid transaction type.".to_string());
     }
 
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|_| "Failed to start ATM transaction.".to_string())?;
+    let mut tx = match pool.begin().await {
+        Ok(tx) => tx,
+        Err(_) => return Err("Failed to start ATM transaction.".to_string()),
+    };
 
     let account_result = if form.find_by == "account_number" {
         sqlx::query(
@@ -64,14 +64,19 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
     }
 
     if form.transaction_type == "deposit" {
-        sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
-            .bind(amount)
-            .bind(account_id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|_| "Failed to deposit money.".to_string())?;
+        let deposit_result =
+            sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
+                .bind(amount)
+                .bind(account_id)
+                .execute(&mut *tx)
+                .await;
 
-        sqlx::query(
+        if deposit_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to deposit money.".to_string());
+        }
+
+        let save_result = sqlx::query(
             "INSERT INTO transactions
              (from_account_id, to_account_id, transaction_type, amount, description)
              VALUES (NULL, $1, 'deposit', $2, 'ATM deposit')",
@@ -79,17 +84,26 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
         .bind(account_id)
         .bind(amount)
         .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to save transaction.".to_string())?;
-    } else {
-        sqlx::query("UPDATE bank_accounts SET balance = balance - $1 WHERE id = $2")
-            .bind(amount)
-            .bind(account_id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|_| "Failed to withdraw money.".to_string())?;
+        .await;
 
-        sqlx::query(
+        if save_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to save transaction.".to_string());
+        }
+    } else {
+        let withdraw_result =
+            sqlx::query("UPDATE bank_accounts SET balance = balance - $1 WHERE id = $2")
+                .bind(amount)
+                .bind(account_id)
+                .execute(&mut *tx)
+                .await;
+
+        if withdraw_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to withdraw money.".to_string());
+        }
+
+        let save_result = sqlx::query(
             "INSERT INTO transactions
              (from_account_id, to_account_id, transaction_type, amount, description)
              VALUES ($1, NULL, 'withdraw', $2, 'ATM withdrawal')",
@@ -97,13 +111,17 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
         .bind(account_id)
         .bind(amount)
         .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to save transaction.".to_string())?;
+        .await;
+
+        if save_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to save transaction.".to_string());
+        }
     }
 
-    tx.commit()
-        .await
-        .map_err(|_| "Failed to complete ATM transaction.".to_string())?;
+    if tx.commit().await.is_err() {
+        return Err("Failed to complete ATM transaction.".to_string());
+    }
 
     Ok(())
 }

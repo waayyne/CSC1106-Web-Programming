@@ -21,22 +21,30 @@ pub async fn create_risk_investment(
         return Err("Invalid risk level selected.".to_string());
     }
 
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|_| "Failed to start transaction.".to_string())?;
+    let mut tx = match pool.begin().await {
+        Ok(tx) => tx,
+        Err(_) => return Err("Failed to start transaction.".to_string()),
+    };
 
-    let account_row =
+    let account_lookup =
         sqlx::query("select id, balance from bank_accounts where user_id = $1 for update")
             .bind(user_id)
             .fetch_one(&mut *tx)
-            .await
-            .map_err(|_| "Bank account not found.".to_string())?;
+            .await;
+
+    let account_row = match account_lookup {
+        Ok(row) => row,
+        Err(_) => {
+            let _ = tx.rollback().await;
+            return Err("Bank account not found.".to_string());
+        }
+    };
 
     let account_id: i32 = account_row.get("id");
     let balance: Decimal = account_row.get("balance");
 
     if balance < amount {
+        let _ = tx.rollback().await;
         return Err("Insufficient balance for investment.".to_string());
     }
 
@@ -73,14 +81,18 @@ pub async fn create_risk_investment(
     let profit_loss = return_amount - amount;
     let new_balance = balance - amount + return_amount;
 
-    sqlx::query("update bank_accounts set balance = $1 where id = $2")
+    let balance_update = sqlx::query("update bank_accounts set balance = $1 where id = $2")
         .bind(new_balance)
         .bind(account_id)
         .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to update balance.".to_string())?;
+        .await;
 
-    sqlx::query(
+    if balance_update.is_err() {
+        let _ = tx.rollback().await;
+        return Err("Failed to update balance.".to_string());
+    }
+
+    let investment_insert = sqlx::query(
         "insert into risk_investments
          (user_id, account_id, amount, risk_level, result, return_amount, profit_loss)
          values ($1, $2, $3, $4, $5, $6, $7)",
@@ -93,10 +105,14 @@ pub async fn create_risk_investment(
     .bind(return_amount)
     .bind(profit_loss)
     .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to save risk investment.".to_string())?;
+    .await;
 
-    sqlx::query(
+    if investment_insert.is_err() {
+        let _ = tx.rollback().await;
+        return Err("Failed to save risk investment.".to_string());
+    }
+
+    let investment_transaction = sqlx::query(
         "insert into transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
          values ($1, null, 'risk_investment', $2, $3)",
@@ -108,11 +124,15 @@ pub async fn create_risk_investment(
         risk_level, result
     ))
     .execute(&mut *tx)
-    .await
-    .map_err(|_| "Failed to save investment out transaction.".to_string())?;
+    .await;
+
+    if investment_transaction.is_err() {
+        let _ = tx.rollback().await;
+        return Err("Failed to save investment out transaction.".to_string());
+    }
 
     if result == "success" {
-        sqlx::query(
+        let return_transaction = sqlx::query(
             "insert into transactions
              (from_account_id, to_account_id, transaction_type, amount, description)
              values (null, $1, 'risk_investment_return', $2, $3)",
@@ -124,13 +144,17 @@ pub async fn create_risk_investment(
             return_amount, profit_loss
         ))
         .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to save investment return transaction.".to_string())?;
+        .await;
+
+        if return_transaction.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to save investment return transaction.".to_string());
+        }
     }
 
-    tx.commit()
-        .await
-        .map_err(|_| "Failed to complete investment.".to_string())?;
+    if tx.commit().await.is_err() {
+        return Err("Failed to complete investment.".to_string());
+    }
 
     Ok(())
 }
@@ -139,7 +163,7 @@ pub async fn get_risk_investments(
     pool: &DbPool,
     user_id: i32,
 ) -> Result<Vec<RiskInvestment>, String> {
-    sqlx::query_as::<_, RiskInvestment>(
+    let investments = sqlx::query_as::<_, RiskInvestment>(
         "select
             id,
             user_id,
@@ -156,6 +180,10 @@ pub async fn get_risk_investments(
     )
     .bind(user_id)
     .fetch_all(pool)
-    .await
-    .map_err(|_| "Failed to load risk investments.".to_string())
+    .await;
+
+    match investments {
+        Ok(investments) => Ok(investments),
+        Err(_) => Err("Failed to load risk investments.".to_string()),
+    }
 }

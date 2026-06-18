@@ -141,27 +141,39 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
         let user_id: i32 = loan.user_id;
         let amount: Decimal = loan.amount;
 
-        let mut tx = pool
-            .begin()
-            .await
-            .map_err(|_| "Failed to start transaction.".to_string())?;
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return Err("Failed to start transaction.".to_string()),
+        };
 
-        let account_row = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
+        let account_lookup = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
             .bind(user_id)
             .fetch_one(&mut *tx)
-            .await
-            .map_err(|_| "Bank account not found.".to_string())?;
+            .await;
+
+        let account_row = match account_lookup {
+            Ok(row) => row,
+            Err(_) => {
+                let _ = tx.rollback().await;
+                return Err("Bank account not found.".to_string());
+            }
+        };
 
         let account_id: i32 = account_row.get("id");
 
-        sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
-            .bind(amount)
-            .bind(account_id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|_| "Failed to credit account.".to_string())?;
+        let credit_result =
+            sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
+                .bind(amount)
+                .bind(account_id)
+                .execute(&mut *tx)
+                .await;
 
-        sqlx::query(
+        if credit_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to credit account.".to_string());
+        }
+
+        let transaction_result = sqlx::query(
             "INSERT INTO transactions
              (from_account_id, to_account_id, transaction_type, amount, description)
              VALUES (NULL, $1, 'loan_disbursement', $2, 'Approved loan disbursed')",
@@ -169,18 +181,26 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
         .bind(account_id)
         .bind(amount)
         .execute(&mut *tx)
-        .await
-        .map_err(|_| "Failed to record disbursement.".to_string())?;
+        .await;
 
-        sqlx::query("UPDATE loans SET status = 'approved' WHERE id = $1")
+        if transaction_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to record disbursement.".to_string());
+        }
+
+        let status_result = sqlx::query("UPDATE loans SET status = 'approved' WHERE id = $1")
             .bind(loan_id)
             .execute(&mut *tx)
-            .await
-            .map_err(|_| "Failed to update loan status.".to_string())?;
+            .await;
 
-        tx.commit()
-            .await
-            .map_err(|_| "Failed to commit approval.".to_string())?;
+        if status_result.is_err() {
+            let _ = tx.rollback().await;
+            return Err("Failed to update loan status.".to_string());
+        }
+
+        if tx.commit().await.is_err() {
+            return Err("Failed to commit approval.".to_string());
+        }
     } else {
         sqlx::query("UPDATE loans SET status = 'rejected' WHERE id = $1")
             .bind(loan_id)
