@@ -115,7 +115,23 @@ pub async fn register_user(pool: &DbPool, form: RegisterForm) -> Result<Registra
 
     let user_row = match user_result {
         Ok(row) => row,
-        Err(_) => return Err("Failed to register user.".to_string()),
+        Err(error) => {
+            let error_text = error.to_string();
+
+            if error_text.contains("users_username_key") {
+                return Err("Username already exists.".to_string());
+            }
+
+            if error_text.contains("users_email_key") {
+                return Err("Email already exists.".to_string());
+            }
+
+            if error_text.contains("users_phone_number_key") {
+                return Err("Phone number already exists.".to_string());
+            }
+
+            return Err(format!("Failed to register user: {}", error_text));
+        }
     };
 
     let user_id: i32 = user_row.get("id");
