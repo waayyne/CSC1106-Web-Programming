@@ -32,7 +32,7 @@ fn require_staff(session: &Session) -> Option<i32> {
     if role == "staff" { Some(user_id) } else { None }
 }
 
-// ── Customer: view loans & apply ──────────────────────────────────────────────
+
 
 pub async fn loan_page(
     tmpl: web::Data<Tera>,
@@ -138,7 +138,7 @@ pub async fn apply_loan(
     }
 }
 
-// ── Staff: view and process loans ─────────────────────────────────────────────
+
 
 pub async fn staff_loans_page(
     tmpl: web::Data<Tera>,

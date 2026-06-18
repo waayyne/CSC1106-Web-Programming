@@ -6,7 +6,7 @@ use dotenvy::dotenv;
 use std::env;
 use tera::Tera;
 
-// Importing modules for database connection, routes, and services using mod declarations
+
 mod db;
 mod middleware;
 mod models;

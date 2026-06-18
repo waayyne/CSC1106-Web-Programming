@@ -26,13 +26,13 @@ pub async fn create_risk_investment(
         .await
         .map_err(|_| "Failed to start transaction.".to_string())?;
 
-    /*
-        Concurrency safety:
-        FOR UPDATE locks this user's bank account row.
+    
 
-        If two investment requests happen at the same time,
-        the second request waits until the first transaction finishes.
-    */
+
+
+
+
+
     let account_row = sqlx::query(
         "select id, balance from bank_accounts where user_id = $1 for update"
     )
@@ -53,7 +53,7 @@ pub async fn create_risk_investment(
     let (result, return_amount) = match risk_level.as_str() {
         "low" => {
             if random_number <= 75 {
-                ("success", amount * Decimal::new(105, 2)) // +5%
+                ("success", amount * Decimal::new(105, 2)) 
             } else {
                 ("failed", Decimal::ZERO)
             }
@@ -61,7 +61,7 @@ pub async fn create_risk_investment(
 
         "medium" => {
             if random_number <= 60 {
-                ("success", amount * Decimal::new(110, 2)) // +10%
+                ("success", amount * Decimal::new(110, 2)) 
             } else {
                 ("failed", Decimal::ZERO)
             }
@@ -69,7 +69,7 @@ pub async fn create_risk_investment(
 
         "high" => {
             if random_number <= 45 {
-                ("success", amount * Decimal::new(120, 2)) // +20%
+                ("success", amount * Decimal::new(120, 2)) 
             } else {
                 ("failed", Decimal::ZERO)
             }
@@ -106,10 +106,10 @@ pub async fn create_risk_investment(
     .await
     .map_err(|_| "Failed to save risk investment.".to_string())?;
 
-    /*
-        First transaction:
-        Investment money goes OUT from user's account.
-    */
+    
+
+
+
     sqlx::query(
         "insert into transactions
          (from_account_id, to_account_id, transaction_type, amount, description)
@@ -125,11 +125,11 @@ pub async fn create_risk_investment(
     .await
     .map_err(|_| "Failed to save investment out transaction.".to_string())?;
 
-    /*
-        Second transaction:
-        If success, return money comes IN to user's account.
-        If failed, no IN transaction is created.
-    */
+    
+
+
+
+
     if result == "success" {
         sqlx::query(
             "insert into transactions

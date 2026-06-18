@@ -377,14 +377,14 @@ pub async fn login_user(
     match result {
         Ok(Some(LoginResult::Authenticated { user_id, role })) => {
             session.insert("user_id", user_id).unwrap();
-            session.insert("role", role.clone()).unwrap(); // clone as session.insert requires ownership of the value
+            session.insert("role", role.clone()).unwrap(); 
 
             let redirecrt_url = match role.as_str() {
-                // gets the role as a string slice for matching
+                
                 "admin" => "/admin/dashboard",
                 "staff" => "/staff/dashboard",
                 "customer" => "/dashboard",
-                _ => "/dashboard", // default to customer dashboard if role is unrecognized
+                _ => "/dashboard", 
             };
 
             HttpResponse::Found()

@@ -39,7 +39,7 @@ pub async fn apply_for_loan(
         return Err("Loan amount must be greater than $0.".to_string());
     }
 
-    // Block duplicate pending applications
+    
     let pending: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM loans WHERE user_id = $1 AND status = 'pending'",
     )
@@ -122,8 +122,8 @@ pub async fn get_all_loans(pool: &DbPool) -> Result<Vec<LoanWithUserView>, Strin
     Ok(loans)
 }
 
-/// Approves the loan and credits the user's bank account in a single transaction.
-/// Rejecting simply updates the status.
+
+
 pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Result<(), String> {
     if status != "approved" && status != "rejected" {
         return Err("Invalid status value.".to_string());

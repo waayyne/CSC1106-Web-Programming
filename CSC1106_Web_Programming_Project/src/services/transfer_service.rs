@@ -1,5 +1,5 @@
-//The system starts a database transaction, locks the sender account row using FOR UPDATE, checks the balance while locked, deducts the sender balance, credits the recipient balance,
-// records the transaction, and commits. If any step fails, rollback is performed.
+
+
 use rust_decimal::Decimal;
 use sqlx::Row;
 

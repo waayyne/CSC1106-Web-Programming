@@ -10,14 +10,14 @@ use crate::services::staff_service;
 use crate::services::transaction_service;
 use crate::routes::transaction_routes::TxQuery;
 
-// Helper function to check if the current user is staff (or admin) and return their user ID
+
 fn require_staff(session: &Session) -> Option<i32> {
     let user_id = session.get::<i32>("user_id").unwrap_or(None)?;
     let role = session.get::<String>("role").unwrap_or(None)?;
     if role == "staff" { Some(user_id) } else { None }
 }
 
-// Handler for the staff dashboard page
+
 pub async fn staff_dashboard(
     pool: web::Data<DbPool>,
     tmpl: web::Data<Tera>,
@@ -30,7 +30,7 @@ pub async fn staff_dashboard(
             .finish(),
     };
 
-    // get staff's own info for topbar
+    
     let staff_info = match sqlx::query(
         "SELECT first_name, last_name FROM users WHERE id = $1"
     )
@@ -39,11 +39,11 @@ pub async fn staff_dashboard(
     .await {
         Ok(row) => row,
         Err(_) => return HttpResponse::Found()
-            .append_header(("Location", "/login")) // Redirect to login if can't fetch staff info, which means the session is invalid
+            .append_header(("Location", "/login")) 
             .finish(),
     };
 
-    // Displays staff's initials in the top right corner
+    
     let first_name: String = staff_info.get("first_name");
     let last_name: String = staff_info.get("last_name");
     let initials = format!(
@@ -53,7 +53,7 @@ pub async fn staff_dashboard(
     );
     let role = session.get::<String>("role").unwrap_or(None).unwrap_or_default();
 
-    // count assigned customers, also only shows customers
+    
     let total_users: i64 = sqlx::query(
         "SELECT COUNT(*) as count FROM users WHERE role = 'customer'"
     )
@@ -62,7 +62,7 @@ pub async fn staff_dashboard(
     .map(|row| row.get("count"))
     .unwrap_or(0);
 
-    // count pending loans that need staff approval
+    
     let pending_loans: i64 = sqlx::query(
         "SELECT COUNT(*) as count FROM loans WHERE status = 'pending'"
     )
@@ -84,17 +84,17 @@ pub async fn staff_dashboard(
 }
 
 
-// Handler for the staff table view page, which lists all customers and their details
+
 pub async fn staff_table_view(
     pool: web::Data<DbPool>,
     tmpl: web::Data<Tera>,
     session: Session,
-    params: web::Query<std::collections::HashMap<String, String>>, // for search filter, e.g. ?search=john
+    params: web::Query<std::collections::HashMap<String, String>>, 
 ) -> impl Responder {
 
-    let search_query = params.get("query").cloned(); // Get the search query from the URL parameters, if any
+    let search_query = params.get("query").cloned(); 
 
-    // Check if the id is staff if not redirect to dashboard
+    
     let staff_id = match require_staff(&session) {
         Some(id) => id,
         None => return HttpResponse::Found()
@@ -102,7 +102,7 @@ pub async fn staff_table_view(
             .finish(),
     };
 
-    // get staff's own info for topbar, this is beacuse the viewing table is going to be in another page.
+    
     let staff_info = match sqlx::query(
         "SELECT first_name, last_name FROM users WHERE id = $1"
     )
@@ -126,9 +126,9 @@ pub async fn staff_table_view(
 
     let customers_result = match search_query.as_ref(){
         Some(q) if !q.is_empty() => {
-            staff_service::get_customers_filter(&pool, &q).await // If there's a search query, use the filtered function
+            staff_service::get_customers_filter(&pool, &q).await 
     },
-        _ => {staff_service::get_all_customers(&pool).await // Otherwise, get all customers
+        _ => {staff_service::get_all_customers(&pool).await 
         }
     };
 
@@ -144,7 +144,7 @@ pub async fn staff_table_view(
     context.insert("role", &role);
     context.insert("table_view", &customers);
 
-    if let Some(q) = search_query { // If statement for search query, so that the search box can retain the search term after searching
+    if let Some(q) = search_query { 
         context.insert("query", &q);
     }
 
@@ -153,7 +153,7 @@ pub async fn staff_table_view(
 }
 
 
-// Handler for the list of customers to select from
+
 pub async fn staff_transaction_users_page(
     pool: web::Data<DbPool>,
     tmpl: web::Data<Tera>,
@@ -166,7 +166,7 @@ pub async fn staff_transaction_users_page(
             .finish(),
     };
 
-    // get staff's own info for topbar
+    
     let staff_info = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
         .bind(staff_id)
         .fetch_one(pool.get_ref())
@@ -178,7 +178,7 @@ pub async fn staff_transaction_users_page(
     let initials = format!("{}{}", first_name.chars().next().unwrap_or('S'), last_name.chars().next().unwrap_or('T'));
     let role = session.get::<String>("role").unwrap_or(None).unwrap_or_default();
 
-    // Fetch all customers and their primary bank accounts
+    
     let records = match sqlx::query(
         r#"
         SELECT u.id, u.first_name, u.last_name, u.email, b.account_number, b.balance 
@@ -219,7 +219,7 @@ pub async fn staff_transaction_users_page(
     HttpResponse::Ok().content_type("text/html").body(rendered)
 }
 
-// Handler for viewing a specific customer's transactions
+
 pub async fn staff_view_customer_transactions(
     pool: web::Data<DbPool>,
     tmpl: web::Data<Tera>,
@@ -234,7 +234,7 @@ pub async fn staff_view_customer_transactions(
             .finish(),
     };
 
-    // get staff's own info for topbar
+    
     let staff_info = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
         .bind(staff_id).fetch_one(pool.get_ref()).await.unwrap();
         
@@ -247,7 +247,7 @@ pub async fn staff_view_customer_transactions(
     let page = query.page.unwrap_or(1).max(1) as i64;
     let per_page = query.per_page.unwrap_or(10).max(1) as i64;
 
-    // Fetch the target user's transactions using the existing service
+    
     let (transactions, total_count) = transaction_service::fetch_transactions(
         &pool, target_user_id, page, per_page, query.start_date.clone(),
         query.end_date.clone(), query.tx_type.clone(), query.q.clone(),
@@ -284,7 +284,7 @@ pub async fn staff_view_customer_transactions(
 }
 
 
-// Configuration block linking URLs to your handlers
+
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.route("/staff/dashboard", web::get().to(staff_dashboard))
        .route("/staff/table_view", web::get().to(staff_table_view))

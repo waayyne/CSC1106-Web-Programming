@@ -68,7 +68,7 @@ pub async fn profile_page(
     context.insert("profile", &profile);
     context.insert("initials", &initials);
 
-    // Try to load the user's account number for header display
+    
     let account_row = sqlx::query("select account_number from bank_accounts where user_id = $1")
         .bind(user_id)
         .fetch_one(pool.get_ref())
