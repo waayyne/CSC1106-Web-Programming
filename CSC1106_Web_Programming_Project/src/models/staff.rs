@@ -10,7 +10,7 @@ pub struct CustomerOverview {
     pub balance: String,
 }
 
-// Struct to represent user information for service-level operations
+
 #[derive(Serialize)]
 pub struct CustInfo {
     pub id: i32,

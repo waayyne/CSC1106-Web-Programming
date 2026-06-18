@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-//contains data structures for admin-related forms and views
 
 #[derive(Deserialize)]
-pub struct AdminUserRegisterForm { //struct for admin user registration form data
+pub struct AdminUserRegisterForm { 
     pub username: String,
     pub first_name: String,
     pub last_name: String,
@@ -14,7 +13,7 @@ pub struct AdminUserRegisterForm { //struct for admin user registration form dat
 }
 
 #[derive(Deserialize)]
- pub struct AdminUserUpdateForm { //struct for admin user update form data
+ pub struct AdminUserUpdateForm { 
     pub user_id: i32,
     pub username: String,
     pub first_name: String,
@@ -24,13 +23,13 @@ pub struct AdminUserRegisterForm { //struct for admin user registration form dat
 }
 
 #[derive(Deserialize)]
-pub struct UpdateRoleForm { //struct for only updating user role form data
+pub struct UpdateRoleForm { 
     pub user_id: i32,
     pub new_role: String,
 }
 
 #[derive(Serialize)]
-pub struct UserRow { //struct for representing user data in admin user management page
+pub struct UserRow { 
     pub id: i32,
     pub username: String,
     pub first_name: String,

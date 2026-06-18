@@ -136,7 +136,7 @@ pub async fn update_role(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, session
 
 
 
-// Handles user registration form submission
+
 pub async fn admin_register_user(pool: web::Data<DbPool>, session: Session, form: web::Form<AdminUserRegisterForm>) -> impl Responder {
     let admin_id = match require_admin(&session) {
         Some(id) => id,
