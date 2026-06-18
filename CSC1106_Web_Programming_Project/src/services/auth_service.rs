@@ -29,11 +29,6 @@ pub enum LoginResult {
     EmailNotVerified,
 }
 
-#[derive(serde::Deserialize)]
-struct TurnstileVerificationResponse {
-    success: bool,
-}
-
 pub fn validate_password_complexity(password: &str) -> Result<(), &'static str> {
     let has_min_length = password.chars().count() >= 8;
     let has_uppercase = password.chars().any(|c| c.is_ascii_uppercase());
@@ -47,39 +42,6 @@ pub fn validate_password_complexity(password: &str) -> Result<(), &'static str> 
         Ok(())
     } else {
         Err(PASSWORD_COMPLEXITY_MESSAGE)
-    }
-}
-
-pub fn turnstile_site_key() -> Option<String> {
-    env::var("TURNSTILE_SITE_KEY").ok()
-}
-
-pub async fn verify_captcha(token: &str) -> Result<(), String> {
-    let token = token.trim();
-
-    if token.is_empty() {
-        return Err("Captcha verification is required.".to_string());
-    }
-
-    let secret = env::var("TURNSTILE_SECRET_KEY")
-        .map_err(|_| "TURNSTILE_SECRET_KEY must be set in .env.".to_string())?;
-
-    let response = reqwest::Client::new()
-        .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
-        .form(&[("secret", secret.as_str()), ("response", token)])
-        .send()
-        .await
-        .map_err(|_| "Unable to verify captcha. Please try again.".to_string())?;
-
-    let verification = response
-        .json::<TurnstileVerificationResponse>()
-        .await
-        .map_err(|_| "Unable to read captcha verification response.".to_string())?;
-
-    if verification.success {
-        Ok(())
-    } else {
-        Err("Captcha verification failed. Please try again.".to_string())
     }
 }
 

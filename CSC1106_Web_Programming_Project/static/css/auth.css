@@ -193,16 +193,6 @@
     background: #1d4ed8;
 }
 
-.captcha-widget {
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    margin-top: 0;
-}
-
 .auth-footer {
     margin-top: 26px;
     text-align: center;
@@ -294,10 +284,4 @@
         grid-template-columns: 1fr;
     }
 
-    .captcha-widget {
-        right: 12px;
-        bottom: 12px;
-        transform: scale(0.9);
-        transform-origin: bottom right;
-    }
 }

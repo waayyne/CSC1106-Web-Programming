@@ -6,9 +6,6 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/forms.css">
-    {% if turnstile_site_key %}
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    {% endif %}
 </head>
 <body class="auth-body">
 
@@ -107,10 +104,6 @@
                     title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
                     required
                 >
-
-                {% if turnstile_site_key %}
-                    <div class="cf-turnstile captcha-widget" data-sitekey="{{ turnstile_site_key }}"></div>
-                {% endif %}
 
                 <button type="submit" class="auth-btn">
                     Register

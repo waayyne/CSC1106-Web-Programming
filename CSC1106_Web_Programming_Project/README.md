@@ -88,8 +88,6 @@ SMTP_PORT=587
 SMTP_USERNAME=your_email@gmail.com
 SMTP_PASSWORD=your_gmail_app_password
 SMTP_FROM=your_email@gmail.com
-TURNSTILE_SITE_KEY=your_turnstile_site_key
-TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
 For Gmail, `SMTP_PASSWORD` has to be an App Password, not your actual password:
@@ -98,7 +96,7 @@ For Gmail, `SMTP_PASSWORD` has to be an App Password, not your actual password:
 https://myaccount.google.com/apppasswords
 ```
 
-If email or Turnstile is not being tested, dummy values can be used, but the related features may not work.
+If email is not being tested, dummy values can be used, but the related features may not work.
 
 ### 4. Database
 

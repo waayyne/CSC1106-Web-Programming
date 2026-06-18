@@ -77,10 +77,6 @@ fn render_register_page(
         context.insert("phone_number", value);
     }
 
-    if let Some(value) = auth_service::turnstile_site_key() {
-        context.insert("turnstile_site_key", &value);
-    }
-
     let rendered = tmpl.render("register.html", &context).unwrap();
 
     HttpResponse::Ok().content_type("text/html").body(rendered)
@@ -104,10 +100,6 @@ fn render_forgot_password_page(
 
     if let Some(value) = email {
         context.insert("email", value);
-    }
-
-    if let Some(value) = auth_service::turnstile_site_key() {
-        context.insert("turnstile_site_key", &value);
     }
 
     let rendered = tmpl.render("forgot_password.html", &context).unwrap();
@@ -158,10 +150,6 @@ fn render_verify_email_page(
 
     if let Some(value) = email {
         context.insert("email", value);
-    }
-
-    if let Some(value) = auth_service::turnstile_site_key() {
-        context.insert("turnstile_site_key", &value);
     }
 
     let rendered = tmpl.render("verify_email.html", &context).unwrap();
@@ -336,18 +324,6 @@ pub async fn register_user(
         );
     }
 
-    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
-        return render_register_page(
-            &tmpl,
-            Some(&message),
-            Some(&form_data.first_name),
-            Some(&form_data.last_name),
-            Some(&form_data.username),
-            Some(&form_data.email),
-            Some(&form_data.phone_number),
-        );
-    }
-
     let first_name = form_data.first_name.clone();
     let last_name = form_data.last_name.clone();
     let username = form_data.username.clone();
@@ -456,10 +432,6 @@ pub async fn verify_email(
         );
     }
 
-    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
-        return render_verify_email_page(&tmpl, Some(&message), None, Some(&email));
-    }
-
     match auth_service::verify_email_otp(&pool, email.clone(), form_data.otp).await {
         Ok(_) => HttpResponse::Found()
             .append_header(("Location", "/login?verified=1"))
@@ -483,10 +455,6 @@ pub async fn resend_verification_otp(
             None,
             Some(&email),
         );
-    }
-
-    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
-        return render_verify_email_page(&tmpl, Some(&message), None, Some(&email));
     }
 
     match auth_service::resend_verification_otp(&pool, email.clone()).await {
@@ -521,10 +489,6 @@ pub async fn forgot_password(
             None,
             Some(&email),
         );
-    }
-
-    if let Err(message) = auth_service::verify_captcha(&form_data.turnstile_response).await {
-        return render_forgot_password_page(&tmpl, Some(&message), None, Some(&email));
     }
 
     let result = auth_service::request_password_reset(&pool, email.clone()).await;
