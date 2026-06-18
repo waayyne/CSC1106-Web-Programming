@@ -577,34 +577,46 @@ fn send_password_reset_email(to_email: &str, token: &str) -> Result<(), String> 
 }
 
 fn send_email(to_email: &str, subject: &str, body: String, email_type: &str) -> Result<(), String> {
-    let smtp_host =
-        env::var("SMTP_HOST").map_err(|_| "SMTP_HOST must be set in .env.".to_string())?;
+    let smtp_host = match env::var("SMTP_HOST") {
+        Ok(value) => value,
+        Err(_) => return Err("SMTP_HOST must be set in .env.".to_string()),
+    };
     let smtp_port = env::var("SMTP_PORT")
         .ok()
         .and_then(|value| value.parse::<u16>().ok())
         .unwrap_or(587);
-    let smtp_username =
-        env::var("SMTP_USERNAME").map_err(|_| "SMTP_USERNAME must be set in .env.".to_string())?;
-    let smtp_password = env::var("SMTP_PASSWORD")
-        .map_err(|_| "SMTP_PASSWORD must be set in .env.".to_string())?
-        .chars()
-        .filter(|character| !character.is_whitespace())
-        .collect::<String>();
+    let smtp_username = match env::var("SMTP_USERNAME") {
+        Ok(value) => value,
+        Err(_) => return Err("SMTP_USERNAME must be set in .env.".to_string()),
+    };
+    let smtp_password = match env::var("SMTP_PASSWORD") {
+        Ok(value) => value,
+        Err(_) => return Err("SMTP_PASSWORD must be set in .env.".to_string()),
+    }
+    .chars()
+    .filter(|character| !character.is_whitespace())
+    .collect::<String>();
     let smtp_from = env::var("SMTP_FROM").unwrap_or_else(|_| smtp_username.clone());
 
-    let from: Mailbox = smtp_from
-        .parse()
-        .map_err(|_| "SMTP_FROM must be a valid email address.".to_string())?;
-    let to: Mailbox = to_email
-        .parse()
-        .map_err(|_| "The account email address is invalid.".to_string())?;
+    let from: Mailbox = match smtp_from.parse() {
+        Ok(mailbox) => mailbox,
+        Err(_) => return Err("SMTP_FROM must be a valid email address.".to_string()),
+    };
+    let to: Mailbox = match to_email.parse() {
+        Ok(mailbox) => mailbox,
+        Err(_) => return Err("The account email address is invalid.".to_string()),
+    };
 
-    let email = Message::builder()
+    let email_result = Message::builder()
         .from(from)
         .to(to)
         .subject(subject)
-        .body(body)
-        .map_err(|_| format!("Failed to build {email_type}."))?;
+        .body(body);
+
+    let email = match email_result {
+        Ok(email) => email,
+        Err(_) => return Err(format!("Failed to build {email_type}.")),
+    };
 
     let credentials = Credentials::new(smtp_username, smtp_password);
     let mailer_builder = if smtp_port == 465 {

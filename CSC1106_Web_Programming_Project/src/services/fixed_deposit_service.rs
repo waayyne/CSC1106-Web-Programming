@@ -121,7 +121,7 @@ pub async fn get_user_fixed_deposits(
 ) -> Result<Vec<FixedDeposit>, String> {
     let now = singapore_now();
 
-    sqlx::query(
+    let status_update = sqlx::query(
         "UPDATE fixed_deposits
          SET status = 'done'
          WHERE user_id = $1
@@ -131,20 +131,25 @@ pub async fn get_user_fixed_deposits(
     .bind(user_id)
     .bind(now)
     .execute(pool)
-    .await
-    .map_err(|_| "Failed to update fixed deposit status.".to_string())?;
+    .await;
 
-    let deposits = sqlx::query_as::<_, FixedDeposit>(
+    if status_update.is_err() {
+        return Err("Failed to update fixed deposit status.".to_string());
+    }
+
+    let deposit_lookup = sqlx::query_as::<_, FixedDeposit>(
         "SELECT * FROM fixed_deposits
          WHERE user_id = $1
          ORDER BY created_at DESC",
     )
     .bind(user_id)
     .fetch_all(pool)
-    .await
-    .map_err(|_| "Failed to load fixed deposits.".to_string())?;
+    .await;
 
-    Ok(deposits)
+    match deposit_lookup {
+        Ok(deposits) => Ok(deposits),
+        Err(_) => Err("Failed to load fixed deposits.".to_string()),
+    }
 }
 
 pub async fn claim_fixed_deposit(

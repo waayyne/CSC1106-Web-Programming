@@ -32,15 +32,19 @@ async fn load_staff_header(
     session: &Session,
     staff_id: i32,
 ) -> Result<StaffHeader, HttpResponse> {
-    let staff_info = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
+    let staff_lookup = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
         .bind(staff_id)
         .fetch_one(pool)
-        .await
-        .map_err(|_| {
-            HttpResponse::Found()
+        .await;
+
+    let staff_info = match staff_lookup {
+        Ok(staff_info) => staff_info,
+        Err(_) => {
+            return Err(HttpResponse::Found()
                 .append_header(("Location", "/login"))
-                .finish()
-        })?;
+                .finish());
+        }
+    };
 
     let first_name: String = staff_info.get("first_name");
     let last_name: String = staff_info.get("last_name");

@@ -16,7 +16,7 @@ struct AtmHistoryItem {
 }
 
 async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, String> {
-    let user = sqlx::query(
+    let user_lookup = sqlx::query(
         "SELECT 
             u.first_name,
             u.last_name,
@@ -29,8 +29,12 @@ async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, Strin
     )
     .bind(user_id)
     .fetch_one(pool)
-    .await
-    .map_err(|_| "Failed to load user details.".to_string())?;
+    .await;
+
+    let user = match user_lookup {
+        Ok(user) => user,
+        Err(_) => return Err("Failed to load user details.".to_string()),
+    };
 
     let first_name: String = user.get("first_name");
     let last_name: String = user.get("last_name");
@@ -93,15 +97,19 @@ async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, Strin
 }
 
 async fn get_logged_in_account_number(pool: &DbPool, user_id: i32) -> Result<String, String> {
-    let account = sqlx::query(
+    let account_lookup = sqlx::query(
         "SELECT account_number
          FROM bank_accounts
          WHERE user_id = $1",
     )
     .bind(user_id)
     .fetch_one(pool)
-    .await
-    .map_err(|_| "Failed to load account number.".to_string())?;
+    .await;
+
+    let account = match account_lookup {
+        Ok(account) => account,
+        Err(_) => return Err("Failed to load account number.".to_string()),
+    };
 
     Ok(account.get("account_number"))
 }

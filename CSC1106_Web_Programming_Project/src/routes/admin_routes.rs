@@ -47,11 +47,15 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 }
 
 async fn load_admin_context(pool: &DbPool, admin_id: i32) -> Result<Context, String> {
-    let admin_info = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
+    let admin_lookup = sqlx::query("SELECT first_name, last_name FROM users WHERE id = $1")
         .bind(admin_id)
         .fetch_one(pool)
-        .await
-        .map_err(|_| "Failed to load admin info.".to_string())?;
+        .await;
+
+    let admin_info = match admin_lookup {
+        Ok(admin_info) => admin_info,
+        Err(_) => return Err("Failed to load admin info.".to_string()),
+    };
 
     let first_name: String = admin_info.get("first_name");
     let last_name: String = admin_info.get("last_name");
