@@ -43,7 +43,8 @@ echo ========================================
 echo All setup tasks completed successfully!
 echo.
 echo Next step:
-echo 1. Run: cargo run
+echo In the CSC1106_Web_Programming_Project folder
+echo 1. Run: cargo run or start.all.bat 
 echo 2. Open: http://localhost
 echo ========================================
 pause
