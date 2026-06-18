@@ -1,84 +1,43 @@
-# WIVAH Bank — CSC1106 Web Programming Project
-
-WIVAH Bank is a banking web app we built for CSC1106. It has normal banking features such as login, deposits, withdrawals, transfers, loans, fixed deposits, risk investment simulation, and separate dashboards for customers, staff, and admins.
-
-Built with Rust, Actix Web, Tera Templates, PostgreSQL, and Nginx.
-
----
-
-## Roles
-
-**Customer** — register/login, verify email, deposit/withdraw/transfer money, view transaction history, export statement, apply for loans, use fixed deposit and risk investment simulation, update profile
-
-**Staff** — review and manage customer loan applications
-
-**Admin** — manage users and accounts, view audit logs
-
----
-
-## How transfers work
-
-Transfers use a database transaction with row-level locking on the sender's account so two transfers cannot read the same balance at the same time. If anything fails during the transfer, it rolls back.
-
----
-
-## Installation and Running Instructions
-
-Follow the steps below in order to install and run the project.
-
-### 1. Install these first
-
-* Rust → https://www.rust-lang.org/tools/install
-* PostgreSQL → https://www.postgresql.org/download/
-* Nginx → https://nginx.org/en/download.html
-
-For Windows, extract Nginx and put it at:
-
-```text
-C:\nginx
-```
-
-Make sure these are directly inside `C:\nginx`:
-
-```text
-nginx.exe
-conf\
-html\
-logs\
-```
-
-Do not leave them inside another nested folder like:
-
-```text
-C:\nginx\nginx-1.31.1\
-```
-
-### 2. Open the project folder
-
-Extract the project ZIP, then open the project folder:
-
-```bash
+# WIVAH Bank
+## Description
+WIVAH Bank is a CSC1106 Web Programming project using Rust, Actix Web, Tera, PostgreSQL, and Nginx.
+It is a simple banking web app with customer, staff, and admin pages. It shows routes, forms, templates, sessions, database queries, and role-based pages.
+## Features
+- Register, login, logout
+- Email verification with OTP
+- Forgot password and reset password
+- Customer dashboard
+- Deposit and withdraw money
+- Transfer money with daily transfer limit
+- Transaction history and statement page
+- Loan application and staff loan approval
+- Fixed deposit demo
+- Risk investment demo
+- Profile settings
+- Admin user management
+- Audit logs
+## Apps Used
+- Rust
+- Actix Web
+- Tera templates
+- PostgreSQL
+- SQLx
+- Nginx
+- HTML, CSS, JavaScript
+## Requirements
+- Rust: https://www.rust-lang.org/tools/install
+- PostgreSQL: https://www.postgresql.org/download/
+- Nginx: https://nginx.org/en/download.html
+## Setup
+Open the project folder:
+```bat
 cd CSC1106_Web_Programming_Project
 ```
-
-### 3. Set up `.env`
-
-Copy the example environment file.
-
-Windows:
-
+Copy the environment file:
 ```bat
 copy .env.example .env
 ```
-
-Mac/Linux:
-
-```bash
-cp .env.example .env
-```
-
-Fill in `.env`:
-
+Edit `.env`:
 ```env
 DATABASE_URL=postgres://postgres:your_password@localhost:5432/banking_system
 SESSION_KEY=your_64_character_session_key
@@ -89,40 +48,16 @@ SMTP_USERNAME=your_email@gmail.com
 SMTP_PASSWORD=your_gmail_app_password
 SMTP_FROM=your_email@gmail.com
 ```
-
-For Gmail, `SMTP_PASSWORD` has to be an App Password, not your actual password:
-
-```text
-https://myaccount.google.com/apppasswords
-```
-
-If email is not being tested, dummy values can be used, but the related features may not work.
-
-### 4. Database
-
-#### Windows
-
-Run:
-
+For Gmail, use a Gmail App Password for `SMTP_PASSWORD`. If email is not tested, dummy SMTP values can be used, but OTP and reset email may not work.
+## Database Setup
+For Windows, the easiest way is:
 ```bat
 setup_all.bat
 ```
-
-This creates the database, runs all migration files, sets up Nginx, and starts it.
-
-Note: this resets the database if it already exists.
-
-#### Mac/Linux
-
-Create the database:
-
-```bash
+This creates the database, runs migrations, sets up Nginx, and starts the app. It also resets the database if it already exists.
+Manual database setup:
+```bat
 createdb banking_system
-```
-
-Run the migration files:
-
-```bash
 psql -U postgres -d banking_system -f migrations/001_create_tables.sql
 psql -U postgres -d banking_system -f migrations/002_add_profile_updated_at.sql
 psql -U postgres -d banking_system -f migrations/003_perma_users.sql
@@ -130,257 +65,145 @@ psql -U postgres -d banking_system -f migrations/004_password_reset_tokens.sql
 psql -U postgres -d banking_system -f migrations/005_email_verification_otps.sql
 psql -U postgres -d banking_system -f migrations/006_add_daily_transfer_limit.sql
 ```
-
-### 5. Nginx
-
-#### Windows
-
-A full Nginx config file is provided in:
-
+## Nginx Setup
+Nginx lets the project open at `http://localhost`.
+On Windows, extract Nginx to:
 ```text
-nginxConfFilesetup.md
+C:\nginx
 ```
-
-Open `nginxConfFilesetup.md`, copy everything inside it, and paste it into:
-
+The folder should contain:
+```text
+C:\nginx\nginx.exe
+C:\nginx\conf\
+C:\nginx\html\
+C:\nginx\logs\
+```
+It should not be nested like:
+```text
+C:\nginx\nginx-1.xx.x\
+```
+If it is nested, move the files inside `nginx-1.xx.x` directly into `C:\nginx`.
+Edit:
 ```text
 C:\nginx\conf\nginx.conf
 ```
-
-Save the file.
-
-Then run:
-
-```bat
-setup_all.bat
+The simple way is to open `nginxConfFilesetup.md`, copy everything inside it, remove the old content in `C:\nginx\conf\nginx.conf`, and paste the copied content there.
+That setup already includes this line inside the `http { }` block:
+```nginx
+include C:/nginx/conf/sites-enabled/*.conf;
 ```
-
-The script copies `WIVAHbank.conf` to the correct Nginx folder and starts Nginx.
-
-To test/start/stop manually:
-
+The project has this Nginx config:
+```text
+deployment/WIVAHbank.conf
+```
+`setup_all.bat` or `setup_nginx.bat` copies it to:
+```text
+C:\nginx\conf\sites-enabled\WIVAHbank.conf
+```
+`WIVAHbank.conf` proxies localhost port 80 to the Rust backend at:
+```text
+http://127.0.0.1:8080
+```
+Test Nginx:
 ```bat
 cd /d C:\nginx
 nginx.exe -t
+```
+Start Nginx manually:
+```bat
 start nginx.exe
+```
+Stop Nginx manually:
+```bat
 nginx.exe -s stop
 ```
-
-#### Mac
-
-```bash
-mkdir -p /opt/homebrew/etc/nginx/servers
-cp deployment/WIVAHbank.conf /opt/homebrew/etc/nginx/servers/WIVAHbank.conf
-nginx -t && brew services restart nginx
-```
-
-Make sure `nginx.conf` has this inside the `http { }` block:
-
-```nginx
-include servers/*;
-```
-
-#### Linux
-
-```bash
-sudo cp deployment/WIVAHbank.conf /etc/nginx/sites-available/WIVAHbank.conf
-sudo ln -s /etc/nginx/sites-available/WIVAHbank.conf /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-### 6. Run
-
-Start the server:
-
+## Running the Project
+Normal way:
 ```bat
 start_all.bat
 ```
-
-This starts Nginx and runs `cargo run` automatically.
-
-Or if you just want to run the Rust server manually:
-
-```bash
-cargo run
-```
-
-Open:
-
+Then open:
 ```text
 http://localhost
 ```
-
-If Nginx is not set up yet, use:
-
-```text
-http://localhost:8080
-```
-
-### 7. Stop
-
-Rust server:
-
-```text
-Ctrl+C
-```
-
-Nginx on Windows:
-
+If not using Nginx:
 ```bat
+cargo run
+```
+Then open:
+```text
+http://127.0.0.1:8080
+```
+## Stopping the Project
+Stop the Rust server with `Ctrl+C`.
+Stop Nginx:
+```bat
+cd /d C:\nginx
 nginx.exe -s stop
 ```
-
 Or run:
-
 ```bat
 stop_all.bat
 ```
-
-Nginx on Mac:
-
-```bash
-brew services stop nginx
-```
-
-Nginx on Linux:
-
-```bash
-sudo systemctl stop nginx
-```
-
-### 8. Starting again
-
-To start the server again without resetting the database, just run:
-
-```bat
-start_all.bat
-```
-
-This will start Nginx and run `cargo run` automatically.
-
-To stop everything, run:
-
-```bat
-stop_all.bat
-```
-
-If `Terminate batch job (Y/N)` appears after pressing `Ctrl+C`, press `Y`.
-
-
----
-
-
-## Pages
-
+## Default Accounts
+Default accounts are created in `migrations/003_perma_users.sql`.
 ```text
-/                  Homepage
+Admin:
+Username: BankAdmin
+Password: SpideyBank
+
+Staff:
+Username: BankStaff
+Password: Staff123
+
+Customer:
+Username: BankUser
+Password: Guest123
+```
+## Main Pages
+```text
+/                  Home
 /login             Login
 /register          Register
 /verify-email      Email verification
 /forgot-password   Forgot password
+/reset-password    Reset password
 /dashboard         Customer dashboard
-/account           Account info
-/atm               Deposit / withdraw
+/atm               Deposit and withdraw
 /transfer          Transfer money
 /transactions      Transaction history
 /loans             Loans
+/fixed-deposit     Fixed deposit
+/risk-investment   Risk investment
 /profile           Profile settings
-/admin             Admin dashboard
-/staff             Staff dashboard
-/audit-logs        Audit logs
+/staff/dashboard   Staff dashboard
+/staff/loans       Staff loans
+/admin/dashboard   Admin dashboard
+/admin/logs        Audit logs
 ```
-
----
-
-## Default User accounts
-
-Created by the migration file:
-
-```text
-Admin:
-Username: BankAdmin
-Email: admin@bank.com
-Password: check migrations/003_perma_users.sql
-```
-
-```text
-Staff:
-Username: BankStaff
-Email: staff@bank.com
-Password: check migrations/003_perma_users.sql
-```
-
-```text
-Customer:
-Username: BankUser
-Email: user@bank.com
-Password: check migrations/003_perma_users.sql
-```
-
-You can also change the passwords of the demo users in 003_perma_users.sql before running the project.
-
----
-
-## Common issues
-
-### `localhost` does not work but `localhost:8080` works
-
-Nginx is not running or the config is not loaded correctly.
-
-Check that `WIVAHbank.conf` is in the correct folder and reload Nginx.
-
-### Database connection error
-
-Make sure PostgreSQL is running and `DATABASE_URL` in `.env` is correct.
-
-### Nginx config error
-
-Run this on Windows:
-
+## Notes
+- Fixed deposit uses seconds so it can be tested during demo.
+- Risk investment is a simple percentage-based profit or loss simulation.
+- Transfers use PostgreSQL transactions and row locking.
+- If email is not configured, email-related features may not work.
+## Troubleshooting
+If `http://localhost` does not work, test Nginx:
 ```bat
 cd /d C:\nginx
 nginx.exe -t
 ```
-
-Run this on Mac/Linux:
-
-```bash
-nginx -t
+Check that this file exists:
+```text
+C:\nginx\conf\sites-enabled\WIVAHbank.conf
 ```
-
-### Port 80 or 8080 already in use
-
-Something else may already be using the port.
-
-Windows:
-
-```bat
-netstat -ano | findstr :80
-netstat -ano | findstr :8080
-```
-
-Mac/Linux:
-
-```bash
-sudo lsof -i :80
-sudo lsof -i :8080
-```
-
-### SQLx `.env` error
-
-Check that there are no spaces around `=` in the `.env` file.
-
+If `http://127.0.0.1:8080` works but `http://localhost` does not, the Rust app is running but Nginx is probably not started or not loading the config.
+If the database does not connect, check PostgreSQL and `DATABASE_URL` in `.env`. There should be no spaces around `=`.
 Correct:
-
 ```env
 DATABASE_URL=postgres://postgres:password@localhost:5432/banking_system
 ```
-
 Wrong:
-
 ```env
 DATABASE_URL = postgres://postgres:password@localhost:5432/banking_system
 ```
-
----
 
