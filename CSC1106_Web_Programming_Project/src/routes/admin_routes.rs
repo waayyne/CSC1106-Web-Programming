@@ -21,7 +21,6 @@ pub fn config(cfg: &mut web::ServiceConfig) {
        .route("/admin/users", web::get().to(admin_dashboard))
        .route("/admin/users/update-role", web::post().to(update_role))
        .route("/admin/users/update", web::post().to(update_user))
-       //.route("/admin/register", web::get().to(admin_register_page))
        .route("/admin/register", web::post().to(admin_register_user))
        .route("/admin/users/delete/{id}", web::post().to(delete_user_handler))
        .route("/admin/logs", web::get().to(audit_logs_page));
@@ -135,16 +134,7 @@ pub async fn update_role(pool: web::Data<DbPool>, tmpl: web::Data<Tera>, session
     }
 }
 
-// Serves the registration page for Admin to create new users (staff or customers)
-pub async fn admin_register_page(tmpl: web::Data<Tera>, session: Session) -> impl Responder {
-    if require_admin(&session).is_none() {
-        return HttpResponse::Found().append_header(("Location", "/dashboard")).finish();
-    }
-    let context = Context::new();
-    let rendered = tmpl.render("admin_register_user.html", &context).unwrap();
-    HttpResponse::Ok().content_type("text/html").body(rendered)
 
-}
 
 // Handles user registration form submission
 pub async fn admin_register_user(pool: web::Data<DbPool>, session: Session, form: web::Form<AdminUserRegisterForm>) -> impl Responder {

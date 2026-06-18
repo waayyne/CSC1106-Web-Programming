@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/css/dashboard.css">
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <script src="/static/js/main.js"></script>
 </head>
 
@@ -70,13 +71,25 @@
                         <p>You are logged in as Administrator.</p>
                     </div>
                 </div>
+
                 <div class="profile-card">
                     <div class="profile-avatar">{{ initials }}</div>
+
                     <div class="profile-info">
                         <h4>{{ first_name }} {{ last_name }}</h4>
-                        <p>{% if account_number %}Account No: {{ account_number }}{% elif profile %}{{ profile.email
-                            }}{% elif role %}{{ role }}{% else %}Administrator{% endif %}</p>
+                        <p>
+                            {% if account_number %}
+                                Account No: {{ account_number }}
+                            {% elif profile %}
+                                {{ profile.email }}
+                            {% elif role %}
+                                {{ role }}
+                            {% else %}
+                                Administrator
+                            {% endif %}
+                        </p>
                     </div>
+
                     <div class="dropdown">
                         <button class="dropbtn"><i class="fa fa-caret-down"></i></button>
                         <div class="dropdown-content">
@@ -114,14 +127,85 @@
                 </div>
 
                 <div class="panel-card">
+
                     <div class="admin-panel-header">
                         <h2 class="admin-panel-title">All Users</h2>
-                        <button type="button" onclick="openModal()" class="btn-primary admin-register-button">+ Register
-                            User</button>
                     </div>
 
-                    {% if error %}<p class="error-message">{{ error }}</p>{% endif %}
-                    {% if message %}<p class="success-message">{{ message }}</p>{% endif %}
+                    <details class="admin-register-details">
+                        <summary class="btn-primary admin-register-button">
+                            + Register User
+                        </summary>
+
+                        <div class="admin-register-panel">
+                            <h3 class="admin-register-title">Register New User</h3>
+
+                            <form method="post" action="/admin/register" class="admin-register-form">
+
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Username</label>
+                                    <input type="text" name="username" required class="admin-form-control">
+                                </div>
+
+                                <div class="admin-modal-grid">
+                                    <div class="admin-form-group">
+                                        <label class="admin-form-label">First Name</label>
+                                        <input type="text" name="first_name" required class="admin-form-control">
+                                    </div>
+
+                                    <div class="admin-form-group">
+                                        <label class="admin-form-label">Last Name</label>
+                                        <input type="text" name="last_name" required class="admin-form-control">
+                                    </div>
+                                </div>
+
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Email</label>
+                                    <input type="email" name="email" required class="admin-form-control">
+                                </div>
+
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Phone Number</label>
+                                    <input type="text" name="phone_number" required class="admin-form-control">
+                                </div>
+
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Password</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        minlength="8"
+                                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}"
+                                        title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+                                        required
+                                        class="admin-form-control">
+                                </div>
+
+                                <div class="admin-form-group admin-form-group--spaced">
+                                    <label class="admin-form-label">Role</label>
+                                    <select name="role" class="admin-form-control">
+                                        <option value="customer">Customer</option>
+                                        <option value="staff">Staff</option>
+                                    </select>
+                                </div>
+
+                                <div class="admin-register-actions">
+                                    <button type="submit" class="btn-primary admin-modal-submit">
+                                        Register
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </details>
+
+                    {% if error %}
+                    <p class="error-message">{{ error }}</p>
+                    {% endif %}
+
+                    {% if message %}
+                    <p class="success-message">{{ message }}</p>
+                    {% endif %}
 
                     <div class="admin-table-wrap">
                         <table class="data-table admin-dashboard-table">
@@ -136,10 +220,10 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 {% for user in users %}
                                 <tr>
-
                                     <td class="admin-username-cell">{{ user.username }}</td>
                                     <td>{{ user.first_name }}</td>
                                     <td>{{ user.last_name }}</td>
@@ -161,6 +245,7 @@
 
                                             <form method="post" action="/admin/users/update-role">
                                                 <input type="hidden" name="user_id" value="{{ user.id }}">
+
                                                 {% if user.role == "staff" %}
                                                 <input type="hidden" name="new_role" value="customer">
                                                 <button type="submit" class="btn-danger admin-table-action">
@@ -185,7 +270,6 @@
 
                                         </div>
                                     </td>
-
                                 </tr>
                                 {% endfor %}
 
@@ -199,79 +283,13 @@
                             </tbody>
                         </table>
                     </div>
+
                 </div>
             </section>
 
         </main>
 
     </div>
-
-    {% if error %}
-    <div id="server-error" data-message="{{ error }}" style="display:none;"></div>
-    {% endif %}
-
-    <div id="register-modal" class="admin-modal-overlay">
-        <div class="admin-modal-dialog">
-
-            <div id="modal-error" class="modal-error-box"></div>
-
-            <div class="admin-modal-header">
-                <h2 class="admin-modal-title">Register New User</h2>
-                <button type="button" onclick="closeModal()" class="admin-modal-close">✕</button>
-            </div>
-
-            <form method="post" action="/admin/register">
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Username</label>
-                    <input type="text" name="username" required class="admin-form-control">
-                </div>
-                <div class="admin-modal-grid">
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">First Name</label>
-                        <input type="text" name="first_name" required class="admin-form-control">
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Last Name</label>
-                        <input type="text" name="last_name" required class="admin-form-control">
-                    </div>
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Email</label>
-                    <input type="email" name="email" required class="admin-form-control">
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Phone Number</label>
-                    <input type="text" name="phone_number" required class="admin-form-control">
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Password</label>
-                    <input type="password" name="password" minlength="8"
-                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}"
-                        title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
-                        required class="admin-form-control">
-                </div>
-                <div class="admin-form-group admin-form-group--spaced">
-                    <label class="admin-form-label">Role</label>
-                    <select name="role" class="admin-form-control">
-                        <option value="customer">Customer</option>
-                        <option value="staff">Staff</option>
-                    </select>
-                </div>
-                <div class="admin-modal-actions">
-                    <button type="button" onclick="closeModal()" class="admin-modal-cancel">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn-primary admin-modal-submit">
-                        Register
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {% if message %}
-    <div id="server-message" data-message="{{ message }}" style="display:none;"></div>
-    {% endif %}
 
 </body>
 

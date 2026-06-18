@@ -18,3 +18,39 @@ body {
 .active-status{
     color: green;
 }
+
+.admin-register-details {
+    margin: 16px 0 20px;
+}
+
+.admin-register-details summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.admin-register-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.admin-register-panel {
+    margin-top: 16px;
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.admin-register-title {
+    margin-bottom: 16px;
+    font-size: 20px;
+    color: #0f172a;
+}
+
+.admin-register-form {
+    max-width: 720px;
+}
+
+.admin-register-actions {
+    margin-top: 18px;
+}
