@@ -25,8 +25,8 @@ fn message_for_success(code: &str) -> &'static str {
     match code {
         "profile_updated" => "Profile updated successfully.",
         "password_changed" => "Password changed successfully.",
-        _ => "Success.",
         "limit_updated" => "Daily transfer limit updated successfully.",
+        _ => "Success.",
     }
 }
 
@@ -37,9 +37,9 @@ fn message_for_error(code: &str) -> &'static str {
         "password_mismatch" => "New password and confirm password do not match.",
         "current_password_invalid" => "Current password is incorrect.",
         "validation_error" => "All profile fields are required.",
+        "limit_invalid" => "Daily transfer limit must be more than 0.",
         "database_error" => "Something went wrong. Please try again.",
         _ => "Something went wrong. Please try again.",
-        "limit_invalid" => "Daily transfer limit must be more than 0.",
     }
 }
 

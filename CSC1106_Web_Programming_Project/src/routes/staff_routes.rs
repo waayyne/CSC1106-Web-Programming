@@ -5,8 +5,6 @@ use tera::{Context, Tera};
 use rust_decimal::Decimal;
 
 use crate::db::DbPool;
-use crate::models::staff;
-use crate::models::staff::CustInfo;
 use crate::models::staff::CustomerOverview;
 use crate::services::staff_service;
 use crate::services::transaction_service;

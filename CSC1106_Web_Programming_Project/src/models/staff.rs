@@ -1,5 +1,4 @@
 use serde::Serialize;
-use rust_decimal::Decimal;
 
 
 #[derive(Serialize)]
