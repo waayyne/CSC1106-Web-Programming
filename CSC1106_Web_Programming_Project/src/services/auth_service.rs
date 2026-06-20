@@ -56,12 +56,12 @@ pub async fn register_user(
 
     let hashed_password = match hash_password(&form.password) {
         Ok(hash) => hash,
-        Err(_) => return Err("Failed to hash password.".to_string()),
+        Err(_) => return Err("The password could not be secured.".to_string()),
     };
 
     let mut transaction = match pool.begin().await {
         Ok(transaction) => transaction,
-        Err(_) => return Err("Failed to start registration.".to_string()),
+        Err(_) => return Err("Registration could not be started.".to_string()),
     };
 
     let user_result = sqlx::query(
@@ -95,7 +95,7 @@ pub async fn register_user(
                 return Err("Phone number already exists.".to_string());
             }
 
-            return Err(format!("Failed to register user: {}", error_text));
+            return Err(format!("An error occurred while registering the user: {}", error_text));
         }
     };
 
@@ -113,7 +113,7 @@ pub async fn register_user(
     .await;
 
     if account_result.is_err() {
-        return Err("Failed to create bank account.".to_string());
+        return Err("We could not create the bank account.".to_string());
     }
 
     let otp = generate_verification_otp();
@@ -131,11 +131,11 @@ pub async fn register_user(
     .await;
 
     if otp_insert.is_err() {
-        return Err("Failed to create verification OTP.".to_string());
+        return Err("Unable to create the verification OTP.".to_string());
     }
 
     if transaction.commit().await.is_err() {
-        return Err("Failed to finish registration.".to_string());
+        return Err("Registration could not be completed.".to_string());
     }
 
     match send_verification_otp_email(&email, &otp) {
@@ -168,7 +168,7 @@ pub async fn login_user(
 
     let row = match user_result {
         Ok(row) => row,
-        Err(_) => return Err("Failed to check login.".to_string()),
+        Err(_) => return Err("We could not verify your login details.".to_string()),
     };
 
     if let Some(user) = row {
@@ -212,7 +212,7 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
     let user = match user_lookup {
         Ok(Some(user)) => user,
         Ok(None) => return Err("Invalid email or OTP.".to_string()),
-        Err(_) => return Err("Failed to check email address.".to_string()),
+        Err(_) => return Err("Unable to check the email address.".to_string()),
     };
 
     let user_id: i32 = user.get("id");
@@ -241,13 +241,13 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
     let otp_row = match otp_lookup {
         Ok(Some(row)) => row,
         Ok(None) => return Err("Invalid or expired OTP.".to_string()),
-        Err(_) => return Err("Failed to check verification OTP.".to_string()),
+        Err(_) => return Err("We could not validate the verification OTP.".to_string()),
     };
 
     let otp_id: i32 = otp_row.get("id");
     let mut transaction = match pool.begin().await {
         Ok(transaction) => transaction,
-        Err(_) => return Err("Failed to start email verification.".to_string()),
+        Err(_) => return Err("Email verification could not be started.".to_string()),
     };
 
     let verify_result = sqlx::query(
@@ -262,7 +262,7 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
     .await;
 
     if verify_result.is_err() {
-        return Err("Failed to verify email.".to_string());
+        return Err("The email address could not be verified.".to_string());
     }
 
     let mark_otp_result =
@@ -272,11 +272,11 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
             .await;
 
     if mark_otp_result.is_err() {
-        return Err("Failed to mark OTP as used.".to_string());
+        return Err("Unable to finalize the verification code.".to_string());
     }
 
     if transaction.commit().await.is_err() {
-        return Err("Failed to finish email verification.".to_string());
+        return Err("Email verification could not be completed.".to_string());
     }
 
     Ok(())
@@ -293,7 +293,7 @@ pub async fn resend_verification_otp(pool: &DbPool, email: String) -> Result<boo
     let user = match user_lookup {
         Ok(Some(user)) => user,
         Ok(None) => return Ok(false),
-        Err(_) => return Err("Failed to check email address.".to_string()),
+        Err(_) => return Err("We could not check the email address.".to_string()),
     };
 
     let user_id: i32 = user.get("id");
@@ -318,7 +318,7 @@ pub async fn request_password_reset(pool: &DbPool, email: String) -> Result<bool
     let user = match user_lookup {
         Ok(Some(user)) => user,
         Ok(None) => return Ok(false),
-        Err(_) => return Err("Failed to check email address.".to_string()),
+        Err(_) => return Err("The email address could not be checked.".to_string()),
     };
 
     let user_id: i32 = user.get("id");
@@ -337,7 +337,7 @@ pub async fn request_password_reset(pool: &DbPool, email: String) -> Result<bool
     .await;
 
     if old_token_update.is_err() {
-        return Err("Failed to replace old reset tokens.".to_string());
+        return Err("Unable to prepare a new password reset link.".to_string());
     }
 
     let token_insert = sqlx::query(
@@ -351,7 +351,7 @@ pub async fn request_password_reset(pool: &DbPool, email: String) -> Result<bool
     .await;
 
     if token_insert.is_err() {
-        return Err("Failed to create reset token.".to_string());
+        return Err("A new password reset link could not be created.".to_string());
     }
 
     if let Err(error) = send_password_reset_email(&user_email, &token) {
@@ -390,19 +390,19 @@ pub async fn reset_password(pool: &DbPool, token: String, password: String) -> R
     let token_row = match token_lookup {
         Ok(Some(row)) => row,
         Ok(None) => return Err("This reset link is invalid or has expired.".to_string()),
-        Err(_) => return Err("Failed to check reset token.".to_string()),
+        Err(_) => return Err("We could not validate the reset link.".to_string()),
     };
 
     let token_id: i32 = token_row.get("id");
     let user_id: i32 = token_row.get("user_id");
     let hashed_password = match hash_password(&password) {
         Ok(hash) => hash,
-        Err(_) => return Err("Failed to hash password.".to_string()),
+        Err(_) => return Err("The password could not be secured.".to_string()),
     };
 
     let mut transaction = match pool.begin().await {
         Ok(transaction) => transaction,
-        Err(_) => return Err("Failed to start password reset.".to_string()),
+        Err(_) => return Err("The password reset could not be started.".to_string()),
     };
 
     let password_update = sqlx::query(
@@ -414,7 +414,7 @@ pub async fn reset_password(pool: &DbPool, token: String, password: String) -> R
     .await;
 
     if password_update.is_err() {
-        return Err("Failed to update password.".to_string());
+        return Err("Your password could not be updated.".to_string());
     }
 
     let token_update =
@@ -424,11 +424,11 @@ pub async fn reset_password(pool: &DbPool, token: String, password: String) -> R
             .await;
 
     if token_update.is_err() {
-        return Err("Failed to mark reset token as used.".to_string());
+        return Err("Unable to finalize the password reset link.".to_string());
     }
 
     if transaction.commit().await.is_err() {
-        return Err("Failed to finish password reset.".to_string());
+        return Err("The password reset could not be completed.".to_string());
     }
 
     Ok(())
@@ -450,7 +450,7 @@ pub async fn is_reset_token_valid(pool: &DbPool, token: &str) -> Result<bool, St
 
     match token_lookup {
         Ok(result) => Ok(result.is_some()),
-        Err(_) => Err("Failed to check reset token.".to_string()),
+        Err(_) => Err("Unable to validate the reset link.".to_string()),
     }
 }
 
@@ -519,7 +519,7 @@ async fn create_and_send_verification_otp(
     .await;
 
     if old_otp_update.is_err() {
-        return Err("Failed to replace old verification OTPs.".to_string());
+        return Err("We could not prepare a new verification OTP.".to_string());
     }
 
     let otp_insert = sqlx::query(
@@ -533,7 +533,7 @@ async fn create_and_send_verification_otp(
     .await;
 
     if otp_insert.is_err() {
-        return Err("Failed to create verification OTP.".to_string());
+        return Err("The verification OTP could not be created.".to_string());
     }
 
     send_verification_otp_email(email, &otp)
@@ -615,7 +615,7 @@ fn send_email(to_email: &str, subject: &str, body: String, email_type: &str) -> 
 
     let email = match email_result {
         Ok(email) => email,
-        Err(_) => return Err(format!("Failed to build {email_type}.")),
+        Err(_) => return Err(format!("The {email_type} could not be prepared.")),
     };
 
     let credentials = Credentials::new(smtp_username, smtp_password);
@@ -624,7 +624,7 @@ fn send_email(to_email: &str, subject: &str, body: String, email_type: &str) -> 
     } else {
         SmtpTransport::starttls_relay(&smtp_host)
     }
-    .map_err(|error| format!("Failed to connect to SMTP host: {error}"))?;
+    .map_err(|error| format!("Unable to connect to the email service: {error}"))?;
 
     let mailer = mailer_builder
         .port(smtp_port)
@@ -633,7 +633,7 @@ fn send_email(to_email: &str, subject: &str, body: String, email_type: &str) -> 
 
     mailer
         .send(&email)
-        .map_err(|error| format!("Failed to send {email_type}: {error}"))?;
+        .map_err(|error| format!("The {email_type} could not be sent: {error}"))?;
 
     Ok(())
 }

@@ -33,7 +33,7 @@ async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, Strin
 
     let user = match user_lookup {
         Ok(user) => user,
-        Err(_) => return Err("Failed to load user details.".to_string()),
+        Err(_) => return Err("User details failed to load.".to_string()),
     };
 
     let first_name: String = user.get("first_name");
@@ -108,7 +108,7 @@ async fn get_logged_in_account_number(pool: &DbPool, user_id: i32) -> Result<Str
 
     let account = match account_lookup {
         Ok(account) => account,
-        Err(_) => return Err("Failed to load account number.".to_string()),
+        Err(_) => return Err("Account number not loading.".to_string()),
     };
 
     Ok(account.get("account_number"))

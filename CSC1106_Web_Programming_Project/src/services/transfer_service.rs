@@ -30,7 +30,7 @@ pub async fn process_transfer(
 
     let sender_account = match sender_result {
         Ok(account) => account,
-        Err(_) => return Err("Failed to find your bank account.".to_string()),
+        Err(_) => return Err("We could not find your bank account.".to_string()),
     };
 
     let sender_account_id: i32 = sender_account.get("id");
@@ -60,7 +60,7 @@ pub async fn process_transfer(
     let recipient_account = match recipient_result {
         Ok(Some(account)) => account,
         Ok(None) => return Err("Recipient account not found.".to_string()),
-        Err(_) => return Err("Failed to find recipient account.".to_string()),
+        Err(_) => return Err("Unable to look up the recipient account.".to_string()),
     };
 
     let recipient_account_id: i32 = recipient_account.get("id");
@@ -83,7 +83,7 @@ pub async fn process_transfer(
 
     let mut tx = match transaction_result {
         Ok(tx) => tx,
-        Err(_) => return Err("Failed to start transfer.".to_string()),
+        Err(_) => return Err("The transfer could not be started.".to_string()),
     };
 
     let locked_sender_result = sqlx::query(
@@ -100,7 +100,7 @@ pub async fn process_transfer(
         Ok(account) => account,
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to lock sender account.".to_string());
+            return Err("Your account could not be prepared for the transfer.".to_string());
         }
     };
 
@@ -124,7 +124,7 @@ pub async fn process_transfer(
         Ok(row) => row,
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to check daily transfer limit.".to_string());
+            return Err("Unable to check your daily transfer limit.".to_string());
         }
     };
 
@@ -145,7 +145,7 @@ pub async fn process_transfer(
         Ok(row) => row,
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to check daily transfer total.".to_string());
+            return Err("We could not calculate today's transfer total.".to_string());
         }
     };
 
@@ -155,7 +155,7 @@ pub async fn process_transfer(
         Ok(value) => value,
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to read daily transfer total.".to_string());
+            return Err("Today's transfer total could not be read.".to_string());
         }
     };
 
@@ -181,7 +181,7 @@ pub async fn process_transfer(
         Ok(_) => {}
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to deduct sender balance.".to_string());
+            return Err("The sender balance could not be updated.".to_string());
         }
     }
 
@@ -199,7 +199,7 @@ pub async fn process_transfer(
         Ok(_) => {}
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to update recipient balance.".to_string());
+            return Err("The recipient balance could not be updated.".to_string());
         }
     }
 
@@ -218,7 +218,7 @@ pub async fn process_transfer(
         Ok(_) => {}
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to save transfer transaction.".to_string());
+            return Err("We could not save the transfer transaction.".to_string());
         }
     }
 
@@ -226,6 +226,6 @@ pub async fn process_transfer(
 
     match commit_result {
         Ok(_) => Ok(()),
-        Err(_) => Err("Failed to complete transfer.".to_string()),
+        Err(_) => Err("Unable to complete the transfer.".to_string()),
     }
 }

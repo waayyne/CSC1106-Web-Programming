@@ -59,7 +59,7 @@ pub async fn create_fixed_deposit(
 
     let mut tx = match pool.begin().await {
         Ok(tx) => tx,
-        Err(_) => return Err("Failed to start database transaction.".to_string()),
+        Err(_) => return Err("Unable to start the fixed deposit.".to_string()),
     };
 
     let deduct_result =
@@ -70,7 +70,7 @@ pub async fn create_fixed_deposit(
             .await;
 
     if deduct_result.is_err() {
-        return Err("Failed to deduct account balance.".to_string());
+        return Err("The account balance could not be deducted.".to_string());
     }
 
     sqlx::query(
@@ -91,7 +91,7 @@ pub async fn create_fixed_deposit(
     .bind(maturity_at)
     .execute(&mut *tx)
     .await
-    .map_err(|e| format!("Failed to create fixed deposit: {}", e))?;
+    .map_err(|e| format!("An error occurred while creating the fixed deposit: {}", e))?;
 
     let transaction_result = sqlx::query(
         "INSERT INTO transactions
@@ -105,11 +105,11 @@ pub async fn create_fixed_deposit(
     .await;
 
     if transaction_result.is_err() {
-        return Err("Failed to record transaction.".to_string());
+        return Err("We could not record the transaction.".to_string());
     }
 
     if tx.commit().await.is_err() {
-        return Err("Failed to save fixed deposit.".to_string());
+        return Err("The fixed deposit could not be saved.".to_string());
     }
 
     Ok(())
@@ -134,7 +134,7 @@ pub async fn get_user_fixed_deposits(
     .await;
 
     if status_update.is_err() {
-        return Err("Failed to update fixed deposit status.".to_string());
+        return Err("Unable to update the fixed deposit status.".to_string());
     }
 
     let deposit_lookup = sqlx::query_as::<_, FixedDeposit>(
@@ -148,7 +148,7 @@ pub async fn get_user_fixed_deposits(
 
     match deposit_lookup {
         Ok(deposits) => Ok(deposits),
-        Err(_) => Err("Failed to load fixed deposits.".to_string()),
+        Err(_) => Err("We could not load your fixed deposits.".to_string()),
     }
 }
 
@@ -161,7 +161,7 @@ pub async fn claim_fixed_deposit(
 
     let mut tx = match pool.begin().await {
         Ok(tx) => tx,
-        Err(_) => return Err("Failed to start database transaction.".to_string()),
+        Err(_) => return Err("The fixed deposit claim could not be started.".to_string()),
     };
 
     let deposit_lookup = sqlx::query_as::<_, FixedDeposit>(
@@ -198,7 +198,7 @@ pub async fn claim_fixed_deposit(
             .await;
 
     if return_result.is_err() {
-        return Err("Failed to return fixed deposit amount.".to_string());
+        return Err("The fixed deposit amount could not be returned.".to_string());
     }
 
     let status_update = sqlx::query(
@@ -214,7 +214,7 @@ pub async fn claim_fixed_deposit(
 
     let update_result = match status_update {
         Ok(result) => result,
-        Err(_) => return Err("Failed to update fixed deposit status.".to_string()),
+        Err(_) => return Err("We could not update the fixed deposit status.".to_string()),
     };
 
     if update_result.rows_affected() == 0 {
@@ -237,11 +237,11 @@ pub async fn claim_fixed_deposit(
     .await;
 
     if claim_transaction.is_err() {
-        return Err("Failed to record claim transaction.".to_string());
+        return Err("Unable to record the fixed deposit claim.".to_string());
     }
 
     if tx.commit().await.is_err() {
-        return Err("Failed to claim fixed deposit.".to_string());
+        return Err("The fixed deposit could not be claimed.".to_string());
     }
 
     Ok(())

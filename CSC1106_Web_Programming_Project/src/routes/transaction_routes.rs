@@ -52,7 +52,7 @@ pub async fn transactions_page(
         Ok(res) => res,
         Err(err) => {
             println!("TRANSACTION LOAD ERROR: {:?}", err);
-            return HttpResponse::InternalServerError().body("Failed to load transactions");
+            return HttpResponse::InternalServerError().body("Transactions failure");
         }
     };
 
@@ -207,7 +207,7 @@ pub async fn transaction_statement_page(
             Ok(items) => items,
             Err(err) => {
                 println!("STATEMENT LOAD ERROR: {:?}", err);
-                return HttpResponse::InternalServerError().body("Failed to load statement");
+                return HttpResponse::InternalServerError().body("Statement failed to load");
             }
         };
 

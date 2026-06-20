@@ -23,7 +23,7 @@ pub async fn create_risk_investment(
 
     let mut tx = match pool.begin().await {
         Ok(tx) => tx,
-        Err(_) => return Err("Failed to start transaction.".to_string()),
+        Err(_) => return Err("Unable to start the investment.".to_string()),
     };
 
     let account_lookup =
@@ -89,7 +89,7 @@ pub async fn create_risk_investment(
 
     if balance_update.is_err() {
         let _ = tx.rollback().await;
-        return Err("Failed to update balance.".to_string());
+        return Err("The account balance could not be updated.".to_string());
     }
 
     let investment_insert = sqlx::query(
@@ -109,7 +109,7 @@ pub async fn create_risk_investment(
 
     if investment_insert.is_err() {
         let _ = tx.rollback().await;
-        return Err("Failed to save risk investment.".to_string());
+        return Err("We could not save the risk investment.".to_string());
     }
 
     let investment_transaction = sqlx::query(
@@ -128,7 +128,7 @@ pub async fn create_risk_investment(
 
     if investment_transaction.is_err() {
         let _ = tx.rollback().await;
-        return Err("Failed to save investment out transaction.".to_string());
+        return Err("Unable to record the investment transaction.".to_string());
     }
 
     if result == "success" {
@@ -148,12 +148,12 @@ pub async fn create_risk_investment(
 
         if return_transaction.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to save investment return transaction.".to_string());
+            return Err("An error occurred while recording the investment return.".to_string());
         }
     }
 
     if tx.commit().await.is_err() {
-        return Err("Failed to complete investment.".to_string());
+        return Err("The investment could not be completed.".to_string());
     }
 
     Ok(())
@@ -184,6 +184,6 @@ pub async fn get_risk_investments(
 
     match investments {
         Ok(investments) => Ok(investments),
-        Err(_) => Err("Failed to load risk investments.".to_string()),
+        Err(_) => Err("We could not load your risk investments.".to_string()),
     }
 }

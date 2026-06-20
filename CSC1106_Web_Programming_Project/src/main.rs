@@ -21,7 +21,7 @@ async fn main() -> std::io::Result<()> {
 
     let db_pool = db::create_pool(&database_url)
         .await
-        .expect("Failed to connect to PostgreSQL");
+        .expect("Connection fail to PostgreSQL");
 
     println!("Connected to PostgreSQL");
 

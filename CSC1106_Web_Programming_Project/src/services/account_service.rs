@@ -17,7 +17,7 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
 
     let mut tx = match pool.begin().await {
         Ok(tx) => tx,
-        Err(_) => return Err("Failed to start ATM transaction.".to_string()),
+        Err(_) => return Err("The ATM transaction could not be started.".to_string()),
     };
 
     let account_result = if form.find_by == "account_number" {
@@ -51,7 +51,7 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
         }
         Err(_) => {
             let _ = tx.rollback().await;
-            return Err("Failed to find account.".to_string());
+            return Err("We could not find the account.".to_string());
         }
     };
 
@@ -73,7 +73,7 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
 
         if deposit_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to deposit money.".to_string());
+            return Err("The deposit could not be processed.".to_string());
         }
 
         let save_result = sqlx::query(
@@ -88,7 +88,7 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
 
         if save_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to save transaction.".to_string());
+            return Err("An error occurred while saving the transaction.".to_string());
         }
     } else {
         let withdraw_result =
@@ -100,7 +100,7 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
 
         if withdraw_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to withdraw money.".to_string());
+            return Err("The withdrawal could not be processed.".to_string());
         }
 
         let save_result = sqlx::query(
@@ -115,12 +115,12 @@ pub async fn process_atm_transaction(pool: &DbPool, form: AtmForm) -> Result<(),
 
         if save_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to save transaction.".to_string());
+            return Err("The withdrawal transaction could not be saved.".to_string());
         }
     }
 
     if tx.commit().await.is_err() {
-        return Err("Failed to complete ATM transaction.".to_string());
+        return Err("Unable to complete the ATM transaction.".to_string());
     }
 
     Ok(())

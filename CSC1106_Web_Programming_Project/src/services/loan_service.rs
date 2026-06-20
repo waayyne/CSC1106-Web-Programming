@@ -43,7 +43,7 @@ pub async fn apply_for_loan(
             .bind(user_id)
             .fetch_one(pool)
             .await
-            .map_err(|e| format!("Failed to check existing loans: {}", e))?;
+            .map_err(|e| format!("We could not check for existing loans: {}", e))?;
 
     if pending > 0 {
         return Err("You already have a pending loan application.".to_string());
@@ -57,7 +57,7 @@ pub async fn apply_for_loan(
     .bind(reason)
     .execute(pool)
     .await
-    .map_err(|e| format!("Failed to submit application: {}", e))?;
+    .map_err(|e| format!("Your application could not be submitted: {}", e))?;
 
     Ok(())
 }
@@ -70,7 +70,7 @@ pub async fn get_user_loans(pool: &DbPool, user_id: i32) -> Result<Vec<LoanView>
     .bind(user_id)
     .fetch_all(pool)
     .await
-    .map_err(|e| format!("Failed to fetch loans: {}", e))?;
+    .map_err(|e| format!("Unable to load loans: {}", e))?;
 
     let loans = loans
         .into_iter()
@@ -96,7 +96,7 @@ pub async fn get_all_loans(pool: &DbPool) -> Result<Vec<LoanWithUserView>, Strin
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| format!("Failed to fetch loans: {}", e))?;
+    .map_err(|e| format!("The loan list could not be loaded: {}", e))?;
 
     let loans = rows
         .into_iter()
@@ -131,11 +131,11 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
         .bind(loan_id)
         .fetch_optional(pool)
         .await
-        .map_err(|e| format!("Failed to fetch loan: {}", e))?;
+        .map_err(|e| format!("The selected loan could not be loaded: {}", e))?;
 
         let loan = match loan {
             Some(r) => r,
-            None => return Err("Loan not found or already processed.".to_string()),
+            None => return Err("This loan request is no longer available.".to_string()),
         };
 
         let user_id: i32 = loan.user_id;
@@ -143,7 +143,7 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
 
         let mut tx = match pool.begin().await {
             Ok(tx) => tx,
-            Err(_) => return Err("Failed to start transaction.".to_string()),
+            Err(_) => return Err("Unable to start the loan approval.".to_string()),
         };
 
         let account_lookup = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
@@ -170,7 +170,7 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
 
         if credit_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to credit account.".to_string());
+            return Err("The account could not be credited.".to_string());
         }
 
         let transaction_result = sqlx::query(
@@ -185,7 +185,7 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
 
         if transaction_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to record disbursement.".to_string());
+            return Err("Unable to record the loan disbursement.".to_string());
         }
 
         let status_result = sqlx::query("UPDATE loans SET status = 'approved' WHERE id = $1")
@@ -195,18 +195,18 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
 
         if status_result.is_err() {
             let _ = tx.rollback().await;
-            return Err("Failed to update loan status.".to_string());
+            return Err("The loan status could not be updated.".to_string());
         }
 
         if tx.commit().await.is_err() {
-            return Err("Failed to commit approval.".to_string());
+            return Err("The loan approval could not be completed.".to_string());
         }
     } else {
         sqlx::query("UPDATE loans SET status = 'rejected' WHERE id = $1")
             .bind(loan_id)
             .execute(pool)
             .await
-            .map_err(|e| format!("Failed to reject loan: {}", e))?;
+            .map_err(|e| format!("The loan could not be rejected: {}", e))?;
     }
 
     Ok(())

@@ -54,7 +54,7 @@ async fn load_admin_context(pool: &DbPool, admin_id: i32) -> Result<Context, Str
 
     let admin_info = match admin_lookup {
         Ok(admin_info) => admin_info,
-        Err(_) => return Err("Failed to load admin info.".to_string()),
+        Err(_) => return Err("admin info failed to load.".to_string()),
     };
 
     let first_name: String = admin_info.get("first_name");

@@ -20,7 +20,7 @@ pub async fn get_all_users(pool: &DbPool) -> Result<Vec<UserInfo>, String> {
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| format!("Failed to fetch users: {}", e))?;
+    .map_err(|e| format!("Unable to load users: {}", e))?;
 
     let users = rows
         .into_iter()
@@ -52,7 +52,7 @@ pub async fn update_user_role(
         .bind(target_user_id)
         .execute(pool)
         .await
-        .map_err(|e| format!("Failed to update role: {}", e))?;
+        .map_err(|e| format!("The role could not be updated: {}", e))?;
 
     Ok(())
 }
@@ -73,7 +73,7 @@ pub async fn register_new_user(
     .bind(&form.phone_number)
     .fetch_one(pool)
     .await
-    .map_err(|e| format!("Validation check failed: {}", e))?;
+    .map_err(|e| format!("We could not validate the user details: {}", e))?;
 
     let username_count: i64 = existing.get("username_count");
     let email_count: i64 = existing.get("email_count");
@@ -105,7 +105,7 @@ pub async fn register_new_user(
     .bind(&form.role)
     .fetch_one(pool)
     .await
-    .map_err(|e| format!("Failed to register user: {}", e))?;
+    .map_err(|e| format!("An error occurred while registering the user: {}", e))?;
 
     let user_id: i32 = row.get("id");
 
@@ -116,7 +116,7 @@ pub async fn register_new_user(
         .bind(rust_decimal::Decimal::new(0, 0))
         .execute(pool)
         .await
-        .map_err(|e| format!("Failed to create bank account: {}", e))?;
+        .map_err(|e| format!("The bank account could not be created: {}", e))?;
 
     Ok(user_id)
 }
@@ -125,7 +125,7 @@ pub async fn delete_user(pool: &DbPool, user_id: i32) -> Result<(), String> {
     let mut transaction = pool
         .begin()
         .await
-        .map_err(|e| format!("Failed to start delete transaction: {}", e))?;
+        .map_err(|e| format!("Unable to begin the user deletion: {}", e))?;
 
     sqlx::query(
         "UPDATE transactions
@@ -135,7 +135,7 @@ pub async fn delete_user(pool: &DbPool, user_id: i32) -> Result<(), String> {
     .bind(user_id)
     .execute(&mut *transaction)
     .await
-    .map_err(|e| format!("Failed to detach sent transactions: {}", e))?;
+    .map_err(|e| format!("Sent transactions could not be detached: {}", e))?;
 
     sqlx::query(
         "UPDATE transactions
@@ -145,19 +145,19 @@ pub async fn delete_user(pool: &DbPool, user_id: i32) -> Result<(), String> {
     .bind(user_id)
     .execute(&mut *transaction)
     .await
-    .map_err(|e| format!("Failed to detach received transactions: {}", e))?;
+    .map_err(|e| format!("Received transactions could not be detached: {}", e))?;
 
     sqlx::query("UPDATE audit_logs SET user_id = NULL WHERE user_id = $1")
         .bind(user_id)
         .execute(&mut *transaction)
         .await
-        .map_err(|e| format!("Failed to detach audit logs: {}", e))?;
+        .map_err(|e| format!("Audit records could not be detached: {}", e))?;
 
     let result = sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(user_id)
         .execute(&mut *transaction)
         .await
-        .map_err(|e| format!("Failed to delete user: {}", e))?;
+        .map_err(|e| format!("The user could not be deleted: {}", e))?;
 
     if result.rows_affected() == 0 {
         return Err("User not found.".to_string());
@@ -166,7 +166,7 @@ pub async fn delete_user(pool: &DbPool, user_id: i32) -> Result<(), String> {
     transaction
         .commit()
         .await
-        .map_err(|e| format!("Failed to finish delete transaction: {}", e))?;
+        .map_err(|e| format!("Unable to complete the user deletion: {}", e))?;
 
     Ok(())
 }
@@ -185,7 +185,7 @@ pub async fn update_user_details(pool: &DbPool, form: &AdminUserUpdateForm) -> R
     .bind(form.user_id)
     .execute(pool)
     .await
-    .map_err(|e| format!("Failed to update user details: {}", e))?;
+    .map_err(|e| format!("An error occurred while saving user details: {}", e))?;
 
     Ok(())
 }
