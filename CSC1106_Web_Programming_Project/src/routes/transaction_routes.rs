@@ -9,6 +9,20 @@ use tera::Tera;
 use crate::db::DbPool;
 use crate::services::transaction_service;
 
+const MAX_TRANSACTION_SEARCH_LENGTH: usize = 100;
+const MAX_TRANSACTION_PAGE_SIZE: u32 = 100;
+const VALID_TRANSACTION_TYPES: &[&str] = &[
+    "deposit",
+    "withdraw",
+    "withdrawal",
+    "transfer",
+    "fixed_deposit",
+    "fixed_deposit_claim",
+    "risk_investment",
+    "risk_investment_return",
+    "loan_disbursement",
+];
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct TxQuery {
     pub page: Option<u32>,
@@ -17,6 +31,32 @@ pub struct TxQuery {
     pub end_date: Option<String>,
     pub tx_type: Option<String>,
     pub q: Option<String>,
+}
+
+fn validate_transaction_filters(query: &TxQuery) -> Result<(), HttpResponse> {
+    for (field_name, value) in [("start_date", &query.start_date), ("end_date", &query.end_date)] {
+        if let Some(date_text) = value {
+            if chrono::NaiveDate::parse_from_str(date_text, "%Y-%m-%d").is_err() {
+                return Err(HttpResponse::BadRequest()
+                    .body(format!("{} must use YYYY-MM-DD format.", field_name)));
+            }
+        }
+    }
+
+    if let Some(tx_type) = query.tx_type.as_ref() {
+        let normalized = tx_type.trim();
+        if !normalized.is_empty() && !VALID_TRANSACTION_TYPES.contains(&normalized) {
+            return Err(HttpResponse::BadRequest().body("Invalid transaction type filter."));
+        }
+    }
+
+    if let Some(search) = query.q.as_ref() {
+        if search.chars().count() > MAX_TRANSACTION_SEARCH_LENGTH {
+            return Err(HttpResponse::BadRequest().body("Transaction search query is too long."));
+        }
+    }
+
+    Ok(())
 }
 
 pub async fn transactions_page(
@@ -34,8 +74,15 @@ pub async fn transactions_page(
         }
     };
 
+        if let Err(response) = validate_transaction_filters(&query) {
+            return response;
+        }
+
     let page = query.page.unwrap_or(1).max(1) as i64;
-    let per_page = query.per_page.unwrap_or(10).max(1) as i64;
+        let per_page = query
+            .per_page
+            .unwrap_or(10)
+            .clamp(1, MAX_TRANSACTION_PAGE_SIZE) as i64;
 
     let (transactions, total_count) = match transaction_service::fetch_transactions(
         &pool,
@@ -239,4 +286,86 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         "/transactions/statement",
         web::get().to(transaction_statement_page),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn base_query() -> TxQuery {
+        TxQuery {
+            page: None,
+            per_page: None,
+            start_date: None,
+            end_date: None,
+            tx_type: None,
+            q: None,
+        }
+    }
+
+    #[test]
+    fn validate_transaction_filters_allows_all_none() {
+        assert!(validate_transaction_filters(&base_query()).is_ok());
+    }
+
+    #[test]
+    fn validate_transaction_filters_allows_valid_dates() {
+        let mut query = base_query();
+        query.start_date = Some("2026-01-01".to_string());
+        query.end_date = Some("2026-06-01".to_string());
+        assert!(validate_transaction_filters(&query).is_ok());
+    }
+
+    #[test]
+    fn validate_transaction_filters_rejects_malformed_start_date() {
+        let mut query = base_query();
+        query.start_date = Some("01-01-2026".to_string());
+        let err = validate_transaction_filters(&query).unwrap_err();
+        assert_eq!(err.status(), actix_web::http::StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn validate_transaction_filters_rejects_malformed_end_date() {
+        let mut query = base_query();
+        query.end_date = Some("not-a-date".to_string());
+        let err = validate_transaction_filters(&query).unwrap_err();
+        assert_eq!(err.status(), actix_web::http::StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn validate_transaction_filters_allows_known_tx_type() {
+        let mut query = base_query();
+        query.tx_type = Some("deposit".to_string());
+        assert!(validate_transaction_filters(&query).is_ok());
+    }
+
+    #[test]
+    fn validate_transaction_filters_allows_blank_tx_type() {
+        let mut query = base_query();
+        query.tx_type = Some("   ".to_string());
+        assert!(validate_transaction_filters(&query).is_ok());
+    }
+
+    #[test]
+    fn validate_transaction_filters_rejects_unknown_tx_type() {
+        let mut query = base_query();
+        query.tx_type = Some("bitcoin_purchase".to_string());
+        let err = validate_transaction_filters(&query).unwrap_err();
+        assert_eq!(err.status(), actix_web::http::StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn validate_transaction_filters_allows_search_at_max_length() {
+        let mut query = base_query();
+        query.q = Some("a".repeat(MAX_TRANSACTION_SEARCH_LENGTH));
+        assert!(validate_transaction_filters(&query).is_ok());
+    }
+
+    #[test]
+    fn validate_transaction_filters_rejects_search_over_max_length() {
+        let mut query = base_query();
+        query.q = Some("a".repeat(MAX_TRANSACTION_SEARCH_LENGTH + 1));
+        let err = validate_transaction_filters(&query).unwrap_err();
+        assert_eq!(err.status(), actix_web::http::StatusCode::BAD_REQUEST);
+    }
 }

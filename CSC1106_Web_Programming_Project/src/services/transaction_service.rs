@@ -6,6 +6,23 @@ use rust_decimal::Decimal;
 use serde::Serialize;
 use sqlx::Row;
 
+const MAX_TRANSACTION_PAGE_SIZE: i64 = 100;
+
+fn clamp_per_page(per_page: i64) -> i64 {
+    per_page.clamp(1, MAX_TRANSACTION_PAGE_SIZE)
+}
+
+fn normalize_tx_type_filter(tx_type: Option<String>) -> Option<String> {
+    tx_type.and_then(|s| {
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    })
+}
+
 #[derive(Serialize)]
 pub struct TransactionView {
     pub id: i32,
@@ -41,6 +58,7 @@ pub async fn fetch_transactions(
     tx_type: Option<String>,
     q: Option<String>,
 ) -> Result<(Vec<TransactionView>, i64), sqlx::Error> {
+    let per_page = clamp_per_page(per_page);
     let offset = (page - 1) * per_page;
 
     let account_row = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
@@ -61,8 +79,7 @@ pub async fn fetch_transactions(
         .and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok())
         .map(|d| d.and_hms_opt(23, 59, 59).unwrap());
 
-    let tx_type_filter: Option<String> =
-        tx_type.and_then(|s| if s.trim().is_empty() { None } else { Some(s) });
+    let tx_type_filter: Option<String> = normalize_tx_type_filter(tx_type);
 
     let count_sql = r#"
         SELECT COUNT(*) FROM transactions t
@@ -383,4 +400,56 @@ pub async fn get_cash_flow_summary(pool: &DbPool, user_id: i32) -> Result<CashFl
         investment_out_total,
         investment_return_total,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn clamp_per_page_rejects_zero_or_negative() {
+        assert_eq!(clamp_per_page(0), 1);
+        assert_eq!(clamp_per_page(-5), 1);
+    }
+
+    #[test]
+    fn clamp_per_page_allows_value_within_range() {
+        assert_eq!(clamp_per_page(25), 25);
+    }
+
+    #[test]
+    fn clamp_per_page_allows_exactly_max() {
+        assert_eq!(
+            clamp_per_page(MAX_TRANSACTION_PAGE_SIZE),
+            MAX_TRANSACTION_PAGE_SIZE
+        );
+    }
+
+    #[test]
+    fn clamp_per_page_caps_values_above_max() {
+        assert_eq!(clamp_per_page(500), MAX_TRANSACTION_PAGE_SIZE);
+    }
+
+    #[test]
+    fn normalize_tx_type_filter_none_stays_none() {
+        assert_eq!(normalize_tx_type_filter(None), None);
+    }
+
+    #[test]
+    fn normalize_tx_type_filter_empty_string_becomes_none() {
+        assert_eq!(normalize_tx_type_filter(Some("".to_string())), None);
+    }
+
+    #[test]
+    fn normalize_tx_type_filter_whitespace_only_becomes_none() {
+        assert_eq!(normalize_tx_type_filter(Some("   ".to_string())), None);
+    }
+
+    #[test]
+    fn normalize_tx_type_filter_trims_valid_value() {
+        assert_eq!(
+            normalize_tx_type_filter(Some("  deposit  ".to_string())),
+            Some("deposit".to_string())
+        );
+    }
 }

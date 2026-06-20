@@ -6,6 +6,31 @@ use sqlx::Row;
 use crate::db::DbPool;
 use crate::models::loan::Loan;
 
+const MAX_LOAN_REASON_LENGTH: usize = 500;
+
+fn max_loan_amount() -> Decimal {
+    Decimal::new(999_999_999_999, 2)
+}
+
+fn normalize_loan_reason(reason: Option<String>) -> Result<Option<String>, String> {
+    match reason {
+        Some(text) => {
+            let trimmed = text.trim();
+            if trimmed.is_empty() {
+                Ok(None)
+            } else if trimmed.chars().count() > MAX_LOAN_REASON_LENGTH {
+                Err(format!(
+                    "Loan reason must be {} characters or fewer.",
+                    MAX_LOAN_REASON_LENGTH
+                ))
+            } else {
+                Ok(Some(trimmed.to_string()))
+            }
+        }
+        None => Ok(None),
+    }
+}
+
 #[derive(Serialize)]
 pub struct LoanView {
     pub id: i32,
@@ -37,6 +62,15 @@ pub async fn apply_for_loan(
     if amount <= Decimal::ZERO {
         return Err("Loan amount must be greater than $0.".to_string());
     }
+
+    if amount > max_loan_amount() {
+        return Err(format!(
+            "Loan amount must be ${:.2} or less.",
+            max_loan_amount()
+        ));
+    }
+
+    let reason = normalize_loan_reason(reason)?;
 
     let pending: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM loans WHERE user_id = $1 AND status = 'pending'")
@@ -125,89 +159,160 @@ pub async fn update_loan_status(pool: &DbPool, loan_id: i32, status: &str) -> Re
     }
 
     if status == "approved" {
-        let loan: Option<Loan> = sqlx::query_as(
-            "SELECT id, user_id, amount, status, reason, created_at FROM loans WHERE id = $1 AND status = 'pending'",
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|_| "Unable to start the loan approval.".to_string())?;
+
+        let loan: Loan = match sqlx::query_as(
+            "SELECT id, user_id, amount, status, reason, created_at FROM loans WHERE id = $1 AND status = 'pending' FOR UPDATE",
         )
         .bind(loan_id)
-        .fetch_optional(pool)
+        .fetch_optional(&mut *tx)
         .await
-        .map_err(|e| format!("The selected loan could not be loaded: {}", e))?;
-
-        let loan = match loan {
-            Some(r) => r,
-            None => return Err("This loan request is no longer available.".to_string()),
+        {
+            Ok(Some(loan)) => loan,
+            Ok(None) => {
+                return Err("This loan request is no longer available.".to_string());
+            }
+            Err(e) => {
+                return Err(format!("The selected loan could not be loaded: {}", e));
+            }
         };
 
         let user_id: i32 = loan.user_id;
         let amount: Decimal = loan.amount;
 
-        let mut tx = match pool.begin().await {
-            Ok(tx) => tx,
-            Err(_) => return Err("Unable to start the loan approval.".to_string()),
-        };
+        if amount <= Decimal::ZERO {
+            return Err("Loan amount is invalid.".to_string());
+        }
 
-        let account_lookup = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
+        if amount > max_loan_amount() {
+            return Err(format!(
+                "Loan amount must be ${:.2} or less.",
+                max_loan_amount()
+            ));
+        }
+
+        let account_row = sqlx::query("SELECT id FROM bank_accounts WHERE user_id = $1")
             .bind(user_id)
             .fetch_one(&mut *tx)
-            .await;
-
-        let account_row = match account_lookup {
-            Ok(row) => row,
-            Err(_) => {
-                let _ = tx.rollback().await;
-                return Err("Bank account not found.".to_string());
-            }
-        };
+            .await
+            .map_err(|_| "Bank account not found.".to_string())?;
 
         let account_id: i32 = account_row.get("id");
 
-        let credit_result =
-            sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
-                .bind(amount)
-                .bind(account_id)
-                .execute(&mut *tx)
-                .await;
+        sqlx::query("UPDATE bank_accounts SET balance = balance + $1 WHERE id = $2")
+            .bind(amount)
+            .bind(account_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|_| "The account could not be credited.".to_string())?;
 
-        if credit_result.is_err() {
-            let _ = tx.rollback().await;
-            return Err("The account could not be credited.".to_string());
-        }
-
-        let transaction_result = sqlx::query(
+        sqlx::query(
             "INSERT INTO transactions
              (from_account_id, to_account_id, transaction_type, amount, description)
              VALUES (NULL, $1, 'loan_disbursement', $2, 'Approved loan disbursed')",
         )
-        .bind(account_id)
-        .bind(amount)
-        .execute(&mut *tx)
-        .await;
-
-        if transaction_result.is_err() {
-            let _ = tx.rollback().await;
-            return Err("Unable to record the loan disbursement.".to_string());
-        }
-
-        let status_result = sqlx::query("UPDATE loans SET status = 'approved' WHERE id = $1")
-            .bind(loan_id)
+            .bind(account_id)
+            .bind(amount)
             .execute(&mut *tx)
-            .await;
+            .await
+            .map_err(|_| "Unable to record the loan disbursement.".to_string())?;
 
-        if status_result.is_err() {
-            let _ = tx.rollback().await;
-            return Err("The loan status could not be updated.".to_string());
+        let status_result = sqlx::query(
+            "UPDATE loans SET status = 'approved' WHERE id = $1 AND status = 'pending'",
+        )
+        .bind(loan_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| "The loan status could not be updated.".to_string())?;
+
+        if status_result.rows_affected() == 0 {
+            return Err("This loan request is no longer available.".to_string());
         }
 
-        if tx.commit().await.is_err() {
-            return Err("The loan approval could not be completed.".to_string());
-        }
+        tx.commit()
+            .await
+            .map_err(|_| "The loan approval could not be completed.".to_string())?;
     } else {
-        sqlx::query("UPDATE loans SET status = 'rejected' WHERE id = $1")
+        let result = sqlx::query("UPDATE loans SET status = 'rejected' WHERE id = $1 AND status = 'pending'")
             .bind(loan_id)
             .execute(pool)
             .await
             .map_err(|e| format!("The loan could not be rejected: {}", e))?;
+
+        if result.rows_affected() == 0 {
+            return Err("This loan request is no longer available.".to_string());
+        }
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_loan_reason_none_stays_none() {
+        assert_eq!(normalize_loan_reason(None), Ok(None));
+    }
+
+    #[test]
+    fn normalize_loan_reason_empty_string_becomes_none() {
+        assert_eq!(normalize_loan_reason(Some("".to_string())), Ok(None));
+    }
+
+    #[test]
+    fn normalize_loan_reason_whitespace_only_becomes_none() {
+        assert_eq!(
+            normalize_loan_reason(Some("   \t  ".to_string())),
+            Ok(None)
+        );
+    }
+
+    #[test]
+    fn normalize_loan_reason_trims_valid_text() {
+        assert_eq!(
+            normalize_loan_reason(Some("  Home renovation  ".to_string())),
+            Ok(Some("Home renovation".to_string()))
+        );
+    }
+
+    #[test]
+    fn normalize_loan_reason_allows_exactly_max_length() {
+        let reason = "a".repeat(MAX_LOAN_REASON_LENGTH);
+        assert_eq!(
+            normalize_loan_reason(Some(reason.clone())),
+            Ok(Some(reason))
+        );
+    }
+
+    #[test]
+    fn normalize_loan_reason_rejects_over_max_length() {
+        let reason = "a".repeat(MAX_LOAN_REASON_LENGTH + 1);
+        assert_eq!(
+            normalize_loan_reason(Some(reason)),
+            Err(format!(
+                "Loan reason must be {} characters or fewer.",
+                MAX_LOAN_REASON_LENGTH
+            ))
+        );
+    }
+
+    #[test]
+    fn max_loan_amount_matches_expected_ceiling() {
+        assert_eq!(max_loan_amount(), Decimal::new(999_999_999_999, 2));
+    }
+
+    #[test]
+    fn max_loan_amount_boundary_comparisons() {
+        let ceiling = max_loan_amount();
+        let one_cent_over = ceiling + Decimal::new(1, 2);
+        let one_cent_under = ceiling - Decimal::new(1, 2);
+
+        assert!(one_cent_over > ceiling);
+        assert!(one_cent_under <= ceiling);
+    }
 }
