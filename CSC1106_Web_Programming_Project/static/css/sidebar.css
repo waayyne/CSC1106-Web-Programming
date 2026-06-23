@@ -261,3 +261,110 @@
     width: 100%;
     text-align: left;
 }
+
+.sidebar-state-toggle {
+    display: none;
+}
+
+.dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 75px;
+    height: 100vh;
+    padding: 0;
+    background-color: #1e293b;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 99;
+    overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-sidebar .sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    color: #ffffff;
+    border-bottom: 1px solid #334155;
+}
+
+.dashboard-sidebar .hamburger-trigger {
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 20px;
+    margin-bottom: 20px;
+    padding-left: 7px;
+    transition: color 0.2s ease;
+}
+
+.dashboard-sidebar .hamburger-trigger:hover {
+    color: #ffffff;
+}
+
+.dashboard-sidebar .logo-block {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.dashboard-sidebar .logo-icon {
+    font-size: 22px;
+    min-width: 35px;
+    padding-left: 5px;
+    text-align: left;
+}
+
+.dashboard-sidebar .brand-name,
+.dashboard-sidebar .link-text {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.dashboard-sidebar .brand-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.dashboard-sidebar .sidebar-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    margin: 20px 0;
+    padding: 0;
+}
+
+.dashboard-sidebar .nav-item {
+    align-items: center;
+    border-radius: 0;
+    color: #94a3b8;
+    display: flex;
+    font-size: 16px;
+    font-weight: 400;
+    gap: 0;
+    padding: 14px 25px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.dashboard-sidebar .nav-item i {
+    font-size: 18px;
+    min-width: 35px;
+}
+
+.dashboard-sidebar .nav-item:hover,
+.dashboard-sidebar .nav-item.active {
+    background-color: #334155;
+    color: #ffffff;
+}
+
+.sidebar-state-toggle:checked ~ .dashboard-sidebar {
+    width: 260px;
+}
+
+.sidebar-state-toggle:checked ~ .dashboard-sidebar .brand-name,
+.sidebar-state-toggle:checked ~ .dashboard-sidebar .link-text {
+    opacity: 1;
+}

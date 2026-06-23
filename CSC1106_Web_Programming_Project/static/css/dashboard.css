@@ -10,6 +10,18 @@
     width: calc(100% - 72px);
 }
 
+.dashboard-main-content {
+    margin-left: 75px;
+    width: calc(100% - 75px);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-state-toggle:checked ~ .dashboard-main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+}
+
 .topbar {
     height: 135px;
     background: white;
@@ -761,6 +773,18 @@
 
     .investment-history-card {
         padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-main-content {
+        margin-left: 75px;
+        width: calc(100% - 75px);
+    }
+
+    .sidebar-state-toggle:checked ~ .dashboard-main-content {
+        margin-left: 260px;
+        width: calc(100% - 260px);
     }
 }
 
