@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -11,58 +11,50 @@
     <link rel="stylesheet" href="/static/css/forms.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <script src="/static/js/main.js"></script>
 </head>
 
 <body>
 
     <div class="app-layout">
 
-        <aside class="sidebar sidebar-collapsed" id="sidebar">
+        <input type="checkbox" id="sidebar-toggle" class="sidebar-state-toggle" />
+
+        
+        <aside class="sidebar dashboard-sidebar">
             <div>
-                <div class="brand-wrapper">
-
-                    <button type="button"
-                        class="sidebar-menu-btn"
-                        id="sidebarToggle"
-                        aria-label="Toggle sidebar"
-                        aria-expanded="false">
+                <div class="sidebar-header">
+                    <label for="sidebar-toggle" class="hamburger-trigger" aria-label="Toggle sidebar">
                         <i class="fa fa-bars"></i>
-                    </button>
+                    </label>
 
-                    <div class="brand">
-                        <div class="brand-icon">WB</div>
-
-                        <div class="brand-copy">
-                            <h2>WIVAH Bank</h2>
-                            <p>Banking with Trust</p>
-                        </div>
+                    <div class="logo-block">
+                        <i class="fa fa-bank logo-icon"></i>
+                        <span class="brand-name">WIVAH Bank</span>
                     </div>
-
                 </div>
 
-                <nav class="side-nav">
-                    <a href="/admin/dashboard" class="nav-item">
-                        <span class="nav-icon"><i class="fa fa-home"></i></span>
-                        <span>Dashboard</span>
+                <nav class="sidebar-links">
+                    <a href="/admin/dashboard" class="nav-item active">
+                        <i class="fa fa-home"></i>
+                        <span class="link-text">Dashboard</span>
                     </a>
 
                     <a href="/admin/logs" class="nav-item">
-                        <span class="nav-icon"><i class="fa fa-file-text-o"></i></span>
-                        <span>Audit Logs</span>
+                        <i class="fa fa-file-text-o"></i>
+                        <span class="link-text">Audit Logs</span>
                     </a>
                 </nav>
             </div>
 
             <div class="logout-box">
                 <a href="/logout" class="nav-item logout">
-                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
-                    <span>Log Out</span>
+                    <i class="fa fa-sign-out"></i>
+                    <span class="link-text">Log Out</span>
                 </a>
             </div>
         </aside>
 
-        <main class="main-content main-content-collapsed" id="mainContent">
+        <main class="main-content dashboard-main-content">
 
             <header class="topbar">
                 <div class="welcome-box">
@@ -294,3 +286,5 @@
 </body>
 
 </html>
+
+
