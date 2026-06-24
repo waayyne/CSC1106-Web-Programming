@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -12,80 +12,91 @@
     <link rel="stylesheet" href="/static/css/transactions.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
+    <script src="/static/js/main.js"></script>
 </head>
 
 <body>
 
     <div class="app-layout">
 
-        <input type="checkbox" id="sidebar-toggle" class="sidebar-state-toggle" />
-
-        
-        <aside class="sidebar dashboard-sidebar">
+        <aside class="sidebar sidebar-collapsed" id="sidebar">
             <div>
-                <div class="sidebar-header">
-                    <label for="sidebar-toggle" class="hamburger-trigger" aria-label="Toggle sidebar">
-                        <i class="fa fa-bars"></i>
-                    </label>
+                <div class="brand-wrapper">
 
-                    <div class="logo-block">
-                        <i class="fa fa-bank logo-icon"></i>
-                        <span class="brand-name">WIVAH Bank</span>
+                    <button type="button"
+                        class="sidebar-menu-btn"
+                        id="sidebarToggle"
+                        aria-label="Toggle sidebar"
+                        aria-expanded="false">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <div class="brand">
+                        <div class="brand-icon">WB</div>
+
+                        <div class="brand-copy">
+                            <h2>WIVAH Bank</h2>
+                            <p>Banking with Trust</p>
+                        </div>
                     </div>
+
                 </div>
 
-                <nav class="sidebar-links">
+                <nav class="side-nav">
                     <a href="/dashboard" class="nav-item">
-                        <i class="fa fa-home"></i>
-                        <span class="link-text">Dashboard</span>
+                        <span class="nav-icon"><i class="fa fa-home"></i></span>
+                        <span>Dashboard</span>
                     </a>
 
-                    <a href="/atm" class="nav-item active">
-                        <i class="fa fa-credit-card"></i>
-                        <span class="link-text">ATM Simulation</span>
+                    <a href="/atm" class="nav-item">
+                        <span class="nav-icon"><i class="fa fa-credit-card"></i></span>
+                        <span>ATM Simulation</span>
                     </a>
 
                     <a href="/transfer" class="nav-item">
-                        <i class="fa fa-exchange"></i>
-                        <span class="link-text">Bank Transfer</span>
+                        <span class="nav-icon"><i class="fa fa-exchange"></i></span>
+                        <span>Bank Transfer</span>
                     </a>
 
                     <a href="/transactions" class="nav-item">
-                        <i class="fa fa-list-alt"></i>
-                        <span class="link-text">Transactions</span>
+                        <span class="nav-icon"><i class="fa fa-list-alt"></i></span>
+                        <span>Transactions</span>
                     </a>
 
-                    <a href="/fixed-deposit" class="nav-item">
-                        <i class="fa fa-line-chart"></i>
-                        <span class="link-text">Fixed Deposit</span>
-                    </a>
+                    <details class="nav-dropdown">
+                        <summary class="nav-item nav-dropdown-title">
+                            <span class="nav-icon"><i class="fa fa-line-chart"></i></span>
+                            <span>Investments</span>
+                            <span class="nav-arrow"><i class="fa fa-chevron-down"></i></span>
+                        </summary>
 
-                    <a href="/risk-investment" class="nav-item">
-                        <i class="fa fa-area-chart"></i>
-                        <span class="link-text">Risk Investment</span>
-                    </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="/fixed-deposit" class="nav-sub-item">Fixed Deposit</a>
+                            <a href="/risk-investment" class="nav-sub-item">Risk Investment</a>
+                        </div>
+                    </details>
 
                     <a href="/loans" class="nav-item">
-                        <i class="fa fa-university"></i>
-                        <span class="link-text">Loans</span>
+                        <span class="nav-icon"><i class="fa fa-university"></i></span>
+                        <span>Loans</span>
                     </a>
 
                     <a href="/profile" class="nav-item">
-                        <i class="fa fa-cog"></i>
-                        <span class="link-text">Settings</span>
+                        <span class="nav-icon"><i class="fa fa-cog"></i></span>
+                        <span>Settings</span>
                     </a>
                 </nav>
             </div>
 
             <div class="logout-box">
                 <a href="/logout" class="nav-item logout">
-                    <i class="fa fa-sign-out"></i>
-                    <span class="link-text">Log Out</span>
+                    <span class="nav-icon"><i class="fa fa-sign-out"></i></span>
+                    <span>Log Out</span>
                 </a>
             </div>
         </aside>
 
-        <main class="main-content dashboard-main-content">
+        <main class="main-content main-content-collapsed" id="mainContent">
 
             <header class="topbar">
                 <div class="welcome-box">
