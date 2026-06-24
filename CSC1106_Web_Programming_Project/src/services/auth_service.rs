@@ -30,13 +30,24 @@ pub enum LoginResult {
 }
 
 pub fn validate_password_complexity(password: &str) -> Result<(), &'static str> {
+    let mut has_uppercase = false;
+    let mut has_lowercase = false;
+    let mut has_number = false;
+    let mut has_special = false;
+
+    for character in password.chars() {
+        if character.is_ascii_uppercase() {
+            has_uppercase = true;
+        } else if character.is_ascii_lowercase() {
+            has_lowercase = true;
+        } else if character.is_ascii_digit() {
+            has_number = true;
+        } else if !character.is_whitespace() {
+            has_special = true;
+        }
+    }
+
     let has_min_length = password.chars().count() >= 8;
-    let has_uppercase = password.chars().any(|c| c.is_ascii_uppercase());
-    let has_lowercase = password.chars().any(|c| c.is_ascii_lowercase());
-    let has_number = password.chars().any(|c| c.is_ascii_digit());
-    let has_special = password
-        .chars()
-        .any(|c| !c.is_ascii_alphanumeric() && !c.is_whitespace());
 
     if has_min_length && has_uppercase && has_lowercase && has_number && has_special {
         Ok(())
@@ -49,7 +60,10 @@ pub async fn register_user(
     pool: &DbPool,
     form: RegisterForm,
 ) -> Result<RegistrationResult, String> {
-    validate_password_complexity(&form.password).map_err(|message| message.to_string())?;
+    match validate_password_complexity(&form.password) {
+        Ok(_) => {}
+        Err(message) => return Err(message.to_string()),
+    }
 
     let full_name = format!("{} {}", form.first_name.trim(), form.last_name.trim());
     let email = form.email.trim().to_lowercase();
@@ -112,12 +126,12 @@ pub async fn register_user(
     .execute(&mut *transaction)
     .await;
 
-    if account_result.is_err() {
-        return Err("We could not create the bank account.".to_string());
+    match account_result {
+        Ok(_) => {}
+        Err(_) => return Err("We could not create the bank account.".to_string()),
     }
 
     let otp = generate_verification_otp();
-    let otp_hash = hash_verification_otp(user_id, &otp);
     let expires_at = Utc::now().naive_utc() + Duration::minutes(EMAIL_VERIFICATION_OTP_MINUTES);
 
     let otp_insert = sqlx::query(
@@ -125,17 +139,19 @@ pub async fn register_user(
          values ($1, $2, $3)",
     )
     .bind(user_id)
-    .bind(&otp_hash)
+    .bind(&otp)
     .bind(expires_at)
     .execute(&mut *transaction)
     .await;
 
-    if otp_insert.is_err() {
-        return Err("Unable to create the verification OTP.".to_string());
+    match otp_insert {
+        Ok(_) => {}
+        Err(_) => return Err("Unable to create the verification OTP.".to_string()),
     }
 
-    if transaction.commit().await.is_err() {
-        return Err("Registration could not be completed.".to_string());
+    match transaction.commit().await {
+        Ok(_) => {}
+        Err(_) => return Err("Registration could not be completed.".to_string()),
     }
 
     match send_verification_otp_email(&email, &otp) {
@@ -162,9 +178,9 @@ pub async fn login_user(
     let user_result = sqlx::query(
         "select id, password_hash, role, email_verified from users where email = $1 or username = $1",
     )
-            .bind(identifier)
-            .fetch_optional(pool)
-            .await;
+    .bind(&identifier)
+    .fetch_optional(pool)
+    .await;
 
     let row = match user_result {
         Ok(row) => row,
@@ -222,7 +238,6 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
         return Ok(());
     }
 
-    let otp_hash = hash_verification_otp(user_id, otp);
     let otp_lookup = sqlx::query(
         "select id
          from email_verification_otps
@@ -234,7 +249,7 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
          limit 1",
     )
     .bind(user_id)
-    .bind(&otp_hash)
+    .bind(otp)
     .fetch_optional(pool)
     .await;
 
@@ -245,10 +260,6 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
     };
 
     let otp_id: i32 = otp_row.get("id");
-    let mut transaction = match pool.begin().await {
-        Ok(transaction) => transaction,
-        Err(_) => return Err("Email verification could not be started.".to_string()),
-    };
 
     let verify_result = sqlx::query(
         "update users
@@ -258,25 +269,23 @@ pub async fn verify_email_otp(pool: &DbPool, email: String, otp: String) -> Resu
          where id = $1",
     )
     .bind(user_id)
-    .execute(&mut *transaction)
+    .execute(pool)
     .await;
 
-    if verify_result.is_err() {
-        return Err("The email address could not be verified.".to_string());
+    match verify_result {
+        Ok(_) => {}
+        Err(_) => return Err("The email address could not be verified.".to_string()),
     }
 
     let mark_otp_result =
         sqlx::query("update email_verification_otps set used_at = current_timestamp where id = $1")
             .bind(otp_id)
-            .execute(&mut *transaction)
+            .execute(pool)
             .await;
 
-    if mark_otp_result.is_err() {
-        return Err("Unable to finalize the verification code.".to_string());
-    }
-
-    if transaction.commit().await.is_err() {
-        return Err("Email verification could not be completed.".to_string());
+    match mark_otp_result {
+        Ok(_) => {}
+        Err(_) => return Err("Unable to finalize the verification code.".to_string()),
     }
 
     Ok(())
@@ -303,7 +312,11 @@ pub async fn resend_verification_otp(pool: &DbPool, email: String) -> Result<boo
         return Ok(false);
     }
 
-    create_and_send_verification_otp(pool, user_id, &email).await?;
+    match create_and_send_verification_otp(pool, user_id, &email).await {
+        Ok(_) => {}
+        Err(message) => return Err(message),
+    }
+
     Ok(true)
 }
 
@@ -336,8 +349,9 @@ pub async fn request_password_reset(pool: &DbPool, email: String) -> Result<bool
     .execute(pool)
     .await;
 
-    if old_token_update.is_err() {
-        return Err("Unable to prepare a new password reset link.".to_string());
+    match old_token_update {
+        Ok(_) => {}
+        Err(_) => return Err("Unable to prepare a new password reset link.".to_string()),
     }
 
     let token_insert = sqlx::query(
@@ -350,28 +364,37 @@ pub async fn request_password_reset(pool: &DbPool, email: String) -> Result<bool
     .execute(pool)
     .await;
 
-    if token_insert.is_err() {
-        return Err("A new password reset link could not be created.".to_string());
+    match token_insert {
+        Ok(_) => {}
+        Err(_) => return Err("A new password reset link could not be created.".to_string()),
     }
 
-    if let Err(error) = send_password_reset_email(&user_email, &token) {
-        let _ = sqlx::query(
-            "update password_reset_tokens
+    let email_result = send_password_reset_email(&user_email, &token);
+
+    match email_result {
+        Ok(_) => {}
+        Err(error) => {
+            let _ = sqlx::query(
+                "update password_reset_tokens
              set used_at = current_timestamp
              where token_hash = $1 and used_at is null",
-        )
-        .bind(&token_hash)
-        .execute(pool)
-        .await;
+            )
+            .bind(&token_hash)
+            .execute(pool)
+            .await;
 
-        return Err(error);
+            return Err(error);
+        }
     }
 
     Ok(true)
 }
 
 pub async fn reset_password(pool: &DbPool, token: String, password: String) -> Result<(), String> {
-    validate_password_complexity(&password).map_err(|message| message.to_string())?;
+    match validate_password_complexity(&password) {
+        Ok(_) => {}
+        Err(message) => return Err(message.to_string()),
+    }
 
     let token = token.trim().to_string();
     let token_hash = hash_reset_token(&token);
@@ -413,8 +436,9 @@ pub async fn reset_password(pool: &DbPool, token: String, password: String) -> R
     .execute(&mut *transaction)
     .await;
 
-    if password_update.is_err() {
-        return Err("Your password could not be updated.".to_string());
+    match password_update {
+        Ok(_) => {}
+        Err(_) => return Err("Your password could not be updated.".to_string()),
     }
 
     let token_update =
@@ -423,12 +447,14 @@ pub async fn reset_password(pool: &DbPool, token: String, password: String) -> R
             .execute(&mut *transaction)
             .await;
 
-    if token_update.is_err() {
-        return Err("Unable to finalize the password reset link.".to_string());
+    match token_update {
+        Ok(_) => {}
+        Err(_) => return Err("Unable to finalize the password reset link.".to_string()),
     }
 
-    if transaction.commit().await.is_err() {
-        return Err("The password reset could not be completed.".to_string());
+    match transaction.commit().await {
+        Ok(_) => {}
+        Err(_) => return Err("The password reset could not be completed.".to_string()),
     }
 
     Ok(())
@@ -491,11 +517,6 @@ fn hash_reset_token(token: &str) -> String {
     URL_SAFE_NO_PAD.encode(hash)
 }
 
-fn hash_verification_otp(user_id: i32, otp: &str) -> String {
-    let hash = Sha256::digest(format!("{}:{}", user_id, otp.trim()).as_bytes());
-    URL_SAFE_NO_PAD.encode(hash)
-}
-
 fn is_valid_otp_format(otp: &str) -> bool {
     otp.len() == 6 && otp.chars().all(|character| character.is_ascii_digit())
 }
@@ -506,7 +527,6 @@ async fn create_and_send_verification_otp(
     email: &str,
 ) -> Result<(), String> {
     let otp = generate_verification_otp();
-    let otp_hash = hash_verification_otp(user_id, &otp);
     let expires_at = Utc::now().naive_utc() + Duration::minutes(EMAIL_VERIFICATION_OTP_MINUTES);
 
     let old_otp_update = sqlx::query(
@@ -518,8 +538,9 @@ async fn create_and_send_verification_otp(
     .execute(pool)
     .await;
 
-    if old_otp_update.is_err() {
-        return Err("We could not prepare a new verification OTP.".to_string());
+    match old_otp_update {
+        Ok(_) => {}
+        Err(_) => return Err("We could not prepare a new verification OTP.".to_string()),
     }
 
     let otp_insert = sqlx::query(
@@ -527,16 +548,20 @@ async fn create_and_send_verification_otp(
          values ($1, $2, $3)",
     )
     .bind(user_id)
-    .bind(&otp_hash)
+    .bind(&otp)
     .bind(expires_at)
     .execute(pool)
     .await;
 
-    if otp_insert.is_err() {
-        return Err("The verification OTP could not be created.".to_string());
+    match otp_insert {
+        Ok(_) => {}
+        Err(_) => return Err("The verification OTP could not be created.".to_string()),
     }
 
-    send_verification_otp_email(email, &otp)
+    match send_verification_otp_email(email, &otp) {
+        Ok(_) => Ok(()),
+        Err(error) => Err(error),
+    }
 }
 
 fn send_verification_otp_email(to_email: &str, otp: &str) -> Result<(), String> {
@@ -581,22 +606,38 @@ fn send_email(to_email: &str, subject: &str, body: String, email_type: &str) -> 
         Ok(value) => value,
         Err(_) => return Err("SMTP_HOST must be set in .env.".to_string()),
     };
-    let smtp_port = env::var("SMTP_PORT")
-        .ok()
-        .and_then(|value| value.parse::<u16>().ok())
-        .unwrap_or(587);
+
+    let smtp_port_text = match env::var("SMTP_PORT") {
+        Ok(value) => value,
+        Err(_) => "587".to_string(),
+    };
+
+    let smtp_port = match smtp_port_text.parse::<u16>() {
+        Ok(value) => value,
+        Err(_) => 587,
+    };
+
     let smtp_username = match env::var("SMTP_USERNAME") {
         Ok(value) => value,
         Err(_) => return Err("SMTP_USERNAME must be set in .env.".to_string()),
     };
-    let smtp_password = match env::var("SMTP_PASSWORD") {
+
+    let smtp_password_text = match env::var("SMTP_PASSWORD") {
         Ok(value) => value,
         Err(_) => return Err("SMTP_PASSWORD must be set in .env.".to_string()),
+    };
+
+    let mut smtp_password = String::new();
+    for character in smtp_password_text.chars() {
+        if !character.is_whitespace() {
+            smtp_password.push(character);
+        }
     }
-    .chars()
-    .filter(|character| !character.is_whitespace())
-    .collect::<String>();
-    let smtp_from = env::var("SMTP_FROM").unwrap_or_else(|_| smtp_username.clone());
+
+    let smtp_from = match env::var("SMTP_FROM") {
+        Ok(value) => value,
+        Err(_) => smtp_username.clone(),
+    };
 
     let from: Mailbox = match smtp_from.parse() {
         Ok(mailbox) => mailbox,
@@ -618,22 +659,27 @@ fn send_email(to_email: &str, subject: &str, body: String, email_type: &str) -> 
         Err(_) => return Err(format!("The {email_type} could not be prepared.")),
     };
 
-    let credentials = Credentials::new(smtp_username, smtp_password);
-    let mailer_builder = if smtp_port == 465 {
+    let mailer_result = if smtp_port == 465 {
         SmtpTransport::relay(&smtp_host)
     } else {
         SmtpTransport::starttls_relay(&smtp_host)
-    }
-    .map_err(|error| format!("Unable to connect to the email service: {error}"))?;
+    };
 
+    let mailer_builder = match mailer_result {
+        Ok(builder) => builder,
+        Err(error) => return Err(format!("Unable to connect to the email service: {}", error)),
+    };
+
+    let credentials = Credentials::new(smtp_username, smtp_password);
     let mailer = mailer_builder
         .port(smtp_port)
         .credentials(credentials)
         .build();
 
-    mailer
-        .send(&email)
-        .map_err(|error| format!("The {email_type} could not be sent: {error}"))?;
+    let send_result = mailer.send(&email);
 
-    Ok(())
+    match send_result {
+        Ok(_) => Ok(()),
+        Err(error) => Err(format!("The {} could not be sent: {}", email_type, error)),
+    }
 }
