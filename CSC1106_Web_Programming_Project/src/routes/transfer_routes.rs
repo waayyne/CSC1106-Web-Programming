@@ -37,7 +37,7 @@ async fn load_user_context(pool: &DbPool, user_id: i32) -> Result<Context, Strin
     let balance: String = user.get("balance");
 
     let history_result = sqlx::query(
-        "SELECT CASE WHEN from_account_id = $1 THEN 'Transferred' WHEN to_account_id = $1 THEN 'Received' ELSE 'Transfer' END AS transaction_type, amount::TEXT AS amount, created_at::TEXT AS created_at
+        "SELECT CASE WHEN from_account_id = $1 THEN 'Transferred' WHEN to_account_id = $1 THEN 'Received' ELSE 'Transfer' END AS transaction_type, amount::TEXT AS amount, to_char(created_at, 'YYYY-MM-DD HH24:MI') AS created_at
          FROM transactions WHERE transaction_type = 'transfer' AND (from_account_id = $1 OR to_account_id = $1) ORDER BY created_at DESC LIMIT 5",
     )
     .bind(account_id)
