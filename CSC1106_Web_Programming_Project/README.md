@@ -1,4 +1,5 @@
 # WIVAH Bank
+This project is configured for Windows.
 ## Description
 WIVAH Bank is a CSC1106 Web Programming project using Rust, Actix Web, Tera, PostgreSQL, and Nginx.
 It is a simple banking web app with customer, staff, and admin pages. It shows routes, forms, templates, sessions, database queries, and role-based pages.
