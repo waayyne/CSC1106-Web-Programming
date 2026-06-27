@@ -55,7 +55,8 @@ For Windows, the easiest way is:
 ```bat
 setup_all.bat
 ```
-This creates the database, runs migrations, sets up Nginx, and starts the app. It also resets the database if it already exists.
+This creates or resets the database, runs migrations, and sets up or reloads Nginx.
+After it finishes, run `cargo run` to start the Rust backend. It also resets the database if it already exists.
 Manual database setup:
 ```bat
 createdb banking_system
