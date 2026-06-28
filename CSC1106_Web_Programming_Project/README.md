@@ -29,15 +29,18 @@ It is a simple banking web app with customer, staff, and admin pages. It shows r
 - Rust: https://www.rust-lang.org/tools/install
 - PostgreSQL: https://www.postgresql.org/download/
 - Nginx: https://nginx.org/en/download.html
+
+The setup scripts assume these settings:
+- PostgreSQL is installed at C:\Program Files\PostgreSQL\18\bin\psql.exe
+- PostgreSQL username is postgres
+- PostgreSQL password is 1234
+- Nginx is extracted directly to C:\nginx
 ## Setup
 Open the project folder:
 ```bat
 cd CSC1106_Web_Programming_Project
 ```
-Copy the environment file:
-```bat
-copy .env.example .env
-```
+
 Edit `.env`:
 ```env
 DATABASE_URL=postgres://postgres:your_password@localhost:5432/banking_system
